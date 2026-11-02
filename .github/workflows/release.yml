@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release, for example v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release --workspace
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = "$env:TAG".TrimStart("v")
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item target/release/swmm_loader.dll target/release/swmm.dll
+          Compress-Archive -Path target/release/swmm.exe, target/release/swmm.dll, LICENSE -DestinationPath "out/swmm-x86_64-windows.zip"
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add -g WixToolset.UI.wixext/5.0.2
+          wix build assets/installer/swmm.wxs -ext WixToolset.UI.wixext -pdbtype none -arch x64 -d Version=$version -d Bin=target/release -d Assets=assets -o "out/swmm-x86_64-windows.msi"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: out/*
+
+  linux:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+      - name: Build
+        run: cargo build --release --workspace
+      - name: Package
+        run: |
+          mkdir -p out stage
+          cp target/release/swmm LICENSE stage/
+          cp assets/icon.png stage/swmm.png
+          tar -cJf "out/swmm-${{ matrix.arch }}-linux.tar.xz" -C stage .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: out/*
+
+  release:
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Install scripts, checksums and notes
+        run: |
+          repo="${{ github.repository }}"
+          base="https://github.com/$repo/releases/download/$TAG"
+          sed -e "s#__REPO__#$repo#g" -e "s#__TAG__#$TAG#g" assets/installer/swmm-installer.ps1 > out/install.ps1
+          sed -e "s#__REPO__#$repo#g" -e "s#__TAG__#$TAG#g" assets/installer/swmm-installer.sh > out/install.sh
+          cd out
+          sha256sum swmm-* install.* > SHA256SUMS.txt
+          link() { echo "[$1]($base/$1)"; }
+          {
+            echo "## Downloads"
+            echo
+            echo "| Platform | Download |"
+            echo "| --- | --- |"
+            echo "| 🪟 Windows | $(link swmm-x86_64-windows.msi) (installer) · $(link swmm-x86_64-windows.zip) (portable) |"
+            echo "| 🐧 Linux, Steam Deck | $(link swmm-x86_64-linux.tar.xz) |"
+            echo "| 🐧 Linux on ARM | $(link swmm-aarch64-linux.tar.xz) |"
+            echo
+            echo "## Quick install"
+            echo
+            echo "**Windows** (PowerShell):"
+            echo
+            echo '```powershell'
+            echo "irm $base/install.ps1 | iex"
+            echo '```'
+            echo
+            echo "**Linux:**"
+            echo
+            echo '```sh'
+            echo "curl -fsSL $base/install.sh | sh"
+            echo '```'
+            echo
+            echo "Checksums are listed in $(link SHA256SUMS.txt)."
+          } > ../notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: SWMM ${{ env.TAG }}
+          body_path: notes.md
+          files: out/*

@@ -1,0 +1,45 @@
+[package]
+name = "swmm-modpack"
+edition = "2021"
+version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+anyhow_ext = { workspace = true }
+dashmap = { workspace = true }
+fs-err = { workspace = true }
+log = { workspace = true }
+indexmap = { workspace = true }
+join_str = { workspace = true }
+jwalk = { workspace = true }
+lenient_semver = { workspace = true }
+minicbor-ser = { workspace = true }
+parking_lot = { workspace = true }
+path-slash = { workspace = true }
+rayon = { workspace = true }
+roead = { workspace = true, features = ["with-serde"] }
+rstb = { workspace = true }
+sanitise-file-name = { workspace = true }
+serde = { workspace = true }
+serde_with = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+smartstring = { workspace = true }
+typetag = { workspace = true }
+zip = { workspace = true, default-features = false, features = ["deflate"] }
+zstd = { workspace = true }
+
+botw-utils = { git = "https://github.com/GingerAvalanche/botw-utils-rust.git" }
+configparser = "3.0.1"
+enum_dispatch = "0.3.8"
+mmap-rs = "0.6.1"
+ouroboros = "0.18.4"
+piz = "0.5.1"
+swmm-formats = { path = "../formats" }
+swmm-gamefiles = { path = "../gamefiles" }
+swmm-common = { path = "../common" }
+
+[dev-dependencies]
+env_logger = "0.11.3"
