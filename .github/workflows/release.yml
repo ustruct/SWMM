@@ -41,14 +41,7 @@ jobs:
           path: out/*
 
   linux:
-    strategy:
-      matrix:
-        include:
-          - runner: ubuntu-22.04
-            arch: x86_64
-          - runner: ubuntu-24.04-arm
-            arch: aarch64
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -64,10 +57,10 @@ jobs:
           mkdir -p out stage
           cp target/release/swmm LICENSE stage/
           cp assets/icon.png stage/swmm.png
-          tar -cJf "out/swmm-${{ matrix.arch }}-linux.tar.xz" -C stage .
+          tar -cJf "out/swmm-x86_64-linux.tar.xz" -C stage .
       - uses: actions/upload-artifact@v4
         with:
-          name: linux-${{ matrix.arch }}
+          name: linux
           path: out/*
 
   release:
@@ -95,7 +88,6 @@ jobs:
             echo "| --- | --- |"
             echo "| 🪟 Windows | $(link swmm-x86_64-windows.msi) (installer) · $(link swmm-x86_64-windows.zip) (portable) |"
             echo "| 🐧 Linux, Steam Deck | $(link swmm-x86_64-linux.tar.xz) |"
-            echo "| 🐧 Linux on ARM | $(link swmm-aarch64-linux.tar.xz) |"
             echo
             echo "## Quick install"
             echo

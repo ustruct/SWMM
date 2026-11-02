@@ -4,8 +4,7 @@ repo="__REPO__"
 tag="__TAG__"
 case "$(uname -s)-$(uname -m)" in
     Linux-x86_64) asset="swmm-x86_64-linux.tar.xz" ;;
-    Linux-aarch64 | Linux-arm64) asset="swmm-aarch64-linux.tar.xz" ;;
-    *) echo "SWMM releases are built for Windows and Linux (x86-64 and ARM64). Build it from source on this system." >&2; exit 1 ;;
+    *) echo "SWMM releases are built for Windows and Linux on x86-64. Build it from source on this system." >&2; exit 1 ;;
 esac
 url="https://github.com/$repo/releases/download/$tag/$asset"
 install_dir="${XDG_DATA_HOME:-$HOME/.local/share}/swmm"
