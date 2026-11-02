@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "Chiaro",
   "Settings_Unsaved": "Modifiche non salvate",
   "Tab_Deploy": "Schieramento",
-  "Browse_Installing": "Installazione…"
+  "Browse_Installing": "Installazione…",
+  "SW_Settings_Browse": "Sfoglia GameBanana",
+  "SW_Settings_Browse_Desc": "Mostra la scheda Sfoglia, che carica le mod di Savage Wind dall'API di GameBanana. Disattivala per non contattare mai GameBanana.",
+  "Browse_RateLimited": "GameBanana sta limitando le richieste, quindi Sfoglia è in pausa. Riprova più tardi",
+  "Browse_ShowNsfw": "Clicca per mostrare"
 }

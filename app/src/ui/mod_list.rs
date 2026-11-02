@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use strfmt::Format;
 use swmm_core::mods::Mod;
 use swmm_i18n::string_ext::LocString;
-use swmm_modpack::ModCategory;
+use uk_mod::ModCategory;
 use swmm_widgets::{
     egui::{self, pos2, vec2, Align2, Color32, CursorIcon, FontId, Id, Key, Rect, Rounding, Sense, Stroke, Ui},
     icons::Icon,

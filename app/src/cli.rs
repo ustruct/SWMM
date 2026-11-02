@@ -7,7 +7,7 @@ use std::{
 use anyhow_ext::{Context, Result};
 use smartstring::alias::String;
 use swmm_core::{core, mods::LookupMod};
-use swmm_modpack::{unpack::ModReader, Manifest, Meta};
+use uk_mod::{unpack::ModReader, Manifest, Meta};
 
 use crate::ui::jobs;
 

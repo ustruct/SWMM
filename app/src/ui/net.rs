@@ -467,6 +467,32 @@ pub fn download_file(url: &str, dest: &Path, done: &AtomicU64) -> Result<()> {
     download_single(&target.url, dest, done)
 }
 
+pub fn response_with_status(url: &str) -> Result<(u16, Vec<u8>)> {
+    let mut current = url.to_string();
+    for _ in 0..8 {
+        let uri = http_req::uri::Uri::try_from(current.as_str())?;
+        let mut buf = Vec::new();
+        let response = http_req::request::Request::new(&uri)
+            .header("User-Agent", USER_AGENT)
+            .method(http_req::request::Method::GET)
+            .redirect_policy(http_req::request::RedirectPolicy::<fn() -> bool>::Limit(0))
+            .connect_timeout(Some(Duration::from_secs(15)))
+            .read_timeout(Some(Duration::from_secs(30)))
+            .timeout(Duration::from_secs(60))
+            .send(&mut buf)
+            .context("Request failed")?;
+        let status = response.status_code();
+        if status.is_redirect() {
+            if let Some(location) = response.headers().get("Location") {
+                current = absolute(&current, location);
+                continue;
+            }
+        }
+        return Ok((u16::from(status), buf));
+    }
+    anyhow::bail!("Too many redirects")
+}
+
 pub fn response(url: &str) -> Result<Vec<u8>> {
     let url = url.try_into()?;
     let mut buf = Vec::new();

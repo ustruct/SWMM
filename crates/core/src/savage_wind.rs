@@ -7,10 +7,10 @@ use std::{
 
 use anyhow_ext::{Context, Result};
 use fs_err as fs;
-use swmm_formats::prelude::Endian;
-use swmm_gamefiles::ResourceReader;
+use uk_content::prelude::Endian;
+use uk_reader::ResourceReader;
 
-use swmm_formats::constants::Language;
+use uk_content::constants::Language;
 
 use crate::settings::{DeployConfig, Platform, PlatformSettings, SavageWindSettings, Settings};
 

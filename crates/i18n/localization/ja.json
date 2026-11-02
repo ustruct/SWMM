@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "ライト",
   "Settings_Unsaved": "未保存の変更",
   "Tab_Deploy": "デプロイ",
-  "Browse_Installing": "インストール中…"
+  "Browse_Installing": "インストール中…",
+  "SW_Settings_Browse": "GameBananaを閲覧",
+  "SW_Settings_Browse_Desc": "GameBanana APIからSavage Windのモッドを読み込む閲覧タブを表示します。オフにするとGameBananaに接続しません。",
+  "Browse_RateLimited": "GameBananaが現在リクエストを制限しているため、閲覧を一時停止しています。後でもう一度お試しください",
+  "Browse_ShowNsfw": "クリックして表示"
 }

@@ -63,7 +63,9 @@ impl App {
         if menu_item(ui, Icon::FileImport, &"Menu_File_Open".localize(), true) {
             self.do_update(Message::SelectFile);
         }
-        if menu_item(ui, Icon::Globe, &"SW_Page_Browse".localize(), true) {
+        if self.core.settings().savage_wind.browse_gamebanana
+            && menu_item(ui, Icon::Globe, &"SW_Page_Browse".localize(), true)
+        {
             self.do_update(Message::SetPage(Page::Browse));
         }
         ui.separator();

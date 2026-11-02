@@ -4,7 +4,7 @@ description = "SWMM: mod manager for Savage Wind"
 authors = ["SWMM contributors"]
 edition = "2024"
 license = "GPL-3.0-or-later"
-version = "0.1.0"
+version = "0.1.1"
 rust-version = "1.85"
 default-run = "swmm"
 
@@ -48,13 +48,13 @@ open = "5.2"
 roxmltree = "0.20.0"
 rustls = "0.23.40"
 shlex = "1.3.0"
-swmm-formats = { path = "../crates/formats" }
+uk-content = { workspace = true }
 swmm-i18n = { path = "../crates/i18n" }
 swmm-core = { path = "../crates/core" }
-swmm-modpack = { path = "../crates/modpack" }
-swmm-gamefiles = { path = "../crates/gamefiles" }
+uk-mod = { workspace = true }
+uk-reader = { workspace = true }
 swmm-widgets = { path = "../crates/widgets" }
-swmm-common = { path = "../crates/common" }
+uk-util = { workspace = true }
 xflags = "0.3.1"
 
 [build-dependencies]

@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "浅色",
   "Settings_Unsaved": "未保存的更改",
   "Tab_Deploy": "部署",
-  "Browse_Installing": "正在安装…"
+  "Browse_Installing": "正在安装…",
+  "SW_Settings_Browse": "浏览 GameBanana",
+  "SW_Settings_Browse_Desc": "显示浏览标签页，通过 GameBanana API 加载 Savage Wind 模组。关闭后将不会连接 GameBanana。",
+  "Browse_RateLimited": "GameBanana 当前正在限制请求，浏览已暂停。请稍后再试",
+  "Browse_ShowNsfw": "点击显示"
 }

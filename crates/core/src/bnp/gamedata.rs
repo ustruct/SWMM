@@ -1,7 +1,7 @@
 use anyhow_ext::{Context, Result};
 use fs_err as fs;
 use roead::byml::{Byml, Map};
-use swmm_formats::{
+use uk_content::{
     data::gamedata::{FlagData, GameData},
     prelude::Resource,
     resource::GameDataPack,

@@ -47,7 +47,7 @@ impl BnpConverter {
                             .and_then(|res| {
                                 res.as_mergeable().and_then(|m| {
                                     match m {
-                                        swmm_formats::resource::MergeableResource::DropTable(d) => {
+                                        uk_content::resource::MergeableResource::DropTable(d) => {
                                             Some(d.clone())
                                         }
                                         _ => None,

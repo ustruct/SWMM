@@ -1,5 +1,5 @@
 use swmm_i18n::string_ext::LocString;
-use swmm_modpack::{ModOption, ModOptionGroup, OptionGroup};
+use uk_mod::{ModOption, ModOptionGroup, OptionGroup};
 use swmm_widgets::{
     egui::{self, pos2, vec2, Color32, Context, Id, Layout, Align, Margin, Rect, RichText, Rounding, Sense, Shape, Stroke, Ui, Vec2},
     icons::Icon,

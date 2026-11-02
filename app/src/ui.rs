@@ -36,7 +36,7 @@ use parking_lot::{
 };
 use mod_list::ModListState;
 use serde::{Deserialize, Serialize};
-use swmm_formats::util::HashMap;
+use uk_content::util::HashMap;
 use swmm_i18n::*;
 use swmm_i18n::string_ext::LocString;
 use swmm_core::{
@@ -44,7 +44,7 @@ use swmm_core::{
     mods::{LookupMod, Mod},
     settings::{Platform, Settings},
 };
-use swmm_modpack::{Manifest, ModPlatform};
+use uk_mod::{Manifest, ModPlatform};
 pub use swmm_widgets::visuals;
 use swmm_widgets::{
     egui::{
@@ -312,7 +312,7 @@ impl App {
     }
 
     #[inline(always)]
-    fn dirty(&self) -> MappedRwLockReadGuard<'_, swmm_modpack::Manifest> {
+    fn dirty(&self) -> MappedRwLockReadGuard<'_, uk_mod::Manifest> {
         let dirty = self.dirty.read();
         RwLockReadGuard::map(dirty, |dirty| {
             dirty
@@ -323,7 +323,7 @@ impl App {
     }
 
     #[inline(always)]
-    fn dirty_mut(&self) -> MappedRwLockWriteGuard<'_, swmm_modpack::Manifest> {
+    fn dirty_mut(&self) -> MappedRwLockWriteGuard<'_, uk_mod::Manifest> {
         let dirty = self.dirty.write();
         RwLockWriteGuard::map(dirty, |dirty| {
             dirty.get_mut(self.core.mod_manager().profile().key().as_str())

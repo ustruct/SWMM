@@ -1,7 +1,7 @@
 use std::{ops::Deref, path::PathBuf};
 
 use swmm_core::{savage_wind, settings::Settings};
-use swmm_formats::constants::Language;
+use uk_content::constants::Language;
 use swmm_i18n::{string_ext::LocString, LocLang};
 use swmm_widgets::{
     egui::{
@@ -291,6 +291,14 @@ impl App {
                 48.0,
                 |ui| {
                     toggle(ui, &mut settings.savage_wind.standalone_mods);
+                },
+            );
+            group.row(
+                &"SW_Settings_Browse".localize(),
+                &"SW_Settings_Browse_Desc".localize(),
+                48.0,
+                |ui| {
+                    toggle(ui, &mut settings.savage_wind.browse_gamebanana);
                 },
             );
             if let Some(config) = settings.switch_config.as_mut() {

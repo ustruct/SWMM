@@ -336,7 +336,14 @@ impl App {
                 ui.add_enabled_ui(!self.modal_open(), |ui| {
                     ui.spacing_mut().item_spacing.y = 2.0;
                     let mut selected_rect = None;
+                    let browse_on = self.core.settings().savage_wind.browse_gamebanana;
+                    if !browse_on && self.page == Page::Browse {
+                        self.page = Page::Home;
+                    }
                     for page in Page::MAIN {
+                        if page == Page::Browse && !browse_on {
+                            continue;
+                        }
                         let response = self.nav_button(ui, page);
                         if self.page == page {
                             selected_rect = Some(response.rect);
@@ -480,7 +487,9 @@ impl App {
             }
             ui.add_space(12.0);
             ui.horizontal(|ui| {
-                if accent_button(ui, Icon::Globe, "SW_Welcome_Browse".localize()).clicked() {
+                if self.core.settings().savage_wind.browse_gamebanana
+                    && accent_button(ui, Icon::Globe, "SW_Welcome_Browse".localize()).clicked()
+                {
                     self.page = Page::Browse;
                 }
                 if ui.icon_text_button("SW_Welcome_OpenSettings".localize(), Icon::Gear).clicked() {
@@ -685,7 +694,7 @@ impl App {
             ui.spacing_mut().item_spacing.x = 6.0;
             if !matches!(
                 mod_.meta.category,
-                swmm_modpack::ModCategory::None | swmm_modpack::ModCategory::Other
+                uk_mod::ModCategory::None | uk_mod::ModCategory::Other
             ) {
                 let category = mod_.meta.category.to_loc_str().localize();
                 chip(ui, category.as_ref(), palette.accent_text);

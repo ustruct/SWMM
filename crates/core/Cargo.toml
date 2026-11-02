@@ -33,11 +33,11 @@ unrar = { workspace = true }
 zip = { workspace = true, default-features = false, features = ["deflate"] }
 
 tempfile = "3.3"
-swmm-formats = { path = "../formats" }
+uk-content = { workspace = true }
 swmm-i18n = { path = "../i18n" }
-swmm-modpack = { path = "../modpack" }
-swmm-gamefiles = { path = "../gamefiles" }
-swmm-common = { path = "../common" }
+uk-mod = { workspace = true }
+uk-reader = { workspace = true }
+uk-util = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 junction = { git = "https://github.com/NiceneNerd/junction" }

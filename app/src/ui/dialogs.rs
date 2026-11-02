@@ -1,5 +1,5 @@
 use swmm_i18n::string_ext::LocString;
-use swmm_modpack::{Meta, ModCategory};
+use uk_mod::{Meta, ModCategory};
 use net::SmartStringWrapper;
 
 use super::*;
@@ -124,7 +124,7 @@ impl App {
                     });
                 });
                 if let Some(context) = err.chain().find_map(|e| {
-                    e.downcast_ref::<swmm_formats::FormatError>()
+                    e.downcast_ref::<uk_content::UKError>()
                         .and_then(|e| e.context_data())
                 }) {
                     egui::CollapsingHeader::new("Error_Context".localize()).show(ui, |ui| {

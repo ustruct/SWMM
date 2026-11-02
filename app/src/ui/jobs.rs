@@ -10,7 +10,7 @@ use swmm_core::{
     core::Manager,
     mods::Mod,
 };
-use swmm_modpack::{
+use uk_mod::{
     pack::ModPacker,
     unpack::ModReader,
     Manifest, Meta,

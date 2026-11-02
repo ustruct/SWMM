@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 use rustc_hash::{FxHashMap, FxHasher};
 use swmm_i18n::string_ext::LocString;
 use swmm_core::mods::Mod;
-use swmm_modpack::Manifest;
+use uk_mod::Manifest;
 #[allow(deprecated)]
 use swmm_widgets::egui_extras::RetainedImage;
 use swmm_widgets::{

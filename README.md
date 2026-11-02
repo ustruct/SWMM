@@ -42,7 +42,10 @@ app is placed in the `dist` folder.
 
 SWMM is free software under the [GNU General Public License v3.0](LICENSE).
 
-Based on [U-King Mod Manager](https://github.com/NiceneNerd/ukmm) by Caleb Smith and Ginger Chody. Icons from
+Built on [U-King Mod Manager](https://github.com/NiceneNerd/ukmm) by Caleb Smith and Ginger Chody. SWMM uses UKMM's
+`uk-content`, `uk-mod`, `uk-reader` and `uk-util` crates directly, from the
+[`swmm` branch of a UKMM fork](https://github.com/ustruct/ukmm/tree/swmm) that carries a few fixes sent upstream as pull
+requests. Icons from
 [Font Awesome Free](https://fontawesome.com). Title font *The Wild Breath of Zelda* by Chequered Ink.
 
 SWMM is a fan project and isn't affiliated with Nintendo.

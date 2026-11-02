@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "Light",
   "Settings_Unsaved": "Unsaved changes",
   "Tab_Deploy": "Deploy",
-  "Browse_Installing": "Installing…"
+  "Browse_Installing": "Installing…",
+  "SW_Settings_Browse": "Browse GameBanana",
+  "SW_Settings_Browse_Desc": "Show the Browse tab, which loads Savage Wind mods from the GameBanana API. Turn this off to never contact GameBanana.",
+  "Browse_RateLimited": "GameBanana is limiting requests right now, so Browse is paused. Try again later",
+  "Browse_ShowNsfw": "Click to show"
 }

@@ -1,11 +1,11 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::PathBuf,
     sync::{
         atomic::{AtomicU64, Ordering},
-        Arc,
+        Arc, LazyLock, Mutex,
     },
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use anyhow::{Context, Result};
@@ -65,6 +65,7 @@ pub struct BrowseMod {
     pub likes: u64,
     pub views: u64,
     pub thumbnail: Option<String>,
+    pub nsfw: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -84,12 +85,13 @@ pub struct BrowseDetails {
     pub text: String,
     pub files: Vec<BrowseFile>,
     pub url: String,
+    pub nsfw: bool,
 }
 
 enum BrowseEvent {
     Page(u64, Result<(Vec<BrowseMod>, bool)>),
     Details(Result<BrowseDetails>),
-    Thumbnail(u64, Option<ColorImage>),
+    Thumbnail(u64, Option<(ColorImage, ColorImage)>),
     Downloaded(Result<PathBuf>),
 }
 
@@ -110,6 +112,8 @@ pub struct BrowserState {
     download_total: u64,
     download_started: Option<Instant>,
     thumbnails: HashMap<u64, Option<TextureHandle>>,
+    blurred: HashMap<u64, TextureHandle>,
+    revealed: HashSet<u64>,
     loaded_once: bool,
     tx: Sender<BrowseEvent>,
     rx: Receiver<BrowseEvent>,
@@ -135,6 +139,8 @@ impl Default for BrowserState {
             download_total: 0,
             download_started: None,
             thumbnails: HashMap::new(),
+            blurred: HashMap::new(),
+            revealed: HashSet::new(),
             loaded_once: false,
             tx,
             rx,
@@ -142,8 +148,52 @@ impl Default for BrowserState {
     }
 }
 
+const CACHE_TIME: Duration = Duration::from_secs(15 * 60);
+const COOLDOWN: Duration = Duration::from_secs(5 * 60);
+
+type PageResult = (Vec<BrowseMod>, bool);
+
+static PAGE_CACHE: LazyLock<Mutex<HashMap<String, (Instant, PageResult)>>> = LazyLock::new(Default::default);
+static DETAILS_CACHE: LazyLock<Mutex<HashMap<u64, (Instant, BrowseDetails)>>> = LazyLock::new(Default::default);
+static PAUSED_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
+
+fn cached<K: std::hash::Hash + Eq, V: Clone>(cache: &Mutex<HashMap<K, (Instant, V)>>, key: &K) -> Option<V> {
+    let mut cache = cache.lock().unwrap_or_else(|e| e.into_inner());
+    cache.retain(|_, (time, _)| time.elapsed() < CACHE_TIME);
+    cache.get(key).map(|(_, value)| value.clone())
+}
+
+fn remember<K: std::hash::Hash + Eq, V>(cache: &Mutex<HashMap<K, (Instant, V)>>, key: K, value: V) {
+    cache
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(key, (Instant::now(), value));
+}
+
+fn paused_message() -> Option<std::string::String> {
+    let until = (*PAUSED_UNTIL.lock().unwrap_or_else(|e| e.into_inner()))?;
+    let left = until.checked_duration_since(Instant::now())?;
+    let minutes = left.as_secs().div_ceil(60).max(1);
+    Some(format!(
+        "{} ({minutes} min)",
+        "Browse_RateLimited".localize()
+    ))
+}
+
 fn get_json(url: &str) -> Result<Value> {
-    let bytes = super::net::response(url).with_context(|| format!("Request to {url} failed"))?;
+    if let Some(message) = paused_message() {
+        anyhow::bail!(message);
+    }
+    let (status, bytes) =
+        super::net::response_with_status(url).context("Could not reach GameBanana")?;
+    if status == 429 || status == 503 {
+        *PAUSED_UNTIL.lock().unwrap_or_else(|e| e.into_inner()) = Some(Instant::now() + COOLDOWN);
+        log::warn!("GameBanana answered HTTP {status}, pausing requests for {} minutes", COOLDOWN.as_secs() / 60);
+        anyhow::bail!(paused_message().unwrap_or_else(|| "Browse_RateLimited".localize().to_string()));
+    }
+    if !(200..300).contains(&status) {
+        anyhow::bail!("GameBanana answered with HTTP {status}");
+    }
     serde_json::from_slice(&bytes).context("GameBanana sent an unexpected answer")
 }
 
@@ -201,10 +251,21 @@ fn parse_mod(value: &Value) -> Option<BrowseMod> {
         likes: number_of(value, "_nLikeCount"),
         views: number_of(value, "_nViewCount"),
         thumbnail: thumbnail_of(value),
+        nsfw: is_nsfw(value),
     })
 }
 
 fn fetch_page(query: &str, sort: BrowseSort, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
+    let key = format!("{}|{}|{page}", query.trim().to_lowercase(), sort.key());
+    if let Some(result) = cached(&*PAGE_CACHE, &key) {
+        return Ok(result);
+    }
+    let result = fetch_page_uncached(query, sort, page)?;
+    remember(&*PAGE_CACHE, key, result.clone());
+    Ok(result)
+}
+
+fn fetch_page_uncached(query: &str, sort: BrowseSort, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
     let mut search = query.trim().to_string();
     if !search.to_lowercase().contains("switch") {
         if !search.is_empty() {
@@ -291,6 +352,15 @@ fn strip_html(html: &str) -> String {
 }
 
 fn fetch_details(id: u64) -> Result<BrowseDetails> {
+    if let Some(details) = cached(&*DETAILS_CACHE, &id) {
+        return Ok(details);
+    }
+    let details = fetch_details_uncached(id)?;
+    remember(&*DETAILS_CACHE, id, details.clone());
+    Ok(details)
+}
+
+fn fetch_details_uncached(id: u64) -> Result<BrowseDetails> {
     let json = get_json(&format!("{API}/Mod/{id}/ProfilePage"))?;
     let files = json
         .get("_aFiles")
@@ -325,14 +395,42 @@ fn fetch_details(id: u64) -> Result<BrowseDetails> {
         text: strip_html(&text_of(&json, "_sText")),
         files,
         url: format!("https://gamebanana.com/mods/{id}"),
+        nsfw: is_nsfw(&json),
     })
 }
 
-fn fetch_thumbnail(url: &str) -> Option<ColorImage> {
+const NSFW_RATINGS: &[&str] = &["st", "sa", "sc", "ft", "lp", "pn", "nu"];
+
+fn is_nsfw(value: &Value) -> bool {
+    let hidden = value
+        .get("_sInitialVisibility")
+        .and_then(Value::as_str)
+        .is_some_and(|v| matches!(v, "hide" | "warn"));
+    let rated = value
+        .get("_aContentRatings")
+        .and_then(Value::as_object)
+        .is_some_and(|ratings| ratings.keys().any(|k| NSFW_RATINGS.contains(&k.as_str())));
+    hidden || rated
+}
+
+fn to_color_image(image: &image::RgbaImage) -> ColorImage {
+    let size = [image.width() as usize, image.height() as usize];
+    ColorImage::from_rgba_unmultiplied(size, image.as_raw())
+}
+
+fn blur_image(image: &image::RgbaImage) -> image::RgbaImage {
+    let (w, h) = (image.width().max(1), image.height().max(1));
+    let small_w = 40.min(w);
+    let small_h = ((h as f32 * small_w as f32 / w as f32).round() as u32).max(1);
+    let small = image::imageops::resize(image, small_w, small_h, image::imageops::FilterType::Triangle);
+    let soft = image::imageops::blur(&small, 2.5);
+    image::imageops::resize(&soft, (small_w * 4).min(w), (small_h * 4).min(h), image::imageops::FilterType::Triangle)
+}
+
+fn fetch_thumbnail(url: &str) -> Option<(ColorImage, ColorImage)> {
     let bytes = super::net::response(url).ok()?;
     let image = image::load_from_memory(&bytes).ok()?.to_rgba8();
-    let size = [image.width() as usize, image.height() as usize];
-    Some(ColorImage::from_rgba_unmultiplied(size, image.as_raw()))
+    Some((to_color_image(&image), to_color_image(&blur_image(&image))))
 }
 
 fn download(file: BrowseFile, done: &AtomicU64) -> Result<PathBuf> {
@@ -469,9 +567,13 @@ impl BrowserState {
                         Err(e) => self.error = Some(e.to_string()),
                     }
                 }
-                BrowseEvent::Thumbnail(id, image) => {
-                    let texture = image.map(|img| {
-                        ctx.load_texture(format!("browse-thumb-{id}"), img, TextureOptions::LINEAR)
+                BrowseEvent::Thumbnail(id, images) => {
+                    let texture = images.map(|(clear, blurred)| {
+                        self.blurred.insert(
+                            id,
+                            ctx.load_texture(format!("browse-blur-{id}"), blurred, TextureOptions::LINEAR),
+                        );
+                        ctx.load_texture(format!("browse-thumb-{id}"), clear, TextureOptions::LINEAR)
                     });
                     self.thumbnails.insert(id, texture);
                 }
@@ -700,8 +802,13 @@ impl App {
                                 ui.spacing_mut().item_spacing.x = CARD_GAP;
                                 for item in chunk {
                                     state.request_thumbnail(item);
-                                    let texture = state.thumbnails.get(&item.id).cloned().flatten();
-                                    if render_card(ui, item, texture.as_ref(), selected == Some(item.id), card_size) {
+                                    let hidden = item.nsfw && !state.revealed.contains(&item.id);
+                                    let texture = if hidden {
+                                        state.thumbnails.get(&item.id).cloned().flatten().and(state.blurred.get(&item.id).cloned())
+                                    } else {
+                                        state.thumbnails.get(&item.id).cloned().flatten()
+                                    };
+                                    if render_card(ui, item, texture.as_ref(), hidden, selected == Some(item.id), card_size) {
                                         state.open_details(item.id);
                                     }
                                 }
@@ -731,7 +838,28 @@ fn paint_cover(ui: &Ui, texture: &TextureHandle, rect: egui::Rect, rounding: egu
         .paint_at(ui, rect);
 }
 
-fn render_card(ui: &mut Ui, item: &BrowseMod, texture: Option<&TextureHandle>, selected: bool, size: Vec2) -> bool {
+fn paint_nsfw_badge(ui: &Ui, rect: egui::Rect, rounding: egui::Rounding, fade: f32) {
+    ui.painter()
+        .rect_filled(rect, rounding, Color32::from_black_alpha((70.0 * fade) as u8));
+    let center = rect.center();
+    let white = Color32::WHITE.gamma_multiply(fade);
+    ui.painter().text(
+        center - Vec2::new(0.0, 10.0),
+        egui::Align2::CENTER_CENTER,
+        Icon::EyeSlash.glyph().to_string(),
+        egui::FontId::new(20.0, swmm_widgets::icons::icon_family()),
+        white,
+    );
+    ui.painter().text(
+        center + Vec2::new(0.0, 14.0),
+        egui::Align2::CENTER_CENTER,
+        "NSFW",
+        egui::FontId::new(12.0, egui::FontFamily::Name("Bold".into())),
+        white,
+    );
+}
+
+fn render_card(ui: &mut Ui, item: &BrowseMod, texture: Option<&TextureHandle>, hidden: bool, selected: bool, size: Vec2) -> bool {
     let (rect, response) = ui.allocate_exact_size(size, Sense::click());
     if !ui.is_rect_visible(rect) {
         return false;
@@ -775,6 +903,9 @@ fn render_card(ui: &mut Ui, item: &BrowseMod, texture: Option<&TextureHandle>, s
     }
     if let Some(texture) = texture {
         paint_cover(ui, texture, image_rect, image_rounding, Color32::WHITE.gamma_multiply(fade));
+    }
+    if hidden {
+        paint_nsfw_badge(ui, image_rect, image_rounding, fade.max(0.6));
     }
     let text = egui::Rect::from_min_max(
         egui::pos2(card.left() + 12.0, image_rect.bottom() + 10.0),
@@ -898,16 +1029,32 @@ fn render_details_body(ui: &mut Ui, state: &mut BrowserState) {
     ui.multiply_opacity(fade);
     ui.add_space((1.0 - fade) * 8.0);
     let width = ui.available_width();
-    if let Some(Some(texture)) = state.thumbnails.get(&details.id) {
+    if let Some(Some(texture)) = state.thumbnails.get(&details.id).cloned() {
+        let hidden = details.nsfw && !state.revealed.contains(&details.id);
+        let shown = match (hidden, state.blurred.get(&details.id)) {
+            (true, Some(blurred)) => blurred.clone(),
+            _ => texture.clone(),
+        };
         let [w, h] = texture.size();
         let (w, h) = (w.max(1) as f32, h.max(1) as f32);
         let scale = (width / w).min(220.0 / h);
         let size = Vec2::new(w * scale, h * scale);
         let (rect, _) = ui.allocate_exact_size(Vec2::new(width, size.y), Sense::hover());
         let image = egui::Rect::from_center_size(rect.center(), size);
-        egui::Image::new(SizedTexture::new(texture.id(), size))
+        let response = ui.interact(image, egui::Id::new(("browseDetailsImage", details.id)), Sense::click());
+        egui::Image::new(SizedTexture::new(shown.id(), size))
             .rounding(10.0)
             .paint_at(ui, image);
+        if hidden {
+            paint_nsfw_badge(ui, image, egui::Rounding::same(10.0), 1.0);
+            if response
+                .on_hover_cursor(egui::CursorIcon::PointingHand)
+                .on_hover_text("Browse_ShowNsfw".localize())
+                .clicked()
+            {
+                state.revealed.insert(details.id);
+            }
+        }
         ui.add_space(14.0);
     }
     let has_thumbnail = state.thumbnails.get(&details.id).is_some_and(|t| t.is_some());

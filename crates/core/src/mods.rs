@@ -15,8 +15,8 @@ use sanitise_file_name as sfn;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use smartstring::alias::String;
-use swmm_formats::platform_prefixes;
-use swmm_modpack::{pack::ModPacker, unpack::ModReader, Manifest, Meta, ModOption};
+use uk_content::platform_prefixes;
+use uk_mod::{pack::ModPacker, unpack::ModReader, Manifest, Meta, ModOption};
 
 use crate::{
     settings::Settings,
@@ -106,13 +106,13 @@ impl Mod {
         if !self.meta.options.is_empty() {
             for group in self.meta.options.iter_mut() {
                 match group {
-                    swmm_modpack::OptionGroup::Exclusive(group) => {
+                    uk_mod::OptionGroup::Exclusive(group) => {
                         self.enabled_options
                             .extend(group.default.iter().filter_map(|path| {
                                 group.options.iter().find(|o| &o.path == path).cloned()
                             }));
                     }
-                    swmm_modpack::OptionGroup::Multiple(group) => {
+                    uk_mod::OptionGroup::Multiple(group) => {
                         self.enabled_options
                             .extend(group.defaults.iter().filter_map(|path| {
                                 group.options.iter().find(|o| &o.path == path).cloned()

@@ -6,7 +6,7 @@ use roead::{
     sarc::{Sarc, SarcWriter},
     yaz0::compress_if,
 };
-use swmm_formats::{
+use uk_content::{
     prelude::{Mergeable, Resource},
     resource::ASList,
 };
@@ -37,7 +37,7 @@ fn handle_diff_entry(
             let diff = ASList::try_from(&ParameterIO::new().with_root(plist.clone()))?;
             let data = pio
                 .merge(&diff)
-                .into_binary(swmm_formats::prelude::Endian::Little);
+                .into_binary(uk_content::prelude::Endian::Little);
             let data = compress_if(&data, nest_root);
             sarc.files.insert(nest_root.into(), data.to_vec());
         }
@@ -80,7 +80,7 @@ impl BnpConverter {
                             let diff = ASList::try_from(&ParameterIO::new().with_root(plist))?;
                             let data = pio
                                 .merge(&diff)
-                                .into_binary(swmm_formats::prelude::Endian::Little);
+                                .into_binary(uk_content::prelude::Endian::Little);
                             let data = compress_if(&data, &root);
                             fs::write(base_path, data)?;
                         }

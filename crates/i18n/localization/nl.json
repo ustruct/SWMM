@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "Licht",
   "Settings_Unsaved": "Niet-opgeslagen wijzigingen",
   "Tab_Deploy": "Implementeren",
-  "Browse_Installing": "Installeren…"
+  "Browse_Installing": "Installeren…",
+  "SW_Settings_Browse": "GameBanana doorzoeken",
+  "SW_Settings_Browse_Desc": "Toont het tabblad Doorzoeken, dat Savage Wind-mods laadt via de GameBanana-API. Zet dit uit om nooit contact met GameBanana te maken.",
+  "Browse_RateLimited": "GameBanana beperkt nu verzoeken, dus Doorzoeken is gepauzeerd. Probeer het later opnieuw",
+  "Browse_ShowNsfw": "Klik om te tonen"
 }

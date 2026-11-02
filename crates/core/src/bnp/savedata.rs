@@ -1,6 +1,6 @@
 use anyhow_ext::Result;
 use fs_err as fs;
-use swmm_formats::{prelude::Resource, resource::SaveDataPack};
+use uk_content::{prelude::Resource, resource::SaveDataPack};
 
 use super::BnpConverter;
 

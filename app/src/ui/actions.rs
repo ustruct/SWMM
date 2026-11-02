@@ -1,5 +1,5 @@
 use strfmt::Format;
-use swmm_formats::prelude::Endian;
+use uk_content::prelude::Endian;
 use swmm_i18n::string_ext::LocString;
 use super::*;
 

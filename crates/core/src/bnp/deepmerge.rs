@@ -6,7 +6,7 @@ use roead::{
     sarc::{Sarc, SarcWriter},
     yaz0::compress_if,
 };
-use swmm_formats::util::merge_plist;
+use uk_content::util::merge_plist;
 
 use super::{parse_aamp_diff, AampDiffEntry, BnpConverter};
 

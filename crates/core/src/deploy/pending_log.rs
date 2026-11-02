@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use anyhow_ext::{Result, Error, Context};
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
-use swmm_modpack::Manifest;
+use uk_mod::Manifest;
 use crate::deploy::folder::Folder;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

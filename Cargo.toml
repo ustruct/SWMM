@@ -2,19 +2,14 @@
 resolver = "2"
 members = [
     "app",
-    "crates/common",
     "crates/core",
-    "crates/formats",
-    "crates/formats-derive",
-    "crates/gamefiles",
     "crates/i18n",
     "crates/loader",
-    "crates/modpack",
     "crates/widgets",
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 license = "GPL-3.0-or-later"
 authors = ["SWMM contributors"]
 
@@ -51,6 +46,10 @@ smartstring = "1"
 strfmt = "0.2.4"
 thiserror = "1"
 typetag = "0.2.1"
+uk-content = { git = "https://github.com/ustruct/ukmm", branch = "swmm" }
+uk-mod = { git = "https://github.com/ustruct/ukmm", branch = "swmm" }
+uk-reader = { git = "https://github.com/ustruct/ukmm", branch = "swmm" }
+uk-util = { git = "https://github.com/ustruct/ukmm", branch = "swmm" }
 unrar = "0.5.8"
 zip = { version = "2.1", default-features = false }
 zstd = { version = "0.13.1", features = ["experimental"] }

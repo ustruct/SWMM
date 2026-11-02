@@ -6,8 +6,8 @@ use std::{
 
 use anyhow_ext::{Context, Result, bail};
 use fs_err as fs;
-use swmm_formats::{platform_prefixes, prelude::Endian};
-use swmm_modpack::{
+use uk_content::{platform_prefixes, prelude::Endian};
+use uk_mod::{
     pack::ModPacker, unpack::ModReader, ExclusiveOptionGroup, Meta, ModCategory, ModOption,
     ModPlatform, MultipleOptionGroup, OptionGroup,
 };

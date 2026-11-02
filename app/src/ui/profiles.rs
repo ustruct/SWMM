@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use fs_err as fs;
 use smartstring::alias::String as SmartString;
 use swmm_core::mods::Profile as ProfileData;
-use swmm_formats::util::{HashMap, HashSet};
+use uk_content::util::{HashMap, HashSet};
 
 #[derive(Debug, Default)]
 pub struct ProfileManagerState {

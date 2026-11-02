@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "Clair",
   "Settings_Unsaved": "Modifications non enregistrées",
   "Tab_Deploy": "Déploiement",
-  "Browse_Installing": "Installation…"
+  "Browse_Installing": "Installation…",
+  "SW_Settings_Browse": "Parcourir GameBanana",
+  "SW_Settings_Browse_Desc": "Affiche l'onglet Parcourir, qui charge les mods Savage Wind via l'API GameBanana. Désactivez-le pour ne jamais contacter GameBanana.",
+  "Browse_RateLimited": "GameBanana limite les requêtes en ce moment, Parcourir est donc en pause. Réessayez plus tard",
+  "Browse_ShowNsfw": "Cliquez pour afficher"
 }

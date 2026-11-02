@@ -14,10 +14,10 @@ use roead::{
     yaz0::{compress_if, decompress_if},
 };
 use rustc_hash::FxHashMap;
-use swmm_formats::{constants::Language, resource::ResourceData};
-use swmm_modpack::pack::ModPacker;
-use swmm_gamefiles::ResourceReader;
-use swmm_common::PathExt;
+use uk_content::{constants::Language, resource::ResourceData};
+use uk_mod::pack::ModPacker;
+use uk_reader::ResourceReader;
+use uk_util::PathExt;
 
 use crate::{settings::Platform, util::extract_7z};
 
@@ -642,7 +642,7 @@ pub fn unpack_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> {
             .convert()
             .context("Failed to upgrade 2.x BNP")?;
     }
-    let (content, aoc) = swmm_formats::platform_prefixes(core.settings().current_mode.into());
+    let (content, aoc) = uk_content::platform_prefixes(core.settings().current_mode.into());
     log::info!("Processing BNP logs…");
     let converter = BnpConverter {
         platform: core.settings().current_mode,

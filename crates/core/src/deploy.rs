@@ -19,8 +19,8 @@ use roead::yaz0::{compress, decompress};
 use rstb::ResourceSizeTable;
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
-use swmm_formats::{constants::Language, platform_prefixes};
-use swmm_modpack::{
+use uk_content::{constants::Language, platform_prefixes};
+use uk_mod::{
     unpack::{ModReader, ModUnpacker},
     Manifest,
 };
@@ -354,12 +354,12 @@ impl Manager {
         merged: &Path,
         platform: Platform,
         updates: DashMap<String, Option<u32>>,
-        dump: &swmm_gamefiles::ResourceReader,
+        dump: &uk_reader::ResourceReader,
         game_romfs: Option<&Path>,
     ) -> Result<()> {
         static RSTB_PATH: &str = "System/Resource/ResourceSizeTable.product.srsizetable";
         log::debug!("RSTB updates:\n{:#?}", &updates);
-        let content = swmm_formats::platform_content(platform.into());
+        let content = uk_content::platform_content(platform.into());
         let table_path = merged.join(content).join(RSTB_PATH);
 
         if let Some((romfs, vanilla)) =
@@ -372,7 +372,7 @@ impl Manager {
                 &vanilla,
                 romfs,
                 updates.into_iter().map(|(name, size)| {
-                    let sizes = swmm_modpack::unpack::RSTB_SIZE_HINTS.get(&name).map(|s| *s);
+                    let sizes = uk_mod::unpack::RSTB_SIZE_HINTS.get(&name).map(|s| *s);
                     (name.to_string(), size, sizes)
                 }),
             );
@@ -505,7 +505,9 @@ impl Manager {
                 out_dir.clone(),
             )
         };
-        let unpacker = unpacker.with_text_override("LayoutMsg/Title_00", "0005", "SWMM Enabled");
+        let unpacker = unpacker
+            .with_text_override("LayoutMsg/Title_00", "0005", "SWMM Enabled")
+            .without_version_files();
         log::info!("Applying changes");
         let rstb_updates = unpacker.unpack()?;
         let game_romfs = crate::savage_wind::current_game_files(&settings)

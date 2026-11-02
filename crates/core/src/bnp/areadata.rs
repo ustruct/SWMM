@@ -1,7 +1,7 @@
 use anyhow_ext::{Context, Result};
 use fs_err as fs;
 use roead::byml::Byml;
-use swmm_formats::{
+use uk_content::{
     prelude::{Mergeable, Resource},
     resource::AreaData,
 };

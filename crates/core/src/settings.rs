@@ -11,9 +11,9 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DefaultOnError};
 use smartstring::alias::String;
-use swmm_formats::{constants::Language, prelude::Endian};
+use uk_content::{constants::Language, prelude::Endian};
 use swmm_i18n::LocLang;
-use swmm_gamefiles::ResourceReader;
+use uk_reader::ResourceReader;
 
 use crate::util;
 
@@ -55,13 +55,13 @@ impl From<Platform> for roead::Endian {
     }
 }
 
-impl From<swmm_formats::prelude::Endian> for Platform {
-    fn from(_: swmm_formats::prelude::Endian) -> Self {
+impl From<uk_content::prelude::Endian> for Platform {
+    fn from(_: uk_content::prelude::Endian) -> Self {
         Self::Switch
     }
 }
 
-impl From<Platform> for swmm_formats::prelude::Endian {
+impl From<Platform> for uk_content::prelude::Endian {
     fn from(_: Platform) -> Self {
         Self::Little
     }
@@ -277,6 +277,7 @@ fn default_storage() -> PathBuf {
 pub struct SavageWindSettings {
     pub executable: Option<PathBuf>,
     pub standalone_mods: bool,
+    pub browse_gamebanana: bool,
 }
 
 impl Default for SavageWindSettings {
@@ -284,6 +285,7 @@ impl Default for SavageWindSettings {
         Self {
             executable: None,
             standalone_mods: true,
+            browse_gamebanana: true,
         }
     }
 }

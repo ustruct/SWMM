@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "Hell",
   "Settings_Unsaved": "Ungespeicherte Änderungen",
   "Tab_Deploy": "Einsetzen",
-  "Browse_Installing": "Wird installiert…"
+  "Browse_Installing": "Wird installiert…",
+  "SW_Settings_Browse": "GameBanana durchsuchen",
+  "SW_Settings_Browse_Desc": "Zeigt den Durchsuchen-Tab, der Savage Wind Mods über die GameBanana-API lädt. Ausschalten, um GameBanana nie zu kontaktieren.",
+  "Browse_RateLimited": "GameBanana begrenzt gerade Anfragen, daher ist Durchsuchen pausiert. Versuche es später erneut",
+  "Browse_ShowNsfw": "Zum Anzeigen klicken"
 }

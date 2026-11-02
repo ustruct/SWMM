@@ -6,7 +6,7 @@ use roead::{
     sarc::{Sarc, SarcWriter},
     yaz0::compress_if,
 };
-use swmm_formats::{
+use uk_content::{
     actor::params::shop::*,
     prelude::{Resource, String64},
     util::merge_plist,
@@ -135,7 +135,7 @@ fn handle_diff_entry(
         AampDiffEntry::Aamp(plist) => {
             let mut base = ShopData::from_binary(nested_bytes)?;
             merge(&mut base, plist)?;
-            let data = base.into_binary(swmm_formats::prelude::Endian::Little);
+            let data = base.into_binary(uk_content::prelude::Endian::Little);
             sarc.files.insert(nest_root.into(), data.to_vec());
         }
     }

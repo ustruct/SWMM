@@ -183,5 +183,9 @@
   "Settings_Theme_Light": "Светлая",
   "Settings_Unsaved": "Несохранённые изменения",
   "Tab_Deploy": "Развёртывание",
-  "Browse_Installing": "Установка…"
+  "Browse_Installing": "Установка…",
+  "SW_Settings_Browse": "Обзор GameBanana",
+  "SW_Settings_Browse_Desc": "Показывает вкладку «Обзор», которая загружает моды Savage Wind через API GameBanana. Отключите, чтобы никогда не обращаться к GameBanana.",
+  "Browse_RateLimited": "GameBanana сейчас ограничивает запросы, поэтому «Обзор» приостановлен. Попробуйте позже",
+  "Browse_ShowNsfw": "Нажмите, чтобы показать"
 }
