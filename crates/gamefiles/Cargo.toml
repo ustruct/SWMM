@@ -1,0 +1,28 @@
+[package]
+name = "swmm-gamefiles"
+edition = "2021"
+version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+anyhow_ext = { workspace = true }
+dashmap = { workspace = true, features = ["serde"] }
+fs-err = { workspace = true }
+include-flate = { workspace = true }
+join_str = { workspace = true }
+log = { workspace = true }
+minicbor-ser = { workspace = true }
+parking_lot = { workspace = true, features = ["serde"] }
+roead = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
+smartstring = { workspace = true, features = ["serde"] }
+thiserror = { workspace = true }
+typetag = { workspace = true }
+
+dyn-clone = "1.0.18"
+moka = { version = "0.12.8", features = ["sync"] }
+swmm-formats = { path = "../formats" }
+swmm-common = { path = "../common" }

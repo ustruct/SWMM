@@ -1,0 +1,70 @@
+[package]
+name = "swmm-app"
+description = "SWMM: mod manager for Savage Wind"
+authors = ["SWMM contributors"]
+edition = "2024"
+license = "GPL-3.0-or-later"
+version = "0.1.0"
+rust-version = "1.85"
+default-run = "swmm"
+
+[[bin]]
+name = "swmm"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+anyhow_ext = { workspace = true }
+dirs2 = { workspace = true }
+eframe = { workspace = true, features = ["glow"] }
+env_logger = "0.11.3"
+flume = { workspace = true }
+fs-err = { workspace = true }
+glob = { workspace = true }
+join_str = { workspace = true }
+lenient_semver = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true, features = ["serde"] }
+rfd = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true, features = ["derive", "rc"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+sevenz-rust = { workspace = true }
+smartstring = { workspace = true, features = ["serde"] }
+ssilide = "0.2.0"
+strfmt = { workspace = true }
+unrar = { workspace = true }
+zip = { workspace = true, default-features = false, features = ["deflate"] }
+
+astrolabe = "0.5.1"
+egui_commonmark = { version = "0.17.0", features = ["svg"] }
+egui-notify = "0.15.0"
+egui_logger = "0.5"
+http_req = { version = "^0.12", default-features = false, features = ["native-tls"] }
+image = { version = "0.25.1", features = ["jpeg", "png", "webp"] }
+mimalloc = { version = "0.1.43", default-features = false }
+open = "5.2"
+roxmltree = "0.20.0"
+rustls = "0.23.40"
+shlex = "1.3.0"
+swmm-formats = { path = "../crates/formats" }
+swmm-i18n = { path = "../crates/i18n" }
+swmm-core = { path = "../crates/core" }
+swmm-modpack = { path = "../crates/modpack" }
+swmm-gamefiles = { path = "../crates/gamefiles" }
+swmm-widgets = { path = "../crates/widgets" }
+swmm-common = { path = "../crates/common" }
+xflags = "0.3.1"
+
+[build-dependencies]
+astrolabe = "0.5.2"
+
+[target.'cfg(windows)'.dependencies]
+raw-window-handle = "0.6"
+remove_dir_all = "1.0.0"
+winreg = "0.52.0"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.12"
+
