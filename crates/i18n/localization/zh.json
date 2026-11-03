@@ -137,8 +137,6 @@
   "SW_Settings_AutoDetect_Desc": "查找 savagewind.exe 及其游戏文件并补全缺少的项目",
   "SW_Settings_Exe": "Savage Wind 程序",
   "SW_Settings_Section": "Savage Wind",
-  "SW_Settings_Standalone": "单独启动 Savage Wind 时也使用模组",
-  "SW_Settings_Standalone_Desc": "通过快捷方式、Steam 或 Savage Wind Configuration 启动时也会加载模组",
   "SW_Status_DeployPending": "有可应用的更改",
   "SW_Status_ExeNotSet": "未设置",
   "SW_Status_GameFiles": "游戏文件：",
@@ -187,5 +185,14 @@
   "SW_Settings_Browse": "浏览 GameBanana",
   "SW_Settings_Browse_Desc": "显示浏览标签页，通过 GameBanana API 加载 Savage Wind 模组。关闭后将不会连接 GameBanana。",
   "Browse_RateLimited": "GameBanana 当前正在限制请求，浏览已暂停。请稍后再试",
-  "Browse_ShowNsfw": "点击显示"
+  "Browse_ShowNsfw": "点击显示",
+  "SW_Settings_Misc": "其他",
+  "SW_Settings_Cemuhook": "Cemuhook 体感",
+  "SW_Settings_Cemuhook_Desc": "使用 Cemuhook (DSU) 服务器（如 BetterJoy、DS4Windows 或手机应用）的陀螺仪。单独启动 Savage Wind 时也可使用。",
+  "SW_Settings_CemuhookServer": "服务器",
+  "SW_Settings_CemuhookServer_Desc": "DSU 服务器的地址和端口，通常为 127.0.0.1:26760。",
+  "SW_Settings_CemuhookPrefer": "优先使用 Cemuhook",
+  "SW_Settings_CemuhookPrefer_Desc": "即使手柄自带陀螺仪也使用 Cemuhook。",
+  "SW_Settings_Camera": "镜头灵敏度",
+  "SW_Settings_Camera_Desc": "用右摇杆和鼠标转动镜头的速度。100% 为游戏的正常速度。"
 }

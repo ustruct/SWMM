@@ -66,6 +66,49 @@ fn option_row(ui: &mut Ui, id: Id, option: &ModOption, checked: bool, radio: boo
     response.clicked()
 }
 
+fn clean_group_name(name: &str) -> &str {
+    let trimmed = name.trim_matches(|c: char| c.is_whitespace() || matches!(c, '_' | '-' | '=' | '~' | '*' | '#' | '.'));
+    if trimmed.is_empty() { name.trim() } else { trimmed }
+}
+
+fn group_header(ui: &mut Ui, name: &str, missing: bool) {
+    let palette = visuals::palette(ui);
+    let warn = ui.visuals().warn_fg_color;
+    let badge = missing.then(|| {
+        ui.fonts(|f| {
+            f.layout_no_wrap("Options_Required".localize().into_owned(), egui::FontId::proportional(11.5), warn)
+        })
+    });
+    let badge_size = badge.as_ref().map(|g| g.size() + vec2(16.0, 6.0)).unwrap_or(Vec2::ZERO);
+    let width = ui.available_width();
+    let name_width = if missing { (width - badge_size.x - 10.0).max(40.0) } else { width };
+    ui.horizontal(|ui| {
+        ui.allocate_ui_with_layout(vec2(name_width, 0.0), Layout::left_to_right(Align::Center), |ui| {
+            ui.set_max_width(name_width);
+            ui.add(
+                egui::Label::new(
+                    RichText::new(clean_group_name(name))
+                        .family(egui::FontFamily::Name("Bold".into()))
+                        .color(palette.text),
+                )
+                .wrap(),
+            );
+        });
+        if let Some(galley) = badge {
+            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                let (rect, _) = ui.allocate_exact_size(badge_size, Sense::hover());
+                ui.painter().rect(
+                    rect,
+                    Rounding::same(badge_size.y / 2.0),
+                    warn.gamma_multiply(0.12),
+                    Stroke::new(1.0_f32, warn.gamma_multiply(0.5)),
+                );
+                ui.painter().galley(rect.center() - galley.size() / 2.0, galley, warn);
+            });
+        }
+    });
+}
+
 impl App {
     pub fn render_option_picker(&mut self, ctx: &Context) {
         if self.options_mod.is_none() {
@@ -98,22 +141,7 @@ impl App {
                             .inner_margin(Margin::same(12.0))
                             .show(ui, |ui| {
                                 ui.set_width(ui.available_width());
-                                ui.horizontal(|ui| {
-                                    ui.label(
-                                        RichText::new(group.name())
-                                            .family(egui::FontFamily::Name("Bold".into()))
-                                            .color(palette.text),
-                                    );
-                                    if !satisfied {
-                                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                            ui.label(
-                                                RichText::new("Options_Required".localize())
-                                                    .size(12.0)
-                                                    .color(ui.visuals().warn_fg_color),
-                                            );
-                                        });
-                                    }
-                                });
+                                group_header(ui, group.name(), !satisfied);
                                 if !group.description().is_empty() {
                                     ui.add(
                                         egui::Label::new(

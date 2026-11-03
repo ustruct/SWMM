@@ -397,18 +397,29 @@ pub fn sync_loader(settings: &Settings) -> Result<std::string::String> {
     }
     let dll = dir.join(LOADER_DLL);
     let overlay = overlay_dir(settings);
-    let enabled = settings.savage_wind.standalone_mods && overlay.is_some();
+    let enabled = overlay.is_some();
+    let sw = &settings.savage_wind;
+    let motion = sw.cemuhook;
+    let camera = sw.camera_sensitivity.clamp(10, 500);
+    let server = if sw.cemuhook_server.trim().is_empty() { "127.0.0.1:26760" } else { sw.cemuhook_server.trim() };
     let config = format!(
-        "enabled = {}\noverlay = {}\n",
+        "enabled = {}\noverlay = {}\nmotion = {}\nmotion_server = {}\ncamera_sensitivity = {}\n",
         if enabled { 1 } else { 0 },
-        overlay.as_ref().map(|p| p.display().to_string()).unwrap_or_default()
+        overlay.as_ref().map(|p| p.display().to_string()).unwrap_or_default(),
+        match (motion, sw.cemuhook_prefer) {
+            (false, _) => "off",
+            (true, false) => "auto",
+            (true, true) => "prefer",
+        },
+        server,
+        camera
     );
     fs::create_dir_all(Settings::config_dir())?;
     fs::write(loader_config_path(), config)?;
     if dll.exists() && !is_our_loader(&dll) {
         anyhow_ext::bail!("{} in {} doesn't belong to SWMM, so it was left alone", LOADER_DLL, dir.display());
     }
-    if !enabled {
+    if !enabled && !motion && camera == 100 {
         if dll.exists() {
             let _ = std::fs::remove_file(&dll);
         }

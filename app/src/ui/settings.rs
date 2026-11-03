@@ -152,6 +152,71 @@ fn toggle(ui: &mut Ui, on: &mut bool) -> egui::Response {
     response.on_hover_cursor(egui::CursorIcon::PointingHand)
 }
 
+fn percent_slider(ui: &mut Ui, id: Id, value: &mut u32, min: u32, max: u32, step: u32, default: u32) -> egui::Response {
+    let palette = visuals::palette(ui);
+    let pill_width = 58.0;
+    let height = 30.0;
+    let (rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), height), Sense::hover());
+    let mut response = ui.interact(rect, id, Sense::click_and_drag());
+    let response_id = id;
+    let track = Rect::from_min_max(
+        pos2(rect.left() + 9.0, rect.center().y - 3.0),
+        pos2(rect.right() - pill_width - 18.0, rect.center().y + 3.0),
+    );
+    let (lo, hi) = (min as f32, max as f32);
+    let old = *value;
+    if response.double_clicked() {
+        *value = default;
+    } else if response.dragged() || response.clicked() {
+        if let Some(pointer) = response.interact_pointer_pos() {
+            let t = ((pointer.x - track.left()) / track.width().max(1.0)).clamp(0.0, 1.0);
+            let raw = lo + t * (hi - lo);
+            *value = ((raw / step as f32).round() as u32 * step).clamp(min, max);
+        }
+    }
+    if response.hovered() {
+        let (left, right) = ui.input(|i| (i.key_pressed(egui::Key::ArrowLeft), i.key_pressed(egui::Key::ArrowRight)));
+        if left {
+            *value = value.saturating_sub(step).max(min);
+        }
+        if right {
+            *value = (*value + step).min(max);
+        }
+    }
+    if *value != old {
+        response.mark_changed();
+    }
+    let shown = ui.ctx().animate_value_with_time(response_id, *value as f32, 0.08);
+    let t = ((shown - lo) / (hi - lo)).clamp(0.0, 1.0);
+    let knob_x = track.left() + t * track.width();
+    let hover = ui.ctx().animate_bool_with_time(response_id.with("hover"), response.hovered() || response.dragged(), 0.12);
+    let rounding = Rounding::same(3.0);
+    ui.painter().rect_filled(track, rounding, palette.base);
+    ui.painter().rect_stroke(track, rounding, Stroke::new(1.0_f32, palette.border));
+    let filled = Rect::from_min_max(track.min, pos2(knob_x, track.max.y));
+    ui.painter().rect_filled(filled, rounding, visuals::ACCENT);
+    let default_x = track.left() + ((default as f32 - lo) / (hi - lo)).clamp(0.0, 1.0) * track.width();
+    ui.painter().line_segment(
+        [pos2(default_x, track.top() - 5.0), pos2(default_x, track.bottom() + 5.0)],
+        Stroke::new(1.5_f32, chrome::mix(palette.border, palette.muted, 0.5)),
+    );
+    let center = pos2(knob_x, track.center().y);
+    let radius = 8.0 + hover * 1.5;
+    ui.painter().circle_filled(center + vec2(0.0, 1.0), radius + 1.0, Color32::from_black_alpha(60));
+    ui.painter().circle(center, radius, Color32::WHITE, Stroke::new(2.0_f32, visuals::ACCENT));
+    let pill = Rect::from_min_size(pos2(rect.right() - pill_width, rect.center().y - 13.0), vec2(pill_width, 26.0));
+    let changed_glow = chrome::mix(palette.border, visuals::ACCENT, hover * 0.6);
+    ui.painter().rect(pill, Rounding::same(13.0), palette.base, Stroke::new(1.0_f32, changed_glow));
+    ui.painter().text(
+        pill.center(),
+        egui::Align2::CENTER_CENTER,
+        format!("{}%", *value),
+        egui::FontId::proportional(13.0),
+        if *value == default { palette.muted } else { palette.text },
+    );
+    response.on_hover_cursor(egui::CursorIcon::Grab)
+}
+
 fn segmented<T: PartialEq + Copy>(ui: &mut Ui, id: Id, options: &[(T, Icon, String)], current: T) -> Option<T> {
     let palette = visuals::palette(ui);
     let segment = 92.0;
@@ -197,8 +262,9 @@ impl App {
                     ui.vertical(|ui| {
                         ui.set_width(width);
                         self.settings_game(ui);
-                        self.settings_mods(ui);
                         self.settings_general(ui, &mut theme_change, &mut lang_change);
+                        self.settings_mods(ui);
+                        self.settings_misc(ui);
                         self.settings_storage(ui);
                         ui.add_space(56.0);
                     });
@@ -286,14 +352,6 @@ impl App {
         let settings = &mut self.temp_settings;
         group(ui, &"Settings_Mods".localize(), |group| {
             group.row(
-                &"SW_Settings_Standalone".localize(),
-                &"SW_Settings_Standalone_Desc".localize(),
-                48.0,
-                |ui| {
-                    toggle(ui, &mut settings.savage_wind.standalone_mods);
-                },
-            );
-            group.row(
                 &"SW_Settings_Browse".localize(),
                 &"SW_Settings_Browse_Desc".localize(),
                 48.0,
@@ -315,6 +373,45 @@ impl App {
                                     ui.selectable_value(&mut config.language, *lang, lang.to_str());
                                 }
                             });
+                    },
+                );
+            }
+        });
+    }
+
+    fn settings_misc(&mut self, ui: &mut Ui) {
+        let sw = &mut self.temp_settings.savage_wind;
+        group(ui, &"SW_Settings_Misc".localize(), |group| {
+            group.block(|ui| {
+                let palette = visuals::palette(ui);
+                ui.label(RichText::new("SW_Settings_Camera".localize()).color(palette.text));
+                ui.label(RichText::new("SW_Settings_Camera_Desc".localize()).size(12.0).color(palette.muted));
+                ui.add_space(10.0);
+                percent_slider(ui, Id::new("cameraSensitivity"), &mut sw.camera_sensitivity, 25, 300, 5, 100);
+            });
+            group.row(&"SW_Settings_Cemuhook".localize(), &"SW_Settings_Cemuhook_Desc".localize(), 48.0, |ui| {
+                toggle(ui, &mut sw.cemuhook);
+            });
+            if sw.cemuhook {
+                group.row(
+                    &"SW_Settings_CemuhookServer".localize(),
+                    &"SW_Settings_CemuhookServer_Desc".localize(),
+                    170.0,
+                    |ui| {
+                        ui.add(
+                            egui::TextEdit::singleline(&mut sw.cemuhook_server)
+                                .hint_text("127.0.0.1:26760")
+                                .desired_width(160.0)
+                                .margin(vec2(8.0, 5.0)),
+                        );
+                    },
+                );
+                group.row(
+                    &"SW_Settings_CemuhookPrefer".localize(),
+                    &"SW_Settings_CemuhookPrefer_Desc".localize(),
+                    48.0,
+                    |ui| {
+                        toggle(ui, &mut sw.cemuhook_prefer);
                     },
                 );
             }

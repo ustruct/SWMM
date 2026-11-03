@@ -276,16 +276,22 @@ fn default_storage() -> PathBuf {
 #[serde(default)]
 pub struct SavageWindSettings {
     pub executable: Option<PathBuf>,
-    pub standalone_mods: bool,
     pub browse_gamebanana: bool,
+    pub cemuhook: bool,
+    pub cemuhook_server: std::string::String,
+    pub cemuhook_prefer: bool,
+    pub camera_sensitivity: u32,
 }
 
 impl Default for SavageWindSettings {
     fn default() -> Self {
         Self {
             executable: None,
-            standalone_mods: true,
             browse_gamebanana: true,
+            cemuhook: true,
+            cemuhook_server: "127.0.0.1:26760".into(),
+            cemuhook_prefer: false,
+            camera_sensitivity: 100,
         }
     }
 }

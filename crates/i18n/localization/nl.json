@@ -137,8 +137,6 @@
   "SW_Settings_AutoDetect_Desc": "Zoekt savagewind.exe en de spelbestanden en vult aan wat ontbreekt",
   "SW_Settings_Exe": "Savage Wind-programma",
   "SW_Settings_Section": "Savage Wind",
-  "SW_Settings_Standalone": "Mods gebruiken als Savage Wind los wordt gestart",
-  "SW_Settings_Standalone_Desc": "Mods laden ook als Savage Wind wordt gestart via een snelkoppeling, Steam of Savage Wind Configuration",
   "SW_Status_DeployPending": "Wijzigingen klaar om toe te passen",
   "SW_Status_ExeNotSet": "niet ingesteld",
   "SW_Status_GameFiles": "Spelbestanden:",
@@ -187,5 +185,14 @@
   "SW_Settings_Browse": "GameBanana doorzoeken",
   "SW_Settings_Browse_Desc": "Toont het tabblad Doorzoeken, dat Savage Wind-mods laadt via de GameBanana-API. Zet dit uit om nooit contact met GameBanana te maken.",
   "Browse_RateLimited": "GameBanana beperkt nu verzoeken, dus Doorzoeken is gepauzeerd. Probeer het later opnieuw",
-  "Browse_ShowNsfw": "Klik om te tonen"
+  "Browse_ShowNsfw": "Klik om te tonen",
+  "SW_Settings_Misc": "Overig",
+  "SW_Settings_Cemuhook": "Cemuhook-beweging",
+  "SW_Settings_Cemuhook_Desc": "Gebruik de gyro van een Cemuhook-(DSU-)server zoals BetterJoy, DS4Windows of een telefoonapp. Werkt ook als Savage Wind los wordt gestart.",
+  "SW_Settings_CemuhookServer": "Server",
+  "SW_Settings_CemuhookServer_Desc": "Adres en poort van de DSU-server. Meestal 127.0.0.1:26760.",
+  "SW_Settings_CemuhookPrefer": "Cemuhook voorkeur geven",
+  "SW_Settings_CemuhookPrefer_Desc": "Gebruik Cemuhook ook als de controller een eigen gyro heeft.",
+  "SW_Settings_Camera": "Cameragevoeligheid",
+  "SW_Settings_Camera_Desc": "Hoe snel de camera draait met de rechterstick en de muis. 100% is de normale snelheid van het spel."
 }

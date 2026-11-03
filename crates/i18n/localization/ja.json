@@ -137,8 +137,6 @@
   "SW_Settings_AutoDetect_Desc": "savagewind.exeとゲームファイルを探し、足りない項目を入力します",
   "SW_Settings_Exe": "Savage Windの実行ファイル",
   "SW_Settings_Section": "Savage Wind",
-  "SW_Settings_Standalone": "Savage Windを単体で起動したときもModを使う",
-  "SW_Settings_Standalone_Desc": "ショートカット、Steam、Savage Wind ConfigurationからSavage Windを起動してもModが読み込まれます",
   "SW_Status_DeployPending": "適用できる変更があります",
   "SW_Status_ExeNotSet": "未設定",
   "SW_Status_GameFiles": "ゲームファイル:",
@@ -187,5 +185,14 @@
   "SW_Settings_Browse": "GameBananaを閲覧",
   "SW_Settings_Browse_Desc": "GameBanana APIからSavage Windのモッドを読み込む閲覧タブを表示します。オフにするとGameBananaに接続しません。",
   "Browse_RateLimited": "GameBananaが現在リクエストを制限しているため、閲覧を一時停止しています。後でもう一度お試しください",
-  "Browse_ShowNsfw": "クリックして表示"
+  "Browse_ShowNsfw": "クリックして表示",
+  "SW_Settings_Misc": "その他",
+  "SW_Settings_Cemuhook": "Cemuhook モーション",
+  "SW_Settings_Cemuhook_Desc": "BetterJoy、DS4Windows、スマホアプリなどの Cemuhook (DSU) サーバーのジャイロを使います。Savage Wind を単体で起動した場合も動作します。",
+  "SW_Settings_CemuhookServer": "サーバー",
+  "SW_Settings_CemuhookServer_Desc": "DSU サーバーのアドレスとポート。通常は 127.0.0.1:26760 です。",
+  "SW_Settings_CemuhookPrefer": "Cemuhook を優先",
+  "SW_Settings_CemuhookPrefer_Desc": "コントローラーにジャイロがあっても Cemuhook を使います。",
+  "SW_Settings_Camera": "カメラ感度",
+  "SW_Settings_Camera_Desc": "右スティックとマウスでカメラが回る速さ。100% がゲーム本来の速さです。"
 }
