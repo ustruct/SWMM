@@ -4,7 +4,7 @@ description = "SWMM: mod manager for Savage Wind"
 authors = ["SWMM contributors"]
 edition = "2024"
 license = "GPL-3.0-or-later"
-version = "0.1.2"
+version = "0.1.3"
 rust-version = "1.85"
 default-run = "swmm"
 

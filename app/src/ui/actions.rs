@@ -254,6 +254,11 @@ impl App {
                     ctx.request_repaint();
                     self.do_task(move |_| jobs::open_mod(&core, &path, meta));
                 }
+                Message::OpenDownloadedMod(path, source) => {
+                    let core = self.core.clone();
+                    ctx.request_repaint();
+                    self.do_task(move |_| jobs::open_downloaded_mod(&core, &path, source));
+                }
                 Message::HandleMod(mod_) => {
                     self.busy.set(false);
                     log::debug!("{:#?}", &mod_);
