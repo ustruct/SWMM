@@ -133,6 +133,7 @@ pub enum Message {
     NewProfile,
     Noop,
     OpenMod(PathBuf),
+    OpenDownloadedMod(PathBuf, swmm_core::source::SourceInfo),
     RefreshModsDisplay,
     Remerge,
     ReloadProfiles,

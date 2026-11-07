@@ -33,8 +33,17 @@ pub fn is_savage_wind_exe(path: &Path) -> bool {
     let Some(name) = path.file_name().map(|n| n.to_string_lossy().to_lowercase()) else {
         return false;
     };
+    let squashed: std::string::String = name.chars().filter(|c| c.is_alphanumeric() || *c == '.').collect();
     EXE_NAMES.iter().any(|n| n.to_lowercase() == name)
-        || (name.starts_with("savage_wind") && name.ends_with(".appimage"))
+        || (squashed.contains("savagewind") && name.ends_with(".appimage"))
+}
+
+fn same_file(a: &Path, b: &Path) -> bool {
+    a == b
+        || matches!(
+            (std::fs::canonicalize(a), std::fs::canonicalize(b)),
+            (Ok(x), Ok(y)) if x == y
+        )
 }
 
 fn find_exe_in(dir: &Path) -> Option<PathBuf> {
@@ -385,8 +394,11 @@ fn game_dir(settings: &Settings) -> Option<PathBuf> {
 }
 
 pub fn sync_loader(settings: &Settings) -> Result<std::string::String> {
+    if cfg!(target_os = "linux") {
+        return sync_linux(settings);
+    }
     if !cfg!(windows) {
-        return Ok("The loader is only used on Windows".into());
+        return Ok("The loader is only used on Windows and Linux".into());
     }
     let dir = game_dir(settings).context("Savage Wind's executable isn't set")?;
     for name in LEGACY_LOADER_FILES {
@@ -447,7 +459,42 @@ pub fn sync_loader(settings: &Settings) -> Result<std::string::String> {
     Ok(format!("Savage Wind loads the mods when started on its own ({})", dll.display()))
 }
 
+fn sync_linux(settings: &Settings) -> Result<std::string::String> {
+    let overlay = overlay_dir(settings).filter(|d| has_files(d));
+    set_persistent_env(overlay.as_deref())?;
+    let _ = match &overlay {
+        Some(path) => Command::new("systemctl")
+            .args(["--user", "set-environment"])
+            .arg(format!("{OVERLAY_ENV}={}", path.display()))
+            .status(),
+        None => Command::new("systemctl").args(["--user", "unset-environment", OVERLAY_ENV]).status(),
+    };
+    let exe = settings.savage_wind.executable.clone();
+    let changed = crate::steam::update_shortcuts(OVERLAY_ENV, overlay.as_deref(), |path| {
+        is_savage_wind_exe(path) || exe.as_deref().is_some_and(|e| same_file(e, path))
+    })
+    .unwrap_or_else(|e| {
+        log::warn!("Couldn't update the Steam shortcuts: {e}");
+        0
+    });
+    Ok(match (&overlay, changed) {
+        (None, _) => "Mods are off when Savage Wind is started on its own".into(),
+        (Some(_), 0) => "Savage Wind loads the mods when started on its own (after you log out and back in)".into(),
+        (Some(_), n) => format!(
+            "Savage Wind loads the mods when started on its own. {n} Steam shortcut(s) were updated: restart Steam to apply"
+        ),
+    })
+}
+
 pub fn remove_loader(settings: &Settings) -> Result<()> {
+    if cfg!(target_os = "linux") {
+        let _ = set_persistent_env(None);
+        let _ = Command::new("systemctl").args(["--user", "unset-environment", OVERLAY_ENV]).status();
+        let exe = settings.savage_wind.executable.clone();
+        let _ = crate::steam::update_shortcuts(OVERLAY_ENV, None, |path| {
+            is_savage_wind_exe(path) || exe.as_deref().is_some_and(|e| same_file(e, path))
+        });
+    }
     if let Some(dir) = game_dir(settings) {
         let dll = dir.join(LOADER_DLL);
         if dll.exists() && is_our_loader(&dll) {
@@ -511,7 +558,7 @@ pub fn sync_game_folders(settings: &Settings, overlay: &Path, game: &GameFiles) 
 }
 
 pub fn clear_legacy_environment() {
-    if std::env::var_os(OVERLAY_ENV).is_some() {
+    if cfg!(windows) && std::env::var_os(OVERLAY_ENV).is_some() {
         let _ = set_persistent_env(None);
     }
 }

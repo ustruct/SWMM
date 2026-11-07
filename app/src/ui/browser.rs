@@ -21,6 +21,8 @@ use swmm_widgets::{
     visuals,
 };
 
+use swmm_core::source::SourceInfo;
+
 use super::{chrome, App, Message};
 
 const GAME_ID: u64 = 6386;
@@ -83,6 +85,10 @@ pub struct BrowseDetails {
     pub name: String,
     pub author: String,
     pub text: String,
+    pub summary: String,
+    pub version: String,
+    pub category: String,
+    pub preview: Option<String>,
     pub files: Vec<BrowseFile>,
     pub url: String,
     pub nsfw: bool,
@@ -92,7 +98,7 @@ enum BrowseEvent {
     Page(u64, Result<(Vec<BrowseMod>, bool)>),
     Details(Result<BrowseDetails>),
     Thumbnail(u64, Option<(ColorImage, ColorImage)>),
-    Downloaded(Result<PathBuf>),
+    Downloaded(Result<(PathBuf, SourceInfo)>),
 }
 
 pub struct BrowserState {
@@ -225,6 +231,17 @@ fn thumbnail_of(value: &Value) -> Option<String> {
         .get("_sFile220")
         .or_else(|| image.get("_sFile530"))
         .or_else(|| image.get("_sFile"))?
+        .as_str()?;
+    Some(format!("{base}/{file}"))
+}
+
+fn preview_of(value: &Value) -> Option<String> {
+    let image = value.get("_aPreviewMedia")?.get("_aImages")?.as_array()?.first()?;
+    let base = image.get("_sBaseUrl")?.as_str()?;
+    let file = image
+        .get("_sFile530")
+        .or_else(|| image.get("_sFile"))
+        .or_else(|| image.get("_sFile220"))?
         .as_str()?;
     Some(format!("{base}/{file}"))
 }
@@ -393,6 +410,15 @@ fn fetch_details_uncached(id: u64) -> Result<BrowseDetails> {
             .map(|s| text_of(s, "_sName"))
             .unwrap_or_default(),
         text: strip_html(&text_of(&json, "_sText")),
+        summary: text_of(&json, "_sDescription"),
+        version: text_of(&json, "_sVersion"),
+        category: json
+            .get("_aCategory")
+            .map(|c| text_of(c, "_sName"))
+            .filter(|c| !c.is_empty())
+            .or_else(|| json.get("_aRootCategory").map(|c| text_of(c, "_sName")))
+            .unwrap_or_default(),
+        preview: preview_of(&json),
         files,
         url: format!("https://gamebanana.com/mods/{id}"),
         nsfw: is_nsfw(&json),
@@ -445,6 +471,39 @@ fn download(file: BrowseFile, done: &AtomicU64) -> Result<PathBuf> {
     super::net::download_file(&file.url, &path, done).with_context(|| format!("Could not download {}", file.name))?;
     log::info!("Downloaded {}", path.display());
     Ok(path)
+}
+
+fn preview_jpeg(url: &str) -> Option<Vec<u8>> {
+    let bytes = super::net::response(url).ok()?;
+    let image = image::load_from_memory(&bytes).ok()?;
+    let image = if image.width() > 720 || image.height() > 720 {
+        image.resize(720, 720, image::imageops::FilterType::Triangle)
+    } else {
+        image
+    };
+    let mut out = Vec::new();
+    image
+        .to_rgb8()
+        .write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Jpeg)
+        .ok()?;
+    Some(out)
+}
+
+fn source_info(details: &BrowseDetails) -> SourceInfo {
+    let description = if details.text.trim().is_empty() {
+        details.summary.clone()
+    } else {
+        details.text.clone()
+    };
+    SourceInfo {
+        name: details.name.clone(),
+        author: details.author.clone(),
+        version: details.version.clone(),
+        category: details.category.clone(),
+        description,
+        url: details.url.clone(),
+        thumbnail: if details.nsfw { None } else { details.preview.as_deref().and_then(preview_jpeg) },
+    }
 }
 
 fn render_download_progress(ui: &mut Ui, state: &BrowserState) {
@@ -580,7 +639,7 @@ impl BrowserState {
                 BrowseEvent::Downloaded(result) => {
                     self.downloading = None;
                     match result {
-                        Ok(path) => sender.send(Message::OpenMod(path)).unwrap_or(()),
+                        Ok((path, source)) => sender.send(Message::OpenDownloadedMod(path, source)).unwrap_or(()),
                         Err(e) => sender.send(Message::Error(e.into())).unwrap_or(()),
                     }
                 }
@@ -589,7 +648,7 @@ impl BrowserState {
         }
     }
 
-    fn start_download(&mut self, file: BrowseFile) {
+    fn start_download(&mut self, file: BrowseFile, details: BrowseDetails) {
         self.downloading = Some(file.name.clone());
         self.download_done.store(0, Ordering::Relaxed);
         self.download_total = file.size;
@@ -597,7 +656,8 @@ impl BrowserState {
         let tx = self.tx.clone();
         let done = self.download_done.clone();
         std::thread::spawn(move || {
-            tx.send(BrowseEvent::Downloaded(download(file, &done))).unwrap_or(());
+            let result = download(file, &done).map(|path| (path, source_info(&details)));
+            tx.send(BrowseEvent::Downloaded(result)).unwrap_or(());
         });
     }
 }
@@ -1121,7 +1181,7 @@ fn render_details_body(ui: &mut Ui, state: &mut BrowserState) {
                         .inner
                         .clicked();
                     if clicked {
-                        state.start_download(file.clone());
+                        state.start_download(file.clone(), details.clone());
                     }
                 }
             });

@@ -71,12 +71,33 @@ fn is_probably_a_bnp(path: &Path) -> bool {
 }
 
 pub fn open_mod(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<Message> {
+    read_mod(core, path, meta).map(Message::HandleMod)
+}
+
+pub fn open_downloaded_mod(
+    core: &Manager,
+    path: &Path,
+    source: swmm_core::source::SourceInfo,
+) -> Result<Message> {
+    let mod_ = read_mod(core, path, None)?;
+    match swmm_core::source::apply(&mod_.path, &source)
+        .and_then(|updated| ModReader::open_peek(updated, vec![]))
+    {
+        Ok(reader) => Ok(Message::HandleMod(Mod::from_reader(reader))),
+        Err(e) => {
+            log::warn!("Could not use the GameBanana details for {}: {e:?}", mod_.meta.name);
+            Ok(Message::HandleMod(mod_))
+        }
+    }
+}
+
+fn read_mod(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<Mod> {
     log::info!("Opening mod at {}", path.display());
     if is_probably_a_bnp(path) {
         let mod_ = convert_bnp(core, path).context("Failed to convert the BNP mod")?;
-        return Ok(Message::HandleMod(Mod::from_reader(
+        return Ok(Mod::from_reader(
             ModReader::open_peek(mod_, vec![]).context("Failed to open converted mod")?,
-        )));
+        ));
     }
     let direct = if meta.is_none() {
         ModReader::open_peek(path, vec![])
@@ -98,7 +119,7 @@ pub fn open_mod(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<Messa
             )
         }
     };
-    Ok(Message::HandleMod(mod_))
+    Ok(mod_)
 }
 
 pub fn apply_changes(core: &Manager, mods: Vec<Mod>, dirty: Option<Manifest>) -> Result<Message> {
