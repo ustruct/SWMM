@@ -189,11 +189,14 @@ impl Profile {
         }
     }
 
-    pub fn validate(&mut self, all_mods: &HashMap<String, Mod>) -> () {
+    pub fn validate(&mut self, all_mods: &HashMap<String, Mod>) {
         let mut mods = self.mods.write();
         let mut mods_by_invalid_hash = HashMap::<usize, Mod>::default();
         mods.retain(|h, m| {
-            match all_mods.get(&m.meta.name) {
+            let found = all_mods
+                .get(&path_key(&m.path))
+                .or_else(|| all_mods.values().find(|x| x.meta.name == m.meta.name));
+            match found {
                 None => {
                     log::warn!(
                         "{} not found at {}, removing from mod list...",
@@ -236,8 +239,8 @@ impl Profile {
             }
         }
         for h in load_order.iter() {
-            if !mods.contains_key(h) {
-                if let Some((_, m)) = all_mods.iter().find(|(_, m)| *h == m.hash) {
+            if !mods.contains_key(h)
+                && let Some((_, m)) = all_mods.iter().find(|(_, m)| *h == m.hash) {
                     log::warn!(
                         "{} found in load order but not in profile mod list. Adding to profile \
                         with no options selected. You will need to reselect mod options from the \
@@ -246,7 +249,6 @@ impl Profile {
                     );
                     mods.insert(*h, m.clone());
                 }
-            }
         }
         load_order.retain(|k| mods.contains_key(k));
         let keys_missing_from_order = mods.keys()
@@ -254,6 +256,14 @@ impl Profile {
             .collect::<Vec<_>>();
         load_order.extend(keys_missing_from_order);
     }
+}
+
+fn path_key(path: &Path) -> String {
+    path.to_string_lossy().replace('/', "\\").to_lowercase().into()
+}
+
+fn meta_hash(path: &Path) -> Option<usize> {
+    ModReader::open_peek(path, vec![]).ok().map(|r| Mod::from_reader(r).hash)
 }
 
 pub struct ModIterator<'a> {
@@ -267,13 +277,13 @@ impl<'a> Iterator for ModIterator<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let loads = self.profile.load_order();
         let mods = self.profile.mods();
-        if self.index < loads.len() {
-            let hash = loads[self.index];
+        while let Some(hash) = loads.get(self.index) {
             self.index += 1;
-            Some(mods[&hash].clone())
-        } else {
-            None
+            if let Some(mod_) = mods.get(hash) {
+                return Some(mod_.clone());
+            }
         }
+        None
     }
 }
 
@@ -291,40 +301,50 @@ impl Manager {
         self.dir.join(self.current_profile.as_str())
     }
 
+    fn profile_named(&self, name: &str) -> MappedRef<'_, String, Profile, Profile> {
+        loop {
+            if let Some(profile) = self.profiles.get(name) {
+                return profile.map(|f| f);
+            }
+            log::warn!("Profile {name} is missing, using an empty one");
+            self.profiles.entry(name.into()).or_default();
+        }
+    }
+
     #[inline(always)]
     pub fn profile(&self) -> MappedRef<'_, String, Profile, Profile> {
-        self.profiles
-            .get(self.current_profile.as_str())
-            .expect("Invalid profile")
-            .map(|f| f)
+        self.profile_named(self.current_profile.as_str())
     }
 
     #[inline(always)]
     pub fn get_profile(&self, profile: Option<&String>) -> MappedRef<'_, String, Profile, Profile> {
         let profile = profile.unwrap_or(&self.current_profile);
-        self.profiles
-            .get(profile.as_str())
-            .expect("Invalid profile")
-            .map(|f| f)
+        self.profile_named(profile.as_str())
     }
 
-    pub fn add_profile(&self, name: String) {
-        self.profiles.insert(
-            name.clone(),
-            serde_yaml::from_str(
-                &fs_err::read_to_string(
-                        self.settings
-                        .upgrade()
-                        .expect("Settings is GONE!")
-                        .read()
-                        .profiles_dir()
-                        .join(name.to_string())
-                        .join("profile.yml")
-                    )
-                    .expect("Lost profile we just created?")
-            )
-            .expect("Copied profile contains errors?")
-        );
+    pub fn forget_profile(&self, name: &str) {
+        if name != self.current_profile {
+            self.profiles.remove(name);
+        }
+    }
+
+    pub fn has_profile(&self, name: &str) -> bool {
+        self.profiles.contains_key(name)
+    }
+
+    pub fn add_profile(&self, name: String) -> Result<()> {
+        let path = self
+            .settings
+            .upgrade()
+            .context("Settings are unavailable")?
+            .read()
+            .profiles_dir()
+            .join(name.as_str())
+            .join("profile.yml");
+        let text = fs_err::read_to_string(&path).context("Couldn't read the copied profile")?;
+        let profile = serde_yaml::from_str(&text).context("The copied profile has errors")?;
+        self.profiles.insert(name, profile);
+        Ok(())
     }
 
     pub fn create_profile_if(&self, profile: &str) -> Result<()> {
@@ -339,6 +359,9 @@ impl Manager {
     }
 
     pub fn set_profile(&mut self, profile: &str) -> Result<()> {
+        if self.current_profile != profile && self.path().is_dir() && self.profiles.contains_key(self.current_profile.as_str()) {
+            self.save().context("Couldn't save the current profile before switching")?;
+        }
         self.current_profile = profile.into();
         self.create_profile_if(profile)?;
         Ok(())
@@ -350,7 +373,7 @@ impl Manager {
             &settings.read().mods_dir().join("*.zip").to_string_lossy()
         )?.map(|p| {
             let mod_ = Mod::from_reader(ModReader::open(p?, vec![])?);
-            Ok((mod_.meta.name.clone(), mod_))
+            Ok((path_key(&mod_.path), mod_))
         }).collect::<Result<HashMap<String, Mod>>>()?;
         let current_profile = settings
             .read()
@@ -376,9 +399,9 @@ impl Manager {
                                 "Failed to parse profile data from {}",
                                 profile_path.to_string_lossy()
                             ))
-                            .and_then(|mut p| {
+                            .map(|mut p| {
                                 p.validate(&all_mods);
-                                Ok(p)
+                                p
                             })
                     )
                     .map(|v| (profile, v))
@@ -400,8 +423,12 @@ impl Manager {
             serde_yaml::to_string(self.profile().deref())?,
         )?;
         log::info!("Saved profile data");
-        log::debug!("{:#?}", &self.profile());
+        log::debug!("{:#?}", self.profile());
         Ok(())
+    }
+
+    pub fn current_profile(&self) -> &str {
+        self.current_profile.as_str()
     }
 
     pub fn all_mods(&self) -> ModIterator<'_> {
@@ -429,9 +456,26 @@ impl Manager {
         })
     }
 
+    fn slim_stored(&self, path: &Path, name: &str) {
+        if !path.is_file() {
+            return;
+        }
+        let Some(dump) = self.settings.upgrade().and_then(|s| s.read().dump()) else { return };
+        match crate::slim::slim_mod(path, &dump) {
+            Ok(s) if s.total() > 0 => log::info!(
+                "Removed what {name} copies unchanged from the game: {} files, {} layout files, {} textures",
+                s.files,
+                s.layout_files,
+                s.textures
+            ),
+            Ok(_) => {}
+            Err(e) => log::warn!("Could not remove unchanged game files from {name}: {e:?}"),
+        }
+    }
+
     pub fn add(&self, mod_path: &Path, profile: Option<&String>) -> Result<Mod> {
         let mut old_version = None;
-        let mod_name = {
+        let (mod_name, new_hash) = {
             let peeker = ModReader::open_peek(mod_path, vec![])?;
             let name = peeker.meta.name.as_str();
             if let Some(mod_) =
@@ -448,7 +492,8 @@ impl Manager {
                     anyhow_ext::bail!("Mod \"{}\" already installed", peeker.meta.name);
                 }
             }
-            peeker.meta.name
+            let name = peeker.meta.name.clone();
+            (name, Some(Mod::from_reader(peeker).hash))
         };
         let san_opts: sfn::Options<Option<char>> = sfn::Options {
             url_safe: true,
@@ -456,13 +501,24 @@ impl Manager {
             ..Default::default()
         };
         let sanitized = sfn::sanitise_with_options(&mod_name, &san_opts);
-        let stored_path = self
+        let mods_dir = self
             .settings
             .upgrade()
-            .expect("Settings is GONE!")
+            .context("Settings are unavailable")?
             .read()
-            .mods_dir()
-            .join(sanitized + ".zip");
+            .mods_dir();
+        let mut stored_path = mods_dir.join(sanitized.clone() + ".zip");
+        if old_version.is_none() && stored_path.exists() && meta_hash(&stored_path) != new_hash {
+            let mut k = 2;
+            stored_path = loop {
+                let candidate = mods_dir.join(format!("{sanitized}-{k}.zip"));
+                if !candidate.exists() || meta_hash(&candidate) == new_hash {
+                    break candidate;
+                }
+                k += 1;
+            };
+            log::info!("Another version of {mod_name} is already stored, keeping this one as {}", stored_path.display());
+        }
         if stored_path.exists() && old_version.is_none() {
             log::debug!("Mod already stored, no need to store it");
         } else {
@@ -474,6 +530,8 @@ impl Manager {
                     .context("Failed to copy mod to storage folder")?;
             }
         }
+        self.slim_stored(&stored_path, &mod_name);
+        crate::origin::forget(&stored_path);
         let reader = ModReader::open_peek(&stored_path, vec![])?;
         let mut mod_ = Mod::from_reader(reader);
         mod_.enabled = true;
@@ -517,6 +575,7 @@ impl Manager {
                 } else {
                     fs::remove_file(&mod_.path)?;
                 }
+                crate::origin::forget(&mod_.path);
             }
             profile_data.load_order_mut().retain(|m| m != &hash);
             log::info!(
@@ -533,10 +592,20 @@ impl Manager {
 
     pub fn replace(&self, mut mod_: Mod, old_hash: usize) -> Result<Mod> {
         let profile_data = self.profile();
+        let old_path = profile_data
+            .mods()
+            .get(&old_hash)
+            .map(|m| m.path.clone())
+            .context("The mod being updated isn't in this profile")?;
+        if mod_.path != old_path && mod_.path.is_file() {
+            fs::copy(&mod_.path, &old_path).context("Failed to copy the updated mod to the storage folder")?;
+            self.slim_stored(&old_path, &mod_.meta.name);
+            crate::origin::forget(&old_path);
+        }
         let old_mod = profile_data
             .mods_mut()
             .remove(&old_hash)
-            .expect("The old mod has to be in the profile");
+            .context("The mod being updated isn't in this profile")?;
         mod_.enabled = old_mod.enabled;
         mod_.path = old_mod.path;
         profile_data.mods_mut().insert(mod_.hash, mod_.clone());
@@ -683,7 +752,7 @@ pub fn convert_gfx(
             }
         } else if path.file_name().context("No file name")?.to_str() == Some("rules.txt") {
             path.parent()
-                .expect("Parent path gotta' exist, right?")
+                .context("The mod has no folder")?
                 .to_owned()
         } else {
             log::error!("{} is not a supported mod archive", path.display());
@@ -722,4 +791,16 @@ fn san_test() {
         &san_opts,
     );
     dbg!(sanitized);
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+#[test]
+fn load_order_skips_missing_mods() {
+    let profiles: DashMap<String, Profile> = DashMap::new();
+    let profile = Profile::default();
+    profile.load_order_mut().push(42);
+    profiles.insert("test".into(), profile);
+    let found = Profile::iter(profiles.get("test").unwrap().map(|p| p)).count();
+    assert_eq!(found, 0);
 }

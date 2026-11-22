@@ -20,7 +20,7 @@ pub static LOGGER: LazyLock<Logger> = LazyLock::new(|| {
 });
 
 pub fn init() {
-    if let Ok(_) = log::set_logger(LOGGER.deref()) {
+    if log::set_logger(LOGGER.deref()).is_ok() {
         log::set_max_level(log::LevelFilter::max());
         LOGGER.set_file(Settings::config_dir().join("log.txt"));
     }
@@ -43,14 +43,12 @@ impl Drop for Logger {
 impl Logger {
     pub fn save_log(&self) {
         if let Some(path) = self.file.get() {
-            let mut file = if path.exists() {
-                fs_err::OpenOptions::new().append(true).open(path)
-            } else {
-                fs_err::create_dir_all(path.parent().expect("Weird log path"))
-                    .expect("Yikes, folder problem");
-                fs_err::File::create(path)
+            if let Some(parent) = path.parent() {
+                let _ = std::fs::create_dir_all(parent);
             }
-            .unwrap();
+            let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) else {
+                return;
+            };
             use std::io::Write;
             let mut text = self.text.lock();
             file.write(text.as_bytes()).unwrap_or_default();
@@ -60,7 +58,7 @@ impl Logger {
 
     pub fn set_file(&self, file: PathBuf) {
         if file.exists() {
-            std::fs::remove_file(&file).unwrap();
+            let _ = std::fs::remove_file(&file);
         }
         self.file.set(file).unwrap_or(());
     }
@@ -81,7 +79,7 @@ impl log::Log for Logger {
     }
 
     fn log(&self, record: &Record) {
-        if !record.target().starts_with("uk") {
+        if !(record.target().starts_with("uk") || record.target().starts_with("swmm")) {
             return;
         }
         let mut buf;
@@ -113,7 +111,7 @@ impl log::Log for Logger {
                 record.level().as_str(),
                 record.args()
             )
-            .expect("Failed to write to log");
+            .unwrap_or(());
             if text.lines().count() > 1024 {
                 drop(text);
                 self.save_log();

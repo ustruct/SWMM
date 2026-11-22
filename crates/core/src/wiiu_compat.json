@@ -1,0 +1,452 @@
+[
+ {
+  "id": 168235,
+  "name": "Linkle Mod",
+  "status": "full",
+  "left_out": 0,
+  "converted": 169,
+  "file": "linklemod_67229.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 406768,
+  "name": "The Linkle Mod 3.0",
+  "status": "full",
+  "left_out": 0,
+  "converted": 597,
+  "file": "thelinklemod301.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49763,
+  "name": "Girly Animation Pack",
+  "status": "full",
+  "left_out": 0,
+  "converted": 189,
+  "file": "girly_animation_pack_v109.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33531,
+  "name": "PS4 UI Complete 1.4.1",
+  "status": "partial",
+  "left_out": 1,
+  "converted": 2082,
+  "file": "botw_ps4_ui_standard_layout.zip",
+  "reason": "1 effect file",
+  "wiiu": true
+ },
+ {
+  "id": 49532,
+  "name": "Hyrule Rebalance v8",
+  "status": "full",
+  "left_out": 0,
+  "converted": 1894,
+  "file": "hyrule_rebalance_v8_d272e.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 168151,
+  "name": "Linkle Armor Icon Pack",
+  "status": "full",
+  "left_out": 0,
+  "converted": 884,
+  "file": "linkle_armor_icon_pack_v1_2.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 406620,
+  "name": "Ultimate PS5 UI",
+  "status": "full",
+  "left_out": 0,
+  "converted": 2080,
+  "file": "ultimateps5ui_st__13a.zip",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33533,
+  "name": "Xbox One UI Complete 1.4.1",
+  "status": "partial",
+  "left_out": 1,
+  "converted": 2081,
+  "file": "botw_xbox_ui_standard_layout.zip",
+  "reason": "1 effect file",
+  "wiiu": true
+ },
+ {
+  "id": 167741,
+  "name": "QNando's Zelda Mod",
+  "status": "full",
+  "left_out": 0,
+  "converted": 1221,
+  "file": "zelda_pack1_update.zip",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 414822,
+  "name": "Relics of the Past Dev [LATEST UPDATE]",
+  "status": "full",
+  "left_out": 0,
+  "converted": 23839,
+  "file": "relics_wiiu_dev_build_2026-08-02.zip",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49668,
+  "name": "Moon Slayer Set",
+  "status": "full",
+  "left_out": 0,
+  "converted": 207,
+  "file": "moon_slayer_set_extreme.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49790,
+  "name": "Survival of the Wild",
+  "status": "full",
+  "left_out": 0,
+  "converted": 2906,
+  "file": "survivalofthewild_v092_betarelease.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33468,
+  "name": "HD Icons and Map",
+  "status": "full",
+  "left_out": 0,
+  "converted": 2074,
+  "file": "hd_map_and_icons_0dc21.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33473,
+  "name": "Linkle Dialogue Fix [EN] (Wii U)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 0,
+  "file": "linklemod-dialoguefix_wiiu_fc2ee.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 408713,
+  "name": "Unofficial Linkle 3.0 Armor Icons",
+  "status": "full",
+  "left_out": 0,
+  "converted": 1011,
+  "file": "unofficiallinkle30armoricons_vanilla-esque_hd_1_1_2.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 373804,
+  "name": "Ultimate Xbox UI",
+  "status": "full",
+  "left_out": 0,
+  "converted": 2077,
+  "file": "ultimatexboxui_st__23a.zip",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33527,
+  "name": "Xbox UI Fixed (Complete)",
+  "status": "partial",
+  "left_out": 1,
+  "converted": 2079,
+  "file": "xbox_ui_standard_layout.rar",
+  "reason": "1 effect file",
+  "wiiu": true
+ },
+ {
+  "id": 414110,
+  "name": "PS4 UI Complete HD (2023 edition)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 40,
+  "file": "ps4_ui_layout_us_v2.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49525,
+  "name": "Linkle Mod Title Screen Pack - GraphicsPack",
+  "status": "full",
+  "left_out": 0,
+  "converted": 11,
+  "file": "breathofthewild__linkletitle.zip",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33532,
+  "name": "Xbox One UI Complete - BNP Version",
+  "status": "partial",
+  "left_out": 1,
+  "converted": 2075,
+  "file": "xboneui_us.7z",
+  "reason": "1 effect file",
+  "wiiu": true
+ },
+ {
+  "id": 439900,
+  "name": "The Legend of Linkle Dialogue Mod",
+  "status": "full",
+  "left_out": 0,
+  "converted": 247,
+  "file": "the_legend_of_linkle_dialogue_mod_ver118.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 168042,
+  "name": "Alternative Hair and Eye Color for Linkle(V2 only)",
+  "status": "partial",
+  "left_out": 4,
+  "converted": 26,
+  "file": "linkle_bonus_green_hair_colour_mod_3addb.bnp",
+  "reason": "2 models SWMM can't convert yet, 2 files in formats SWMM can't convert",
+  "wiiu": true
+ },
+ {
+  "id": 49627,
+  "name": "Field of View camera mod (FOV)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 0,
+  "file": "fieldofview_camera_mods_1bda9.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 305257,
+  "name": "Zelda's Ballad - Amiibo Outfits",
+  "status": "full",
+  "left_out": 0,
+  "converted": 797,
+  "file": "zelda_s_ballad_-_amiibo_outfits_07651.rar",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49554,
+  "name": "Lylari's Music Overhaul",
+  "status": "full",
+  "left_out": 0,
+  "converted": 327,
+  "file": "lylah_music_overhaul_16_final.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 317509,
+  "name": "Relics of the Past Official Final Beta v2.9.6b",
+  "status": "full",
+  "left_out": 0,
+  "converted": 21677,
+  "file": "breathofthewild_relics_of_the_past_o_12729.7z",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49580,
+  "name": "Zelda - Dialogue and Cutscene-Audio Adjustments",
+  "status": "full",
+  "left_out": 0,
+  "converted": 590,
+  "file": "zelda_-_dialogue_and_audio_adj_v22_4d62d.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 192,
+  "name": "Crafting Project",
+  "status": "full",
+  "left_out": 0,
+  "converted": 753,
+  "file": "craftingproject_c042f.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33530,
+  "name": "PS4 UI Complete - BNP Version",
+  "status": "partial",
+  "left_out": 1,
+  "converted": 1570,
+  "file": "ds4_ui_complete_pe.bnp",
+  "reason": "1 effect file",
+  "wiiu": true
+ },
+ {
+  "id": 49749,
+  "name": "WildRunning",
+  "status": "full",
+  "left_out": 0,
+  "converted": 411,
+  "file": "wildrunning_25.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 420882,
+  "name": "[LINKLE] Title Screen (natural)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 3,
+  "file": "linkle__title_screen-natural10.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 346532,
+  "name": "Sockpoppet Patreon Mods UAR Patches",
+  "status": "full",
+  "left_out": 0,
+  "converted": 7122,
+  "file": "sockpoppets_patreon_uar_patches_v210.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49705,
+  "name": "Better Armors",
+  "status": "full",
+  "left_out": 0,
+  "converted": 1152,
+  "file": "better_armors.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49847,
+  "name": "Sleepover with Paya +5 hearts",
+  "status": "full",
+  "left_out": 0,
+  "converted": 2,
+  "file": "payaxlinkle.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49662,
+  "name": "Durability Options (That Aren't Outdated!)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 0,
+  "file": "unbreakableweaponsmod.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 168234,
+  "name": "Linkle Bikini (updated 6/28/19)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 19,
+  "file": "linklebikini.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 420394,
+  "name": "Linkle 3.0 with Logical Braids",
+  "status": "full",
+  "left_out": 0,
+  "converted": 1693,
+  "file": "linkle30withlogicalbraids_1_0_4_-_bcml.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49493,
+  "name": "Unbreakable Weapons and Items",
+  "status": "full",
+  "left_out": 0,
+  "converted": 928,
+  "file": "unbreakable_weapons_140fix.zip",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 167707,
+  "name": "Pyra Outfit Renewal (Linkle & Zelda)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 68,
+  "file": "linkle_flamebreaker_renewal_glow.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 49535,
+  "name": "Wearable Lantern, Brighter Lights & Darker Nights",
+  "status": "full",
+  "left_out": 0,
+  "converted": 144,
+  "file": "darkernightsbrighterlights_975d9.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 33519,
+  "name": "Linkle Mod Title Screen Pack",
+  "status": "full",
+  "left_out": 0,
+  "converted": 11,
+  "file": "linkle_mod_title_screen_pack.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 407243,
+  "name": "[Linkle 3.0] Hair & Eye Colour Options",
+  "status": "full",
+  "left_out": 0,
+  "converted": 89,
+  "file": "blueeyesandhairoptions15.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 508732,
+  "name": "Quality of Life NG+",
+  "status": "full",
+  "left_out": 0,
+  "converted": 6886,
+  "file": "quality_of_life_new_game_plus_v106.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 168166,
+  "name": "[LINKLE] Kunoichi Kimono (cosplay)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 189,
+  "file": "linkle__kunoichi_kimono-cosplay15.bnp",
+  "reason": "",
+  "wiiu": true
+ },
+ {
+  "id": 431101,
+  "name": "~Linkle Magical Girl~ (Linkle 3.0 Collection)",
+  "status": "full",
+  "left_out": 0,
+  "converted": 138,
+  "file": "valmodfix_v2.bnp",
+  "reason": "",
+  "wiiu": true
+ }
+]

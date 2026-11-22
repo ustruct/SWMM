@@ -1,8 +1,6 @@
 #![cfg(windows)]
 #![allow(non_snake_case, clippy::missing_safety_doc)]
 
-mod motion;
-
 use std::{
     ffi::{c_void, OsString},
     os::windows::ffi::{OsStrExt, OsStringExt},
@@ -109,34 +107,6 @@ fn log(dir: &Path, message: &str) {
     }
 }
 
-fn append_log(dir: &Path, message: &str) {
-    use std::io::Write;
-    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("loader.log")) {
-        let _ = writeln!(file, "{message}");
-    }
-}
-
-fn motion_config(config: Option<&str>) -> Result<motion::Config, String> {
-    let setting = get_env("SWMM_MOTION")
-        .map(|v| v.to_string_lossy().to_string())
-        .or_else(|| config.and_then(|c| ini_value(c, "motion")))
-        .unwrap_or_else(|| "off".into());
-    let mode = match setting.to_ascii_lowercase().as_str() {
-        "auto" | "on" | "1" | "true" | "yes" => motion::Mode::Auto,
-        "prefer" => motion::Mode::Prefer,
-        _ => return Err("Cemuhook motion is off".into()),
-    };
-    let server = config
-        .and_then(|c| ini_value(c, "motion_server"))
-        .filter(|v| !v.is_empty())
-        .unwrap_or_else(|| "127.0.0.1:26760".into());
-    let slot = config
-        .and_then(|c| ini_value(c, "motion_slot"))
-        .and_then(|v| v.parse::<u8>().ok())
-        .filter(|v| *v <= 3);
-    Ok(motion::Config { mode, server, slot })
-}
-
 fn read_text(path: &Path) -> Option<String> {
     let bytes = std::fs::read(path).ok()?;
     let text = String::from_utf8_lossy(&bytes);
@@ -147,21 +117,7 @@ fn config_dir() -> Option<PathBuf> {
     get_env("APPDATA").map(|d| PathBuf::from(d).join("SWMM"))
 }
 
-struct Input {
-    motion: Option<motion::Config>,
-    camera: f32,
-}
-
-fn camera_config(config: Option<&str>) -> f32 {
-    config
-        .and_then(|c| ini_value(c, "camera_sensitivity"))
-        .and_then(|v| v.trim_end_matches('%').trim().parse::<f32>().ok())
-        .filter(|v| v.is_finite() && *v >= 10.0 && *v <= 500.0)
-        .map(|v| v / 100.0)
-        .unwrap_or(1.0)
-}
-
-fn attach() -> Option<(PathBuf, String, Input)> {
+fn attach() -> Option<(PathBuf, String)> {
     let exe = module_path(std::ptr::null_mut())?;
     let game_dir = exe.parent()?.to_path_buf();
     let exe_name = exe.file_name()?.to_string_lossy().to_ascii_lowercase();
@@ -195,28 +151,21 @@ fn attach() -> Option<(PathBuf, String, Input)> {
             return format!("{} doesn't exist, mods off", overlay.display());
         }
         let previous = get_env(OVERLAY_ENV)
-            .filter(|v| !v.is_empty() && PathBuf::from(v) != overlay)
+            .filter(|v| !v.is_empty() && *v != overlay)
             .map(|v| format!(" (replaced {})", v.to_string_lossy()))
             .unwrap_or_default();
         set_env(OVERLAY_ENV, &overlay);
         format!("{OVERLAY_ENV}={}{previous}", overlay.display())
     })();
-    let camera = camera_config(loader_config.as_deref());
-    match motion_config(loader_config.as_deref()) {
-        Ok(motion) => Some((config_dir_path, message, Input { motion: Some(motion), camera })),
-        Err(off) => Some((config_dir_path, format!("{message}\n{off}"), Input { motion: None, camera })),
-    }
+    Some((config_dir_path, message))
 }
 
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(module: Hmodule, reason: u32, _reserved: *mut c_void) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
         let _ = module;
-        if let Ok(Some((dir, message, input))) = std::panic::catch_unwind(attach) {
+        if let Ok(Some((dir, message))) = std::panic::catch_unwind(attach) {
             log(&dir, &message);
-            if input.motion.is_some() || (input.camera - 1.0).abs() >= 0.001 {
-                motion::start(input.motion, input.camera, move |line| append_log(&dir, &line));
-            }
         }
     }
     1

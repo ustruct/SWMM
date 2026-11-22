@@ -1,12 +1,34 @@
-#![deny(clippy::unwrap_used)]
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
 
+pub mod actor_size;
+pub mod bfres;
 pub mod bnp;
+pub mod compat;
+pub mod conflicts;
+pub mod crash;
+pub mod effect;
 pub mod core;
 pub mod deploy;
+pub mod font;
+pub mod havok;
 pub mod import;
+pub mod layout;
+pub mod modpack;
 pub mod mods;
+pub mod origin;
+pub mod rebase;
+pub mod texts;
+pub mod saves;
 pub mod settings;
+pub mod slim;
+pub mod sound;
 pub mod source;
 pub mod steam;
+pub mod stock;
+pub mod tables;
+pub mod tex;
 pub mod util;
+pub mod wiiu;
+pub mod wiiu_package;
+pub mod xlink;
 pub mod savage_wind;

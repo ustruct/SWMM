@@ -7,6 +7,6 @@ pub trait LocString {
 
 impl LocString for &'static str {
     fn localize(&self) -> Cow<'static, str> {
-        LOCALIZATION.read().get(&self)
+        LOCALIZATION.read().get(self)
     }
 }

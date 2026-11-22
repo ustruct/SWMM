@@ -1,4 +1,4 @@
-use std::{hash::Hash, path::PathBuf, str::FromStr, sync::Arc};
+use std::{hash::Hash, path::PathBuf, sync::Arc};
 
 use egui::{
     epaint::text::TextWrapping, mutex::RwLock, text::LayoutJob, Button, Direction, Id, NumExt,
@@ -90,10 +90,10 @@ impl UiExt for Ui {
     }
 
     fn file_picker_string(&mut self, value: &mut String) -> Response {
-        let mut path = PathBuf::from_str(value).unwrap();
+        let mut path = PathBuf::from(value.as_str());
         let res = render_picker(false, self, &mut path);
         if res.changed() {
-            *value = path.to_str().unwrap().to_owned();
+            *value = path.to_string_lossy().into_owned();
         }
         res
     }
@@ -113,8 +113,8 @@ impl UiExt for Ui {
             .style()
             .text_styles
             .get(&egui::TextStyle::Body)
-            .unwrap()
-            .clone();
+            .cloned()
+            .unwrap_or_else(|| egui::FontId::proportional(14.0));
         let color = self.visuals().text_color();
         let mut job = LayoutJob::simple_singleline(text.clone(), font.clone(), color);
         let max_width = self.available_width();

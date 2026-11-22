@@ -6,6 +6,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+botw-utils = { git = "https://github.com/GingerAvalanche/botw-utils-rust.git" }
 anyhow = { workspace = true }
 anyhow_ext = { workspace = true }
 dashmap = { workspace = true, features = ["rayon"] }
@@ -17,7 +18,6 @@ jwalk = { workspace = true }
 lenient_semver = { workspace = true }
 log = { workspace = true }
 parking_lot = { workspace = true, features = ["serde"] }
-path-slash = { workspace = true }
 rayon = { workspace = true }
 roead = { workspace = true, features = ["yaml"] }
 rstb = { workspace = true }
@@ -31,14 +31,18 @@ sevenz-rust = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
 unrar = { workspace = true }
 zip = { workspace = true, default-features = false, features = ["deflate"] }
+zstd = { workspace = true }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 tempfile = "3.3"
 uk-content = { workspace = true }
 swmm-i18n = { path = "../i18n" }
 uk-mod = { workspace = true }
+minicbor-ser = { workspace = true }
 uk-reader = { workspace = true }
 uk-util = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 junction = { git = "https://github.com/NiceneNerd/junction" }
 remove_dir_all = "1.0.0"
+

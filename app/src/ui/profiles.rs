@@ -51,12 +51,10 @@ impl ProfileManagerState {
     pub fn all_assigned_mod_hashes(&self) -> HashSet<usize> {
         self.profiles
             .values()
-            .map(|m| m.mods()
+            .flat_map(|m| m.mods()
                 .keys()
                 .copied()
-                .collect::<Vec<_>>()
-            )
-            .flatten()
+                .collect::<Vec<_>>())
             .collect()
     }
 }

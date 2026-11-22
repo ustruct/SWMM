@@ -14,6 +14,7 @@ impl App {
                 Message::Noop => self.busy.set(false),
                 Message::ResetMods(dirty) => {
                     self.busy.set(false);
+                    chrome::celebrate_if_pending(ctx);
                     self.game_status = frame::GameStatus::check(&self.core);
                     self.dirty_mut().clear();
                     if let Some(dirty) = dirty {
@@ -188,7 +189,7 @@ impl App {
                             profiles_dir.join(profile),
                             profiles_dir.join(&new_profile),
                         )?;
-                        core.mod_manager().add_profile(new_profile.into());
+                        core.mod_manager().add_profile(new_profile.into())?;
                         Ok(Message::ReloadProfiles)
                     });
                 }
@@ -204,11 +205,13 @@ impl App {
                     let mods = state
                         .profiles
                         .get(profile.as_str())
-                        .unwrap()
-                        .mods()
-                        .iter()
-                        .map(|(h, m)| (*h, m.path.clone()))
-                        .collect::<HashMap<_,_>>();
+                        .map(|p| {
+                            p.mods()
+                                .iter()
+                                .map(|(h, m)| (*h, m.path.clone()))
+                                .collect::<HashMap<_, _>>()
+                        })
+                        .unwrap_or_default();
                     state.reload(&self.core);
                     let assigned = state.all_assigned_mod_hashes();
                     mods.iter()
@@ -238,6 +241,7 @@ impl App {
                         .add_filter("Any mod", swmm_core::import::MOD_EXTENSIONS)
                         .add_filter("Archives (*.zip, *.7z, *.rar, *.tar, ...)", swmm_core::import::ARCHIVE_EXTENSIONS)
                         .add_filter("BNP mod (*.bnp)", &["bnp"])
+                        .add_filter("SWMM modpack (*.swmmpack)", &[swmm_core::modpack::EXTENSION])
                         .add_filter("All files (*.*)", &["*"])
                         .pick_files()
                         .filter(|p| !p.is_empty())
@@ -261,7 +265,7 @@ impl App {
                 }
                 Message::HandleMod(mod_) => {
                     self.busy.set(false);
-                    log::debug!("{:#?}", &mod_);
+                    log::debug!("{:#?}", mod_);
                     for (hash, (name, version)) in mod_.meta.masters.iter() {
                         if !self.mods.iter().any(|m| m.hash() == *hash) {
                             self.do_update(Message::Error(anyhow_ext::anyhow!(
@@ -296,12 +300,15 @@ impl App {
                         if let Some(mod_) = update_mod {
                             let mut dirty = Manifest::default();
                             dirty.extend(&tmp_mod_.manifest().unwrap_or_default());
+                            let tmp_path = tmp_mod_.path.clone();
                             mods.replace(tmp_mod_, mod_.hash())?;
+                            swmm_core::util::release_temp(&tmp_path);
                             log::info!("Updated {}", mod_.meta.name);
                             dirty.extend(&mod_.manifest().unwrap_or_default());
                             Ok(Message::ResetMods(Some(dirty)))
                         } else {
                             let mod_ = mods.add(&tmp_mod_.path, None)?;
+                            swmm_core::util::release_temp(&tmp_mod_.path);
                             let hash = mod_.as_map_id();
                             if !tmp_mod_.enabled_options.is_empty() {
                                 mods.set_enabled_options(hash, tmp_mod_.enabled_options)?;
@@ -332,11 +339,12 @@ impl App {
                         .add_filter("Any mod", swmm_core::import::MOD_EXTENSIONS)
                         .add_filter("Archives (*.zip, *.7z, *.rar, *.tar, ...)", swmm_core::import::ARCHIVE_EXTENSIONS)
                         .add_filter("BNP mod (*.bnp)", &["bnp"])
+                        .add_filter("SWMM modpack (*.swmmpack)", &[swmm_core::modpack::EXTENSION])
                         .add_filter("All files (*.*)", &["*"])
                         .pick_file()
                     {
                         let path = file.clone();
-                        self.update_mod = Some(self.selected.first().unwrap().clone());
+                        self.update_mod = self.selected.first().cloned();
                         self.do_task(move |core| jobs::open_mod(&core, &path, None));
                     }
                 }
@@ -375,7 +383,7 @@ impl App {
                             .error_queue
                             .drain(..)
                             .fold(String::new(), |mut acc, e| {
-                                writeln!(acc, "{:?}", e).expect("Failed to write to String");
+                                writeln!(acc, "{:?}", e).unwrap_or(());
                                 acc
                             });
                         self.do_update(Message::Error(anyhow_ext::anyhow!("{msg}").context(
@@ -408,7 +416,7 @@ impl App {
                             let vars = std::collections::HashMap::from(
                                 [("profile_name".to_string(), profile.to_string())]
                             );
-                            let mut toast = Toast::success(message.format(&vars).unwrap());
+                            let mut toast = Toast::success(message.format(&vars).unwrap_or_else(|_| message.to_string()));
                             toast.set_duration(Some(Duration::new(2, 0)));
                             toast
                         });
@@ -426,11 +434,13 @@ impl App {
                     self.busy.set(false);
                 }
                 Message::Apply => {
+                    chrome::celebrate_next(ctx);
                     let mods = self.mods.clone();
                     let dirty = std::mem::take(self.dirty_mut().deref_mut());
                     self.do_task(move |core| jobs::apply_changes(&core, mods, Some(dirty)));
                 }
                 Message::Deploy => {
+                    chrome::celebrate_next(ctx);
                     self.do_task(move |core| {
                         log::info!("Deploying current mod configuration");
                         core.deploy_manager().deploy()?;
@@ -456,6 +466,20 @@ impl App {
                 Message::SwAutoDetect => {
                     self.do_task(jobs::sw_auto_detect);
                 }
+                Message::GameConfigOpened => {
+                    self.busy.set(false);
+                    self.toasts.add({
+                        let mut toast = Toast::success("SW_Config_Opened".localize());
+                        toast.set_duration(Some(Duration::new(3, 0)));
+                        toast
+                    });
+                    self.do_update(Message::ResetMods(None));
+                }
+                Message::OpenGameConfig => {
+                    let mods = self.mods.clone();
+                    let dirty = std::mem::take(self.dirty_mut().deref_mut());
+                    self.do_task(move |core| jobs::open_game_config(&core, mods, dirty));
+                }
                 Message::ResetPending => {
                     self.do_task(|core| {
                         log::info!("Resetting pending deployment data");
@@ -473,22 +497,17 @@ impl App {
                 }
                 Message::SaveSettings => {
                     let mut needs_reset = false;
-                    self.core.settings().platform_config().map(|old_plat| {
-                        old_plat.deploy_config.as_ref().map(|old_dep| {
-                            if let Some(new_plat) = &self.temp_settings.platform_config() {
-                                new_plat.deploy_config.as_ref().map(|new_dep| {
-                                    if old_dep.layout != new_dep.layout ||
-                                        old_dep.method != new_dep.method ||
-                                        old_dep.output != new_dep.output {
-                                        if let Ok(_) = self.core.settings()
-                                            .wipe_output(self.core.settings().current_mode.into()) {
-                                            needs_reset = true;
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    });
+                    let old_dep = self.core.settings().platform_config().and_then(|p| p.deploy_config.clone());
+                    let new_dep = self.temp_settings.platform_config().and_then(|p| p.deploy_config.clone());
+                    if let (Some(old_dep), Some(new_dep)) = (old_dep, new_dep) {
+                        if (old_dep.layout != new_dep.layout
+                            || old_dep.method != new_dep.method
+                            || old_dep.output != new_dep.output)
+                            && self.core.settings().wipe_output(self.core.settings().current_mode.into()).is_ok()
+                        {
+                            needs_reset = true;
+                        }
+                    }
                     let old_sw = self.core.settings().savage_wind.clone();
                     let sw_paths_changed = old_sw.executable != self.temp_settings.savage_wind.executable;
                     let save_res = self.temp_settings.save().and_then(|_| {
@@ -564,7 +583,8 @@ impl App {
                     }
                 }
                 Message::Error(error) => {
-                    log::error!("{:?}", &error);
+                    chrome::celebrate_cancel(ctx);
+                    log::error!("{:?}", error);
                     if self.install_queue.is_empty() {
                         self.busy.set(false);
                         self.error = Some(error);
@@ -578,10 +598,107 @@ impl App {
                 }
 
                 Message::CloseChangelog => self.changelog = None,
+                Message::GameCrashed(report) => {
+                    self.crash = Some(report);
+                    ctx.request_repaint();
+                }
+                Message::CloseCrash => self.crash = None,
+                Message::BackupSaves => {
+                    self.do_task(|core| {
+                        let settings = core.settings().clone();
+                        let dir = swmm_core::saves::save_dir(&settings)
+                            .context("Savage Wind's save folder wasn't found. Check Savage Wind's location in Settings.")?;
+                        let made = swmm_core::saves::backup(&dir, false)?;
+                        Ok(Message::SavesChanged(Some(
+                            if made.is_some() { "SW_Saves_BackedUp" } else { "SW_Saves_Nothing" }.localize().into(),
+                        )))
+                    });
+                }
+                Message::RestoreSaves(path) => {
+                    self.do_task(move |core| {
+                        let settings = core.settings().clone();
+                        let dir = swmm_core::saves::save_dir(&settings).context("Savage Wind's save folder wasn't found")?;
+                        swmm_core::saves::restore(&dir, &path)?;
+                        Ok(Message::SavesChanged(Some("SW_Saves_Restored".localize().into())))
+                    });
+                }
+                Message::SavesChanged(note) => {
+                    self.busy.set(false);
+                    *self.saves.borrow_mut() = None;
+                    if let Some(note) = note {
+                        self.toasts.add({
+                            let mut toast = Toast::success(note);
+                            toast.set_duration(Some(Duration::new(3, 0)));
+                            toast
+                        });
+                    }
+                }
+                Message::SelectModpack => {
+                    if let Some(path) = rfd::FileDialog::new()
+                        .set_title("SW_Modpack_Import".localize())
+                        .add_filter("SWMM modpack (*.swmmpack)", &[swmm_core::modpack::EXTENSION])
+                        .pick_file()
+                    {
+                        self.do_update(Message::ImportModpack(path));
+                    }
+                }
+                Message::ImportModpack(path) => {
+                    self.do_task(move |core| jobs::import_modpack(&core, &path));
+                }
+                Message::ExportModpack(profile) => {
+                    if let Some(dest) = rfd::FileDialog::new()
+                        .set_title("SW_Modpack_Share".localize())
+                        .set_file_name(format!("{profile}.{}", swmm_core::modpack::EXTENSION))
+                        .add_filter("SWMM modpack (*.swmmpack)", &[swmm_core::modpack::EXTENSION])
+                        .save_file()
+                    {
+                        self.do_task(move |core| jobs::export_modpack(&core, &profile, &dest));
+                    }
+                }
+                Message::ModpackImported(profile) => {
+                    self.busy.set(false);
+                    self.toasts.add({
+                        let mut toast = Toast::success(format!("{} {profile}", "SW_Modpack_Imported".localize()));
+                        toast.set_duration(Some(Duration::new(3, 0)));
+                        toast
+                    });
+                    self.do_update(Message::ChangeProfile(profile));
+                    self.do_update(Message::Remerge);
+                }
+                Message::SelectCompatFile => {
+                    if let Some(path) = rfd::FileDialog::new()
+                        .set_title("Compat_Pick".localize())
+                        .add_filter("Any mod", swmm_core::import::MOD_EXTENSIONS)
+                        .add_filter("All files (*.*)", &["*"])
+                        .pick_file()
+                    {
+                        let file = path.file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_default();
+                        let name = path.file_stem().map(|f| f.to_string_lossy().to_string()).unwrap_or_default();
+                        self.do_update(Message::TestCompat { path, id: 0, name, file, downloaded: false });
+                    }
+                }
+                Message::TestCompat { path, id, name, file, downloaded } => {
+                    ctx.request_repaint();
+                    self.do_task(move |core| jobs::test_compat(&core, &path, id, &name, &file, downloaded));
+                }
+                Message::CompatTested(entry) => {
+                    self.busy.set(false);
+                    self.compat.borrow_mut().tested(*entry);
+                    self.page = super::frame::Page::Compat;
+                }
+                Message::ShowCompat(query) => {
+                    self.compat.borrow_mut().query = query;
+                    self.page = super::frame::Page::Compat;
+                }
+                Message::Finished => {
+                    self.busy.set(false);
+                    chrome::celebrate(ctx);
+                }
                 Message::Toast(msg) => {
                     self.toasts.add({
+                        let seconds = if msg.len() > 60 { 8 } else { 2 };
                         let mut toast = Toast::info(msg);
-                        toast.set_duration(Some(Duration::new(2, 0)));
+                        toast.set_duration(Some(Duration::new(seconds, 0)));
                         toast
                     });
                 }

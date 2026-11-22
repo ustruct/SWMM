@@ -292,7 +292,7 @@ impl<'a> Bnp2xConverter<'a> {
                     let mut iter = line.split(',').map(|p| p.replace('\\', "/"));
                     let canon = iter.next();
                     let path = iter.next();
-                    canon.and_then(|c| path.map(|p| (c, p)))
+                    canon.zip(path)
                 })
                 .collect();
             fs::write(

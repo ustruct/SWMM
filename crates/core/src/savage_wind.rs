@@ -35,7 +35,67 @@ pub fn is_savage_wind_exe(path: &Path) -> bool {
     };
     let squashed: std::string::String = name.chars().filter(|c| c.is_alphanumeric() || *c == '.').collect();
     EXE_NAMES.iter().any(|n| n.to_lowercase() == name)
-        || (squashed.contains("savagewind") && name.ends_with(".appimage"))
+        || (cfg!(all(unix, not(target_os = "macos")))
+            && squashed.contains("savagewind")
+            && name.ends_with(".appimage"))
+}
+
+pub const CONFIG_EXE: &str = "Savage Wind Configuration.exe";
+
+fn check_program(exe: &Path) -> Result<()> {
+    if !cfg!(windows) {
+        return Ok(());
+    }
+    let mut head = [0u8; 2];
+    let read = std::fs::File::open(exe).and_then(|mut f| std::io::Read::read_exact(&mut f, &mut head));
+    if read.is_err() || &head != b"MZ" {
+        anyhow_ext::bail!(
+            "{} isn't a Windows program. Choose savagewind.exe on the Settings page.",
+            exe.display()
+        );
+    }
+    Ok(())
+}
+
+fn chosen_exe(settings: &Settings) -> Result<PathBuf> {
+    let exe = settings
+        .savage_wind
+        .executable
+        .as_ref()
+        .filter(|p| !p.as_os_str().is_empty())
+        .context("Savage Wind's executable isn't set. Choose it on the Settings page.")?;
+    if !exe.exists() {
+        anyhow_ext::bail!("Savage Wind's executable was not found at {}", exe.display());
+    }
+    check_program(exe)?;
+    Ok(exe.clone())
+}
+
+pub fn config_command(settings: &Settings) -> Result<Command> {
+    let exe = chosen_exe(settings)?;
+    let dir = exe.parent().map(Path::to_path_buf);
+    let tool = dir.as_ref().map(|d| d.join(CONFIG_EXE)).filter(|p| cfg!(windows) && p.is_file());
+    let mut command = match tool {
+        Some(tool) => Command::new(tool),
+        None => {
+            let mut c = Command::new(&exe);
+            c.arg("--config");
+            c
+        }
+    };
+    if let Some(dir) = dir {
+        command.current_dir(dir);
+    }
+    if let Some(overlay) = overlay_dir(settings).filter(|d| has_files(d)) {
+        command.env(OVERLAY_ENV, &overlay);
+    }
+    Ok(command)
+}
+
+pub fn launch_config(settings: &Settings) -> Result<Child> {
+    config_command(settings)?
+        .spawn()
+        .context("Failed to open Savage Wind's Configuration")
 }
 
 fn same_file(a: &Path, b: &Path) -> bool {
@@ -89,15 +149,14 @@ pub fn detect_executable() -> Option<PathBuf> {
                 return Some(exe);
             }
             let name = sub.file_name().map(|n| n.to_string_lossy().to_lowercase()).unwrap_or_default();
-            if name.contains("savage") || name.contains("wind") {
-                if let Ok(entries) = std::fs::read_dir(&sub) {
+            if (name.contains("savage") || name.contains("wind"))
+                && let Ok(entries) = std::fs::read_dir(&sub) {
                     for sub2 in entries.filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.is_dir()) {
                         if let Some(exe) = find_exe_in(&sub2) {
                             return Some(exe);
                         }
                     }
                 }
-            }
         }
     }
     None
@@ -112,11 +171,10 @@ pub fn data_root(config: &SavageWindSettings) -> Option<PathBuf> {
         .as_ref()
         .filter(|p| !p.as_os_str().is_empty())
         .and_then(|exe| exe.parent().map(Path::to_path_buf));
-    if let Some(dir) = exe_dir.as_ref() {
-        if dir.join("extracted").is_dir() {
+    if let Some(dir) = exe_dir.as_ref()
+        && dir.join("extracted").is_dir() {
             return Some(dir.clone());
         }
-    }
     #[cfg(windows)]
     {
         exe_dir
@@ -278,13 +336,12 @@ pub fn auto_configure(settings: &mut Settings) -> Result<AutoConfig> {
         .as_ref()
         .map(|p| !p.as_os_str().is_empty())
         .unwrap_or(false);
-    if !has_exe {
-        if let Some(exe) = detect_executable() {
+    if !has_exe
+        && let Some(exe) = detect_executable() {
             log::info!("Found Savage Wind at {}", exe.display());
             settings.savage_wind.executable = Some(exe);
             result.found_executable = true;
         }
-    }
     let game = current_game_files(settings)?;
     if !game.is_supported_version() {
         log::warn!(
@@ -393,12 +450,73 @@ fn game_dir(settings: &Settings) -> Option<PathBuf> {
         .and_then(|p| p.parent().map(Path::to_path_buf))
 }
 
+pub const LAUNCH_FLAGS: &str = "launch-flags.txt";
+const LAUNCH_FLAG_VALUE_MAX: usize = 127;
+const LAUNCH_FLAGS_HEADER: &str = "# Savage Wind launch options: environment flags set at every start. One NAME=value per line.\n";
+
+fn is_overlay_flag(line: &str) -> bool {
+    line.trim()
+        .split('=')
+        .next()
+        .is_some_and(|name| name.trim().eq_ignore_ascii_case(OVERLAY_ENV))
+}
+
+fn flag_line(name: &str, dir: &Path) -> Result<std::string::String> {
+    let value = dir.display().to_string();
+    if value.len() > LAUNCH_FLAG_VALUE_MAX || value.chars().any(char::is_control) {
+        anyhow_ext::bail!(
+            "The folder {value} is too long for Savage Wind's launch options ({} bytes, at most {LAUNCH_FLAG_VALUE_MAX}). Choose a shorter storage folder in Settings.",
+            value.len()
+        );
+    }
+    Ok(format!("{name}={value}"))
+}
+
+pub fn sync_launch_flags(settings: &Settings, overlay: Option<&Path>) -> Result<bool> {
+    let root = data_root(&settings.savage_wind).context("Savage Wind's data folder isn't known")?;
+    let path = root.join(LAUNCH_FLAGS);
+    let old = std::fs::read_to_string(&path).unwrap_or_default();
+    let mut lines = Vec::new();
+    if let Some(dir) = overlay {
+        lines.push(flag_line(OVERLAY_ENV, dir)?);
+    }
+    match launch_flags_text(&old, &lines) {
+        None => {
+            if path.exists() {
+                fs::remove_file(&path)?;
+            }
+        }
+        Some(text) if text != old => {
+            fs::create_dir_all(&root)?;
+            fs::write(&path, text)?;
+        }
+        Some(_) => {}
+    }
+    Ok(!lines.is_empty())
+}
+
+fn launch_flags_text(old: &str, ours: &[std::string::String]) -> Option<std::string::String> {
+    let mut lines: Vec<&str> = old.lines().filter(|l| !is_overlay_flag(l)).collect();
+    lines.extend(ours.iter().map(std::string::String::as_str));
+    if !lines.iter().any(|l| !l.trim().is_empty() && !l.trim_start().starts_with('#')) {
+        return None;
+    }
+    let mut text = if old.trim().is_empty() { LAUNCH_FLAGS_HEADER.to_owned() } else { std::string::String::new() };
+    text.push_str(&lines.join("\n"));
+    text.push('\n');
+    Some(text)
+}
+
 pub fn sync_loader(settings: &Settings) -> Result<std::string::String> {
     if cfg!(target_os = "linux") {
         return sync_linux(settings);
     }
     if !cfg!(windows) {
-        return Ok("The loader is only used on Windows and Linux".into());
+        let overlay = overlay_dir(settings).filter(|d| has_files(d));
+        return Ok(match sync_launch_flags(settings, overlay.as_deref())? {
+            true => "Savage Wind loads the mods however it's started".into(),
+            false => "Mods are off when Savage Wind is started on its own".into(),
+        });
     }
     let dir = game_dir(settings).context("Savage Wind's executable isn't set")?;
     for name in LEGACY_LOADER_FILES {
@@ -410,57 +528,48 @@ pub fn sync_loader(settings: &Settings) -> Result<std::string::String> {
     let dll = dir.join(LOADER_DLL);
     let overlay = overlay_dir(settings);
     let enabled = overlay.is_some();
-    let sw = &settings.savage_wind;
-    let motion = sw.cemuhook;
-    let camera = sw.camera_sensitivity.clamp(10, 500);
-    let server = if sw.cemuhook_server.trim().is_empty() { "127.0.0.1:26760" } else { sw.cemuhook_server.trim() };
     let config = format!(
-        "enabled = {}\noverlay = {}\nmotion = {}\nmotion_server = {}\ncamera_sensitivity = {}\n",
+        "enabled = {}\noverlay = {}\n",
         if enabled { 1 } else { 0 },
         overlay.as_ref().map(|p| p.display().to_string()).unwrap_or_default(),
-        match (motion, sw.cemuhook_prefer) {
-            (false, _) => "off",
-            (true, false) => "auto",
-            (true, true) => "prefer",
-        },
-        server,
-        camera
     );
     fs::create_dir_all(Settings::config_dir())?;
     fs::write(loader_config_path(), config)?;
     if dll.exists() && !is_our_loader(&dll) {
         anyhow_ext::bail!("{} in {} doesn't belong to SWMM, so it was left alone", LOADER_DLL, dir.display());
     }
-    if !enabled && !motion && camera == 100 {
+    if !enabled {
         if dll.exists() {
             let _ = std::fs::remove_file(&dll);
         }
         return Ok("Mods are off when Savage Wind is started on its own".into());
     }
-    if let Some(system) = std::env::var_os("SystemRoot") {
-        if !Path::new(&system).join("System32").join("vcruntime140.dll").exists() {
+    if let Some(system) = std::env::var_os("SystemRoot")
+        && !Path::new(&system).join("System32").join("vcruntime140.dll").exists() {
             anyhow_ext::bail!(
                 "The Microsoft Visual C++ Redistributable is missing, so the loader can't be installed. Get it \
                  from https://aka.ms/vs/17/release/vc_redist.x64.exe"
             );
         }
-    }
     let build = loader_build()
         .with_context(|| format!("{LOADER_BUILD} wasn't found next to SWMM. Build it with build-windows.bat."))?;
     let new = fs::read(&build)?;
-    if std::fs::read(&dll).map(|old| old != new).unwrap_or(true) {
-        if let Err(e) = fs::write(&dll, &new) {
+    if std::fs::read(&dll).map(|old| old != new).unwrap_or(true)
+        && let Err(e) = fs::write(&dll, &new) {
             if !dll.exists() {
                 return Err(e.into());
             }
             log::warn!("Could not update {}: {e}", dll.display());
         }
-    }
     Ok(format!("Savage Wind loads the mods when started on its own ({})", dll.display()))
 }
 
 fn sync_linux(settings: &Settings) -> Result<std::string::String> {
     let overlay = overlay_dir(settings).filter(|d| has_files(d));
+    let flags = sync_launch_flags(settings, overlay.as_deref()).unwrap_or_else(|e| {
+        log::warn!("Couldn't update Savage Wind's launch options: {e:?}");
+        false
+    });
     set_persistent_env(overlay.as_deref())?;
     let _ = match &overlay {
         Some(path) => Command::new("systemctl")
@@ -479,6 +588,7 @@ fn sync_linux(settings: &Settings) -> Result<std::string::String> {
     });
     Ok(match (&overlay, changed) {
         (None, _) => "Mods are off when Savage Wind is started on its own".into(),
+        (Some(_), _) if flags => "Savage Wind loads the mods however it's started".into(),
         (Some(_), 0) => "Savage Wind loads the mods when started on its own (after you log out and back in)".into(),
         (Some(_), n) => format!(
             "Savage Wind loads the mods when started on its own. {n} Steam shortcut(s) were updated: restart Steam to apply"
@@ -487,6 +597,9 @@ fn sync_linux(settings: &Settings) -> Result<std::string::String> {
 }
 
 pub fn remove_loader(settings: &Settings) -> Result<()> {
+    if !cfg!(windows) {
+        let _ = sync_launch_flags(settings, None);
+    }
     if cfg!(target_os = "linux") {
         let _ = set_persistent_env(None);
         let _ = Command::new("systemctl").args(["--user", "unset-environment", OVERLAY_ENV]).status();
@@ -564,15 +677,8 @@ pub fn clear_legacy_environment() {
 }
 
 pub fn launch_command(settings: &Settings) -> Result<Command> {
-    let config = &settings.savage_wind;
-    let exe = config
-        .executable
-        .as_ref()
-        .filter(|p| !p.as_os_str().is_empty())
-        .context("Savage Wind's executable isn't set. Choose it on the Settings page.")?;
-    if !exe.exists() {
-        anyhow_ext::bail!("Savage Wind's executable was not found at {}", exe.display());
-    }
+    let exe = chosen_exe(settings)?;
+    let exe = &exe;
     #[cfg(target_os = "macos")]
     let mut command = if exe.extension().map(|e| e == "app").unwrap_or(false) {
         let mut c = Command::new("open");
@@ -801,6 +907,158 @@ impl RawRstb {
     }
 }
 
+#[derive(Clone, Copy)]
+enum RstbRule {
+    Over(u32),
+    Line(f64, u32),
+    Scale(f64),
+}
+
+const RSTB_BASE: u32 = 448;
+
+const RSTB_RULES: &[(&str, RstbRule)] = &[
+    ("Tex.bfres", RstbRule::Over(8192)),
+    ("bitemico", RstbRule::Over(8192)),
+    ("bmaptex", RstbRule::Over(8192)),
+    ("bstftex", RstbRule::Over(8192)),
+    ("breviewtex", RstbRule::Over(8192)),
+    ("bmapopen", RstbRule::Over(8192)),
+    ("jpg", RstbRule::Over(8192)),
+    ("bfarc", RstbRule::Over(8192)),
+    ("blarc", RstbRule::Over(4096)),
+    ("esetlist", RstbRule::Over(16736)),
+    ("genvb", RstbRule::Over(6624)),
+    ("hktmrb", RstbRule::Over(1344)),
+    ("bars", RstbRule::Over(840)),
+    ("bactorpack", RstbRule::Over(576)),
+    ("beventpack", RstbRule::Over(512)),
+    ("stats", RstbRule::Over(512)),
+    ("sarc", RstbRule::Over(552)),
+    ("byml", RstbRule::Over(456)),
+    ("bxml", RstbRule::Over(2424)),
+    ("baischedule", RstbRule::Over(1088)),
+    ("bumii", RstbRule::Over(1088)),
+    ("bdemo", RstbRule::Over(3232)),
+    ("bawareness", RstbRule::Over(3264)),
+    ("blod", RstbRule::Over(1344)),
+    ("brgconfig", RstbRule::Over(17504)),
+    ("brgcon", RstbRule::Over(7096)),
+    ("mubin", RstbRule::Over(9696)),
+    ("baniminfo", RstbRule::Over(1160)),
+    ("hkcl", RstbRule::Line(2.113, 0)),
+    ("brgbw", RstbRule::Line(5.472, 1088)),
+    ("batcl", RstbRule::Line(4.343, 1440)),
+    ("batcllist", RstbRule::Line(3.52, 1408)),
+    ("bbonectrl", RstbRule::Line(4.33, 2656)),
+    ("bcamanim", RstbRule::Line(1.311, 9024)),
+    ("brgconfiglist", RstbRule::Line(3.359, 2360)),
+    ("bmscdef", RstbRule::Line(4.606, 0)),
+    ("bdmgparam", RstbRule::Line(5.628, 0)),
+    ("bassetting", RstbRule::Line(5.93, 0)),
+    ("bfres", RstbRule::Scale(1.04)),
+    ("bas", RstbRule::Scale(1.012)),
+    ("hknm2", RstbRule::Scale(1.015)),
+];
+
+fn rstb_kind(name: &str) -> &str {
+    let file = name.rsplit('/').next().unwrap_or(name);
+    if file.contains(".Tex") && (file.ends_with("bfres")) {
+        return "Tex.bfres";
+    }
+    let ext = file.rsplit('.').next().unwrap_or("");
+    match ext.strip_prefix('s') {
+        Some(rest) if ext != "sarc" && ext != "stats" && ext != "stera" => rest,
+        _ => ext,
+    }
+}
+
+pub fn rstb_estimate(data: &[u8], name: &str) -> Option<u32> {
+    let size = if data.len() >= 8 && data.starts_with(b"Yaz0") {
+        u32::from_be_bytes([data[4], data[5], data[6], data[7]]) as u64
+    } else {
+        data.len() as u64
+    };
+    let rounded = (size + 31) & !31;
+    let parsed = rstb::calc::estimate_from_slice_and_name(data, name, rstb::Endian::Little).map(u64::from);
+    let rule = RSTB_RULES.iter().find(|(k, _)| *k == rstb_kind(name)).map(|(_, r)| *r);
+    let ruled = match rule {
+        Some(RstbRule::Over(o)) => Some(rounded + o as u64),
+        Some(RstbRule::Line(a, b)) => Some((rounded as f64 * a).ceil() as u64 + b as u64),
+        Some(RstbRule::Scale(k)) => parsed.map(|p| (p as f64 * k).ceil() as u64),
+        None => None,
+    };
+    let floor = rounded + RSTB_BASE as u64;
+    let best = [parsed.map(|p| p + 32), ruled, Some(floor)].into_iter().flatten().max()?;
+    Some(((best + 31) & !31).min(u32::MAX as u64) as u32)
+}
+
+fn estimate_into(
+    name: &str,
+    data: &[u8],
+    prefix: &str,
+    wanted: &std::collections::HashSet<String>,
+    out: &mut std::collections::HashMap<String, u32>,
+) {
+    let decoded;
+    let data = if data.starts_with(b"Yaz0") {
+        match roead::yaz0::decompress(data) {
+            Ok(d) => {
+                decoded = d;
+                decoded.as_slice()
+            }
+            Err(_) => return,
+        }
+    } else {
+        data
+    };
+    let key = format!("{prefix}{name}");
+    if wanted.contains(&key)
+        && let Some(value) = rstb_estimate(data, name) {
+            let slot = out.entry(key).or_insert(0);
+            *slot = (*slot).max(value);
+        }
+    if data.len() > 4 && &data[..4] == b"SARC"
+        && let Ok(sarc) = roead::sarc::Sarc::new(data) {
+            for file in sarc.files() {
+                if let Some(inner) = file.name {
+                    estimate_into(&rstb_name(inner), file.data, prefix, wanted, out);
+                }
+            }
+        }
+}
+
+pub fn deployed_rstb_estimates(
+    roots: &[(PathBuf, &str)],
+    wanted: &std::collections::HashSet<String>,
+) -> std::collections::HashMap<String, u32> {
+    use rayon::prelude::*;
+    let mut files = Vec::new();
+    for (root, prefix) in roots {
+        let mut found = Vec::new();
+        walk_files(root, root, &mut found);
+        files.extend(found.into_iter().map(|(rel, _)| (root.clone(), *prefix, rel)));
+    }
+    files
+        .par_iter()
+        .filter(|(_, prefix, rel)| {
+            let name = format!("{prefix}{}", rstb_name(rel));
+            wanted.contains(&name) || matches!(rstb_kind(rel), "pack" | "bactorpack" | "beventpack" | "sarc" | "bmodelsh" | "blarc" | "bfarc")
+        })
+        .fold(std::collections::HashMap::new, |mut out, (root, prefix, rel)| {
+            if let Ok(data) = std::fs::read(root.join(rel)) {
+                estimate_into(&rstb_name(rel), &data, prefix, wanted, &mut out);
+            }
+            out
+        })
+        .reduce(std::collections::HashMap::new, |mut a, b| {
+            for (k, v) in b {
+                let slot = a.entry(k).or_insert(0);
+                *slot = (*slot).max(v);
+            }
+            a
+        })
+}
+
 pub fn game_rstb(romfs: &Path) -> Option<RawRstb> {
     RawRstb::read(&romfs.join(RSTB_PATH))
 }
@@ -856,11 +1114,10 @@ pub fn adjust_rstb(table: &mut RawRstb, vanilla: &RawRstb, romfs: &Path) -> usiz
         for (file, _) in files {
             let name = rstb_name(&file);
             let aoc = format!("Aoc/0010/{name}");
-            if let (Some(base), Some(dlc)) = (vanilla.get(&name), vanilla.get(&aoc)) {
-                if dlc > base {
+            if let (Some(base), Some(dlc)) = (vanilla.get(&name), vanilla.get(&aoc))
+                && dlc > base {
                     raised += table.raise(&name, dlc) as usize;
                 }
-            }
         }
     }
     raised
@@ -969,6 +1226,17 @@ mod tests {
     use super::*;
 
     #[test]
+    fn launch_flags() {
+        let line = "SAVAGEWIND_ROMFS_OVERLAY=/home/deck/.local/share/SWMM/overlay".to_string();
+        let new = launch_flags_text("", std::slice::from_ref(&line)).unwrap();
+        assert!(new.starts_with('#') && new.ends_with(&format!("{line}\n")));
+        let kept = launch_flags_text("# mine\nSAVAGEWIND_SCALE=2\nsavagewind_romfs_overlay = /old\n", std::slice::from_ref(&line)).unwrap();
+        assert_eq!(kept, format!("# mine\nSAVAGEWIND_SCALE=2\n{line}\n"));
+        assert_eq!(launch_flags_text(&new, &[]), None);
+        assert_eq!(launch_flags_text("SAVAGEWIND_SCALE=2\nSAVAGEWIND_ROMFS_OVERLAY=/x\n", &[]).unwrap(), "SAVAGEWIND_SCALE=2\n");
+    }
+
+    #[test]
     fn rstb_names() {
         assert_eq!(rstb_name("Map/MainField/D-7/D-7_Dynamic.smubin"), "Map/MainField/D-7/D-7_Dynamic.mubin");
         assert_eq!(rstb_name("Pack/Bootup.pack"), "Pack/Bootup.pack");
@@ -996,7 +1264,18 @@ mod tests {
 
     #[test]
     fn exe_names() {
-        assert!(is_savage_wind_exe(Path::new("Savage_Wind-0.4.0-alpha.4-x86_64.AppImage")));
+        let appimage = is_savage_wind_exe(Path::new("Savage_Wind-0.4.0-alpha.4-x86_64.AppImage"));
+        assert_eq!(appimage, cfg!(all(unix, not(target_os = "macos"))));
         assert!(!is_savage_wind_exe(Path::new("other.exe")));
+        if cfg!(windows) {
+            let dir = std::env::temp_dir().join(format!("swmm-exe-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).unwrap();
+            let fake = dir.join("savagewind.exe");
+            std::fs::write(&fake, [0x7f, 0x45, 0x4c, 0x46]).unwrap();
+            assert!(check_program(&fake).is_err());
+            std::fs::write(&fake, [0x4d, 0x5a, 0x90, 0x00]).unwrap();
+            assert!(check_program(&fake).is_ok());
+            std::fs::remove_dir_all(&dir).unwrap();
+        }
     }
 }

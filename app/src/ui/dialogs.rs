@@ -23,7 +23,7 @@ impl MetaInputModal {
     pub fn clear(&mut self) {
         self.meta = None;
         self.path = None;
-        self.sender.send(Message::Noop).expect("Broken channel");
+        self.sender.send(Message::Noop).unwrap_or(());
     }
 
     pub fn take(&mut self) -> Option<Meta> {
@@ -77,13 +77,9 @@ impl MetaInputModal {
                             Layout::right_to_left(Align::Center),
                             |ui| {
                                 if ui.button("Generic_OK".localize()).clicked() {
-                                    self.sender
-                                        .send(Message::OpenMod(
-                                            self.path
-                                                .take()
-                                                .expect("There should be a mod path here"),
-                                        ))
-                                        .expect("Broken channel");
+                                    if let Some(path) = self.path.take() {
+                                        self.sender.send(Message::OpenMod(path)).unwrap_or(());
+                                    }
                                 }
                                 if ui.button("Generic_Close".localize()).clicked() {
                                     should_clear = true;
@@ -138,7 +134,7 @@ impl App {
                         self.do_update(Message::CloseError);
                     }
                     if ui.icon_text_button("Generic_Copy".localize(), Icon::Copy).clicked() {
-                        ui.output_mut(|o| o.copied_text = format!("{:?}", &err));
+                        ui.output_mut(|o| o.copied_text = format!("{:?}", err));
                         self.do_update(Message::Toast("Generic_Copied".localize().into()));
                     }
                 });
@@ -175,7 +171,9 @@ impl App {
         chrome::dialog(ctx, "newProfileDialog", Icon::People, None, &"Profile_New".localize(), 380.0, |ui| {
             ui.label("Profile_New_Label".localize());
             ui.add_space(6.0);
-            let name = self.new_profile.as_mut().unwrap();
+            let Some(name) = self.new_profile.as_mut() else {
+                return;
+            };
             let response = ui.add(
                 egui::TextEdit::singleline(name)
                     .desired_width(f32::INFINITY)

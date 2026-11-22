@@ -49,7 +49,7 @@ impl App {
         let enabled = self.game_status.can_launch && !self.busy.get();
         let response = ui
             .add_enabled_ui(enabled, |ui| {
-                super::chrome::fancy_button(ui, Icon::Play, &"SW_Play".localize(), 96.0, 30.0)
+                super::chrome::hero_button(ui, Icon::Play, &"SW_Play".localize(), 96.0, 30.0)
             })
             .inner
             .on_hover_text("SW_Play_Desc".localize())
@@ -124,9 +124,12 @@ impl App {
             }
         }
         if menu_item(ui, Icon::Gamepad, &"SW_Menu_GameFolder".localize(), game_dir.is_some()) {
-            if let Some(dir) = game_dir {
+            if let Some(dir) = game_dir.clone() {
                 open::that(dir).unwrap_or(());
             }
+        }
+        if menu_item(ui, Icon::Gear, &"SW_Menu_GameConfig".localize(), game_dir.is_some()) {
+            self.do_update(Message::OpenGameConfig);
         }
     }
 

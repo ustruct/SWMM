@@ -49,7 +49,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev libudev-dev pkg-config
       - name: Build
         run: cargo build --release --workspace
       - name: Package
@@ -63,8 +63,28 @@ jobs:
           name: linux
           path: out/*
 
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release --workspace
+      - name: Package
+        run: |
+          mkdir -p out stage
+          cp target/release/swmm LICENSE stage/
+          cp assets/icon.png stage/swmm.png
+          tar -cJf "out/swmm-aarch64-macos.tar.xz" -C stage .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: out/*
+
   release:
-    needs: [windows, linux]
+    needs: [windows, linux, macos]
+    if: ${{ !cancelled() && needs.windows.result == 'success' && needs.linux.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,6 +113,9 @@ jobs:
             echo "| Windows | [swmm-x86_64-windows.msi]($base/swmm-x86_64-windows.msi) | Installer, recommended |"
             echo "| Windows | [swmm-x86_64-windows.zip]($base/swmm-x86_64-windows.zip) | Portable, no installation needed |"
             echo "| Linux and Steam Deck | [swmm-x86_64-linux.tar.xz]($base/swmm-x86_64-linux.tar.xz) | Archive |"
+            if [ -f swmm-aarch64-macos.tar.xz ]; then
+              echo "| macOS, Apple silicon | [swmm-aarch64-macos.tar.xz]($base/swmm-aarch64-macos.tar.xz) | Archive, not signed |"
+            fi
             echo
             echo "## Install with one command"
             echo

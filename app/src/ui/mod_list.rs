@@ -2,7 +2,7 @@ use std::{collections::HashMap, process::Command};
 
 use serde::{Deserialize, Serialize};
 use strfmt::Format;
-use swmm_core::mods::Mod;
+use swmm_core::{mods::Mod, origin::{self, Origin}};
 use swmm_i18n::string_ext::LocString;
 use uk_mod::ModCategory;
 use swmm_widgets::{
@@ -58,6 +58,13 @@ fn switch(ui: &mut Ui, rect: Rect, id: Id, on: bool) -> egui::Response {
     response
 }
 
+pub fn origin_color(origin: Origin) -> Color32 {
+    match origin {
+        Origin::WiiU => Color32::from_rgb(0x3f, 0xa9, 0xe0),
+        Origin::Switch => Color32::from_rgb(0xf0, 0x5a, 0x5f),
+    }
+}
+
 impl App {
     pub fn render_modlist(&mut self, ui: &mut Ui) {
         let palette = visuals::palette(ui);
@@ -81,6 +88,11 @@ impl App {
             });
             return;
         }
+        let overridden = self.overridden_mods();
+        let entered = chrome::shown_for(ui.ctx(), Id::new("modListIn"));
+        if entered < 1.0 {
+            ui.ctx().request_repaint();
+        }
         let can_drag = filter.is_empty();
         let pointer = ui.ctx().pointer_interact_pos();
         let mut row_rects: Vec<(usize, Rect)> = Vec::with_capacity(rows.len());
@@ -90,16 +102,33 @@ impl App {
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 ui.spacing_mut().item_spacing.y = 2.0;
+                let origin = ui.min_rect().top();
+                let base_opacity = ui.opacity();
+                let mut shown = 0;
                 for &index in rows.iter() {
                     let mod_ = self.mods[index].clone();
                     let width = ui.available_width();
                     let (rect, _) = ui.allocate_exact_size(vec2(width, ROW_HEIGHT), Sense::hover());
                     row_rects.push((index, rect));
+                    let id = Id::new(("modRow", mod_.hash()));
+                    let place = rect.top() - origin;
+                    let slid = ui.ctx().animate_value_with_time(id.with("slot"), place, 0.24);
+                    if self.selected.contains(&mod_)
+                        && ui
+                            .ctx()
+                            .data_mut(|d| d.remove_temp::<bool>(Id::new(super::gamepad::SCROLL_TO_SELECTED)))
+                            .unwrap_or(false)
+                    {
+                        ui.scroll_to_rect(rect, Some(egui::Align::Center));
+                    }
                     if !ui.is_rect_visible(rect) {
                         continue;
                     }
-                    let id = Id::new(("modRow", mod_.hash()));
+                    let arrive = chrome::stagger(entered, shown, 0.035, 0.32);
+                    shown += 1;
+                    ui.set_opacity(base_opacity * arrive);
                     let response = ui.interact(rect, id, Sense::click_and_drag());
+                    let rect = rect.translate(vec2((1.0 - arrive) * 18.0, slid - place));
                     let selected = self.selected.contains(&mod_);
                     let hover = ui.ctx().animate_bool_with_time(id.with("hover"), response.hovered(), 0.12);
                     let picked = ui.ctx().animate_bool_with_time(id.with("picked"), selected, 0.16);
@@ -136,11 +165,47 @@ impl App {
                                 + 24.0
                         })
                         .unwrap_or(0.0);
+                    let origin = origin::of(&mod_);
+                    let origin_text = origin.label();
+                    let origin_width = ui
+                        .fonts(|f| f.layout_no_wrap(origin_text.to_string(), FontId::proportional(11.5), palette.muted))
+                        .size()
+                        .x
+                        + 20.0;
+                    let chips_width = category_width + origin_width;
                     let text_left = toggle_rect.right() + 14.0;
+                    let warn_width = if overridden.contains(&mod_.hash()) { 22.0 } else { 0.0 };
                     let text_rect = Rect::from_min_max(
                         pos2(text_left, rect.top()),
-                        pos2((rect.right() - 12.0 - category_width).max(text_left + 40.0), rect.bottom()),
+                        pos2((rect.right() - 12.0 - chips_width - warn_width).max(text_left + 40.0), rect.bottom()),
                     );
+                    let origin_chip = Rect::from_min_max(
+                        pos2(rect.right() - 12.0 - chips_width + 6.0, rect.center().y - 10.0),
+                        pos2(rect.right() - 12.0 - category_width, rect.center().y + 10.0),
+                    );
+                    painter.rect_filled(origin_chip, Rounding::same(10.0), palette.base);
+                    painter.text(
+                        origin_chip.center(),
+                        Align2::CENTER_CENTER,
+                        origin_text,
+                        FontId::proportional(11.5),
+                        origin_color(origin),
+                    );
+                    if warn_width > 0.0 {
+                        let spot = Rect::from_center_size(
+                            pos2(rect.right() - 12.0 - chips_width - 10.0, rect.center().y),
+                            vec2(18.0, 18.0),
+                        );
+                        painter.text(
+                            spot.center(),
+                            Align2::CENTER_CENTER,
+                            Icon::Layers.glyph().to_string(),
+                            FontId::new(11.0, swmm_widgets::icons::icon_family()),
+                            ui.visuals().warn_fg_color,
+                        );
+                        ui.interact(spot, id.with("overridden"), Sense::hover())
+                            .on_hover_text("SW_Conflicts_Overridden".localize());
+                    }
                     let text_painter = ui.painter().with_clip_rect(text_rect);
                     text_painter.text(
                         pos2(text_rect.left(), rect.center().y - 9.0),
@@ -193,6 +258,7 @@ impl App {
                         self.do_update(Message::StartDrag(index));
                     }
                 }
+                ui.set_opacity(base_opacity);
                 if self.drag_index.is_some() && can_drag {
                     if let Some(pointer) = pointer {
                         let dest = row_rects

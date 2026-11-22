@@ -20,17 +20,19 @@ pub enum Page {
     Home,
     Browse,
     Profiles,
+    Compat,
     Settings,
 }
 
 impl Page {
-    pub const MAIN: [Page; 3] = [Page::Home, Page::Browse, Page::Profiles];
+    pub const MAIN: [Page; 4] = [Page::Home, Page::Browse, Page::Profiles, Page::Compat];
 
     pub fn icon(self) -> Icon {
         match self {
             Page::Home => Icon::Home,
             Page::Browse => Icon::Globe,
             Page::Profiles => Icon::People,
+            Page::Compat => Icon::ListCheck,
             Page::Settings => Icon::Gear,
         }
     }
@@ -40,6 +42,7 @@ impl Page {
             Page::Home => "SW_Page_Home",
             Page::Browse => "SW_Page_Browse",
             Page::Profiles => "SW_Page_Profiles",
+            Page::Compat => "SW_Page_Compat",
             Page::Settings => "SW_Page_Settings",
         }
         .localize()
@@ -126,15 +129,18 @@ pub fn auto_configure_on_start(core: &Manager) {
     super::jobs::sync_loader(&core.settings());
 }
 
-static LOGO: LazyLock<RetainedImage> = LazyLock::new(|| {
-    RetainedImage::from_image_bytes("swmm-icon", include_bytes!("../../../assets/icon.png"))
-        .expect("Bundled icon is a valid PNG")
-});
+fn bundled_image(name: &str, bytes: &[u8]) -> RetainedImage {
+    RetainedImage::from_image_bytes(name, bytes).unwrap_or_else(|e| {
+        log::error!("Couldn't load the bundled {name} image: {e}");
+        RetainedImage::from_color_image(name, egui::ColorImage::new([1, 1], Color32::TRANSPARENT))
+    })
+}
 
-static BANNER: LazyLock<RetainedImage> = LazyLock::new(|| {
-    RetainedImage::from_image_bytes("swmm-banner", include_bytes!("../../../assets/swmm.png"))
-        .expect("Bundled banner is a valid PNG")
-});
+static LOGO: LazyLock<RetainedImage> =
+    LazyLock::new(|| bundled_image("swmm-icon", include_bytes!("../../../assets/icon.png")));
+
+static BANNER: LazyLock<RetainedImage> =
+    LazyLock::new(|| bundled_image("swmm-banner", include_bytes!("../../../assets/swmm.png")));
 
 pub fn logo(ui: &mut Ui, size: f32) -> egui::Response {
     let tint = if ui.visuals().dark_mode { Color32::WHITE } else { Color32::BLACK };
@@ -257,18 +263,26 @@ impl App {
                     ui.ctx().request_repaint();
                 }
                 ui.horizontal_centered(|ui| {
+                    let burst_at = pos2(ui.max_rect().left() + 6.0, ui.max_rect().center().y);
+                    chrome::paint_success_burst(ui.ctx(), burst_at);
                     let (icon, text) = self.status_text();
-                    if self.busy.get() {
-                        chrome::progress_ring(ui, 13.0, palette.accent_text);
-                    } else {
-                        let color = match icon {
-                            Icon::Check => visuals::GREEN,
-                            Icon::Warning => ui.visuals().warn_fg_color,
-                            _ => palette.accent_text,
-                        };
-                        ui.label(icon.rich(11.0).color(color));
-                    }
-                    ui.add(egui::Label::new(RichText::new(text).size(12.0).color(palette.muted)).truncate());
+                    let key = if self.busy.get() { 0 } else { Id::new(text.as_str()).value() };
+                    let fade = chrome::content_fade(ui.ctx(), Id::new("statusFade"), key, 0.25);
+                    ui.add_space((1.0 - fade) * 6.0);
+                    ui.scope(|ui| {
+                        ui.multiply_opacity(fade);
+                        if self.busy.get() {
+                            chrome::progress_ring(ui, 13.0, palette.accent_text);
+                        } else {
+                            let color = match icon {
+                                Icon::Check => visuals::GREEN,
+                                Icon::Warning => ui.visuals().warn_fg_color,
+                                _ => palette.accent_text,
+                            };
+                            ui.label(icon.rich(11.0).color(color));
+                        }
+                        ui.add(egui::Label::new(RichText::new(text).size(12.0).color(palette.muted)).truncate());
+                    });
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                         ui.label(
                             RichText::new(format!("v{}", env!("CARGO_PKG_VERSION")))
@@ -286,6 +300,16 @@ impl App {
                         ui.label(RichText::new("·").color(palette.muted));
                         ui.label(RichText::new(self.current_profile()).size(12.0).color(palette.muted));
                         ui.label(Icon::User.rich(10.0).color(palette.muted));
+                        if self.gamepad.connected() {
+                            ui.label(RichText::new("·").color(palette.muted));
+                            ui.add(
+                                egui::Label::new(
+                                    RichText::new("SW_Gamepad_Hint".localize()).size(12.0).color(palette.muted),
+                                )
+                                .truncate(),
+                            );
+                            ui.label(Icon::Gamepad.rich(11.0).color(palette.accent_text));
+                        }
                     });
                 });
             });
@@ -303,15 +327,16 @@ impl App {
             ui.painter().rect_filled(rect, Rounding::same(7.0), palette.hover.gamma_multiply(fill));
         }
         let color = chrome::mix(chrome::mix(palette.muted, palette.text, hover), palette.text, active);
+        let nudge = hover * 2.0;
         ui.painter().text(
-            pos2(rect.left() + 20.0, rect.center().y),
+            pos2(rect.left() + 20.0 + nudge, rect.center().y),
             Align2::CENTER_CENTER,
             page.icon().glyph().to_string(),
             egui::FontId::new(14.0, icon_family()),
             chrome::mix(color, palette.accent_text, active),
         );
         ui.painter().text(
-            pos2(rect.left() + 40.0, rect.center().y),
+            pos2(rect.left() + 40.0 + nudge, rect.center().y),
             Align2::LEFT_CENTER,
             page.title(),
             egui::FontId::proportional(14.0),
@@ -407,6 +432,10 @@ impl App {
                         page_header(ui, page);
                         self.render_profiles_page(ui);
                     }
+                    Page::Compat => {
+                        page_header(ui, page);
+                        self.render_compat(ui);
+                    }
                     Page::Settings => {
                         page_header(ui, page);
                         self.render_settings(ui);
@@ -440,7 +469,7 @@ impl App {
         let time = ui.input(|i| i.time);
         ui.ctx().request_repaint_after(std::time::Duration::from_millis(33));
         let avail = ui.available_rect_before_wrap();
-        let width = avail.width().min(720.0).max(240.0);
+        let width = avail.width().clamp(240.0, 720.0);
         let area = Rect::from_center_size(avail.center(), Vec2::new(width, avail.height().min(660.0)));
         ui.allocate_ui_at_rect(area, |ui| {
             let float = (time * 1.3).sin() as f32 * 4.0;
@@ -520,39 +549,29 @@ impl App {
         let width = ui.available_width();
         ui.horizontal(|ui| {
             let search_width = (width - 150.0 - 36.0 - 2.0 * ui.spacing().item_spacing.x).max(120.0);
-            egui::Frame::none()
-                .fill(palette.raised)
-                .stroke(Stroke::new(1.0_f32, palette.border))
-                .rounding(8.0)
-                .inner_margin(Margin::symmetric(10.0, 6.0))
-                .show(ui, |ui| {
-                    ui.set_width(search_width - 22.0);
-                    ui.horizontal(|ui| {
-                        ui.label(Icon::Search.rich(12.0).color(palette.muted));
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.mod_list_filter)
-                                .frame(false)
-                                .hint_text("SW_SearchMods".localize())
-                                .desired_width(f32::INFINITY),
-                        );
-                    });
-                });
+            chrome::search_box(ui, search_width, &mut self.mod_list_filter, &"SW_SearchMods".localize());
             let current = self.current_profile();
-            egui::ComboBox::from_id_source("homeProfiles")
-                .width(150.0)
-                .selected_text(current.as_str())
-                .show_ui(ui, |ui| {
-                    for profile in self.core.settings().profiles() {
-                        if ui.selectable_label(profile.as_str() == current, profile.as_str()).clicked()
-                            && profile.as_str() != current
-                        {
-                            self.do_update(Message::ChangeProfile(profile.to_string()));
+            chrome::control_sized(ui, |ui| {
+                egui::ComboBox::from_id_source("homeProfiles")
+                    .width(150.0)
+                    .selected_text(current.as_str())
+                    .show_ui(ui, |ui| {
+                        for profile in self.core.settings().profiles() {
+                            if ui.selectable_label(profile.as_str() == current, profile.as_str()).clicked()
+                                && profile.as_str() != current
+                            {
+                                self.do_update(Message::ChangeProfile(profile.to_string()));
+                            }
                         }
-                    }
-                })
-                .response
-                .on_hover_text("Profile_Select".localize());
-            if action_button(ui, Icon::Add, "SW_Tip_Install", true) {
+                    })
+                    .response
+                    .on_hover_text("Profile_Select".localize());
+            });
+            if ui
+                .add(egui::Button::new(Icon::Add.rich(14.0)).min_size(Vec2::new(36.0, chrome::CONTROL_HEIGHT)))
+                .on_hover_text("SW_Tip_Install".localize())
+                .clicked()
+            {
                 self.do_update(Message::SelectFile);
             }
         });
@@ -614,11 +633,33 @@ impl App {
             }
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 self.primary_action(ui);
+                ui.add_space(8.0);
+                let muted = visuals::palette(ui).muted;
+                ui.add(
+                    egui::Label::new(RichText::new("SW_LoadOrderHint".localize()).size(12.0).color(muted))
+                        .truncate(),
+                );
             });
         });
     }
 
     fn primary_action(&self, ui: &mut Ui) {
+        let kind = if !self.dirty().is_empty() {
+            1
+        } else if self.core.deploy_manager().pending() {
+            2
+        } else {
+            3
+        };
+        let fade = chrome::content_fade(ui.ctx(), Id::new("primaryAction"), kind, 0.28);
+        ui.scope(|ui| {
+            ui.multiply_opacity(fade);
+            ui.add_space((1.0 - fade) * 10.0);
+            self.primary_action_inner(ui);
+        });
+    }
+
+    fn primary_action_inner(&self, ui: &mut Ui) {
         if !self.dirty().is_empty() {
             let response = accent_button(ui, Icon::ListCheck, "Generic_Apply".localize()).on_hover_ui(|ui| {
                 ui.label(RichText::new("Pending_Files".localize()).strong());
@@ -692,6 +733,8 @@ impl App {
         ui.add_space(8.0);
         ui.horizontal_wrapped(|ui| {
             ui.spacing_mut().item_spacing.x = 6.0;
+            let origin = swmm_core::origin::of(&mod_);
+            chip(ui, origin.label(), super::mod_list::origin_color(origin));
             if !matches!(
                 mod_.meta.category,
                 uk_mod::ModCategory::None | uk_mod::ModCategory::Other
@@ -703,6 +746,7 @@ impl App {
                 let warn = ui.visuals().warn_fg_color;
                 chip(ui, "SW_Disabled".localize().as_ref(), warn);
             }
+
             if !mod_.meta.options.is_empty()
                 && ui
                     .add(
@@ -744,6 +788,7 @@ impl App {
                         });
                     }
                 }
+                self.render_conflicts(ui, &mod_);
             });
     }
 
@@ -779,6 +824,17 @@ impl App {
                     .clicked()
                 {
                     self.do_update(Message::NewProfile);
+                }
+                ui.add_space(4.0);
+                if ui
+                    .add(
+                        egui::Button::new(egui::WidgetText::from(icon_text_job_owned(ui, Icon::Import, &"SW_Modpack_Import".localize())))
+                            .min_size(Vec2::new(ui.available_width(), 32.0)),
+                    )
+                    .on_hover_text("SW_Modpack_Import_Desc".localize())
+                    .clicked()
+                {
+                    self.do_update(Message::SelectModpack);
                 }
                 ui.add_space(10.0);
                 egui::ScrollArea::vertical().drag_to_scroll(false)
@@ -835,12 +891,14 @@ impl App {
                 let (enabled, total) = profile_counts(&state, &selected);
                 ui.horizontal(|ui| {
                     let rename = state.rename.get_or_insert_with(|| selected.clone());
+                    let margin = Vec2::new(10.0, 6.0);
+                    let name_width = ui.available_width() - 90.0 - ui.spacing().item_spacing.x - margin.x * 2.0;
                     ui.add(
                         egui::TextEdit::singleline(&mut *rename)
                             .font(egui::FontId::new(18.0, egui::FontFamily::Name("Bold".into())))
                             .hint_text("SW_ProfileName".localize())
-                            .margin(Vec2::new(10.0, 6.0))
-                            .desired_width((ui.available_width() - 100.0).max(120.0)),
+                            .margin(margin)
+                            .desired_width(name_width.max(80.0)),
                     );
                     let can_rename = !rename.trim().is_empty() && *rename != selected;
                     if ui
@@ -857,7 +915,8 @@ impl App {
                         .color(palette.muted),
                 );
                 ui.add_space(12.0);
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.spacing_mut().item_spacing.y = 6.0;
                     if selected == active {
                         ui.label(Icon::Check.rich(13.0).color(visuals::GREEN));
                         ui.label(RichText::new("SW_ProfileActive".localize()).color(visuals::GREEN));
@@ -870,6 +929,17 @@ impl App {
                         .clicked()
                     {
                         self.do_update(Message::DuplicateProfile(selected.clone()));
+                    }
+                    if ui
+                        .add_enabled(
+                            total > 0,
+                            egui::Button::new(icon_text_job_owned(ui, Icon::Package, &"SW_Modpack_Share".localize()))
+                                .min_size(Vec2::new(0.0, 30.0)),
+                        )
+                        .on_hover_text("SW_Modpack_Share_Desc".localize())
+                        .clicked()
+                    {
+                        self.do_update(Message::ExportModpack(selected.clone()));
                     }
                     let delete = ui
                         .add_enabled(

@@ -25,8 +25,9 @@ use swmm_core::source::SourceInfo;
 
 use super::{chrome, App, Message};
 
-const GAME_ID: u64 = 6386;
-const PER_PAGE: u32 = 20;
+const SWITCH_GAME: u64 = 6386;
+const WIIU_GAME: u64 = 5866;
+const PER_PAGE: u32 = 15;
 const API: &str = "https://gamebanana.com/apiv11";
 const MIN_CARD_WIDTH: f32 = 200.0;
 const CARD_GAP: f32 = 14.0;
@@ -36,6 +37,7 @@ const DETAILS_WIDTH: f32 = 330.0;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BrowseSort {
     Popular,
+    Downloads,
     Newest,
     Updated,
 }
@@ -44,6 +46,7 @@ impl BrowseSort {
     fn key(self) -> &'static str {
         match self {
             BrowseSort::Popular => "Browse_Sort_Popular",
+            BrowseSort::Downloads => "Browse_Sort_Downloads",
             BrowseSort::Newest => "Browse_Sort_Newest",
             BrowseSort::Updated => "Browse_Sort_Updated",
         }
@@ -51,8 +54,7 @@ impl BrowseSort {
 
     fn api(self) -> &'static str {
         match self {
-            BrowseSort::Popular => "default",
-            BrowseSort::Newest => "new",
+            BrowseSort::Popular | BrowseSort::Downloads | BrowseSort::Newest => "new",
             BrowseSort::Updated => "updated",
         }
     }
@@ -68,6 +70,8 @@ pub struct BrowseMod {
     pub views: u64,
     pub thumbnail: Option<String>,
     pub nsfw: bool,
+    pub added: u64,
+    pub updated: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -98,12 +102,38 @@ enum BrowseEvent {
     Page(u64, Result<(Vec<BrowseMod>, bool)>),
     Details(Result<BrowseDetails>),
     Thumbnail(u64, Option<(ColorImage, ColorImage)>),
-    Downloaded(Result<(PathBuf, SourceInfo)>),
+    Downloaded(Result<(PathBuf, SourceInfo)>, Option<(u64, String, String)>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BrowsePlatform {
+    Switch,
+    WiiU,
+    All,
+}
+
+impl BrowsePlatform {
+    fn key(self) -> &'static str {
+        match self {
+            BrowsePlatform::Switch => "Browse_Platform_Switch",
+            BrowsePlatform::WiiU => "Browse_Platform_WiiU",
+            BrowsePlatform::All => "Browse_Platform_All",
+        }
+    }
+
+    fn games(self) -> &'static [u64] {
+        match self {
+            BrowsePlatform::Switch => &[SWITCH_GAME],
+            BrowsePlatform::WiiU => &[WIIU_GAME],
+            BrowsePlatform::All => &[SWITCH_GAME, WIIU_GAME],
+        }
+    }
 }
 
 pub struct BrowserState {
     query: String,
     sort: BrowseSort,
+    platform: BrowsePlatform,
     page: u32,
     results: Vec<BrowseMod>,
     has_more: bool,
@@ -121,6 +151,7 @@ pub struct BrowserState {
     blurred: HashMap<u64, TextureHandle>,
     revealed: HashSet<u64>,
     loaded_once: bool,
+    pending: Vec<Message>,
     tx: Sender<BrowseEvent>,
     rx: Receiver<BrowseEvent>,
 }
@@ -131,6 +162,7 @@ impl Default for BrowserState {
         Self {
             query: String::new(),
             sort: BrowseSort::Popular,
+            platform: BrowsePlatform::Switch,
             page: 1,
             results: Vec::new(),
             has_more: false,
@@ -148,6 +180,7 @@ impl Default for BrowserState {
             blurred: HashMap::new(),
             revealed: HashSet::new(),
             loaded_once: false,
+            pending: Vec::new(),
             tx,
             rx,
         }
@@ -269,40 +302,78 @@ fn parse_mod(value: &Value) -> Option<BrowseMod> {
         views: number_of(value, "_nViewCount"),
         thumbnail: thumbnail_of(value),
         nsfw: is_nsfw(value),
+        added: number_of(value, "_tsDateAdded"),
+        updated: number_of(value, "_tsDateModified").max(number_of(value, "_tsDateUpdated")),
     })
 }
 
-fn fetch_page(query: &str, sort: BrowseSort, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
-    let key = format!("{}|{}|{page}", query.trim().to_lowercase(), sort.key());
+fn fetch_page(query: &str, sort: BrowseSort, platform: BrowsePlatform, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
+    let key = format!("{}|{}|{}|{page}", query.trim().to_lowercase(), sort.key(), platform.key());
     if let Some(result) = cached(&*PAGE_CACHE, &key) {
         return Ok(result);
     }
-    let result = fetch_page_uncached(query, sort, page)?;
+    let result = fetch_page_uncached(query, sort, platform, page)?;
     remember(&*PAGE_CACHE, key, result.clone());
     Ok(result)
 }
 
-fn fetch_page_uncached(query: &str, sort: BrowseSort, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
-    let mut search = query.trim().to_string();
-    if !search.to_lowercase().contains("switch") {
-        if !search.is_empty() {
-            search.push(' ');
-        }
-        search.push_str("switch");
+fn fetch_page_uncached(query: &str, sort: BrowseSort, platform: BrowsePlatform, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
+    let games = platform.games();
+    let mut lists = Vec::with_capacity(games.len());
+    let mut more = false;
+    for &game in games {
+        let (mods, game_more) = fetch_game_page(query, sort, game, page)?;
+        more |= game_more;
+        lists.push(mods);
     }
-    let url = if search.is_empty() {
+    if lists.len() == 1 {
+        return Ok((lists.pop().unwrap_or_default(), more));
+    }
+    let mut mods: Vec<BrowseMod> = Vec::new();
+    let longest = lists.iter().map(Vec::len).max().unwrap_or(0);
+    for i in 0..longest {
+        mods.extend(lists.iter().filter_map(|l| l.get(i).cloned()));
+    }
+    if query.trim().is_empty() {
+        match sort {
+            BrowseSort::Popular => mods.sort_by_key(|m| std::cmp::Reverse(m.likes)),
+            BrowseSort::Downloads => {}
+            BrowseSort::Newest => mods.sort_by_key(|m| std::cmp::Reverse(m.added)),
+            BrowseSort::Updated => mods.sort_by_key(|m| std::cmp::Reverse(m.updated.max(m.added))),
+        }
+    }
+    Ok((mods, more))
+}
+
+fn fetch_game_page(query: &str, sort: BrowseSort, game: u64, page: u32) -> Result<(Vec<BrowseMod>, bool)> {
+    let words = query.trim();
+    let url = if sort == BrowseSort::Downloads {
+        let name = if words.is_empty() {
+            std::string::String::new()
+        } else {
+            format!("&_aFilters%5BGeneric_Name%5D=contains,{}", encode(words))
+        };
         format!(
-            "{API}/Game/{GAME_ID}/Subfeed?_nPage={page}&_nPerpage={PER_PAGE}&_sSort={}&_csvModelInclusions=Mod",
+            "{API}/Mod/Index?_nPage={page}&_nPerpage={PER_PAGE}&_aFilters%5BGeneric_Game%5D={game}&_sSort=Generic_MostDownloaded{name}"
+        )
+    } else if words.is_empty() && sort == BrowseSort::Popular {
+        format!(
+            "{API}/Mod/Index?_nPage={page}&_nPerpage={PER_PAGE}&_aFilters%5BGeneric_Game%5D={game}&_sSort=Generic_MostLiked"
+        )
+    } else if words.is_empty() {
+        format!(
+            "{API}/Game/{game}/Subfeed?_nPage={page}&_nPerpage={PER_PAGE}&_sSort={}&_csvModelInclusions=Mod",
             sort.api()
         )
     } else {
         format!(
-            "{API}/Util/Search/Results?_sModelName=Mod&_sOrder={}&_idGameRow={GAME_ID}&_sSearchString={}&_nPage={page}&_nPerpage={PER_PAGE}",
+            "{API}/Util/Search/Results?_sModelName=Mod&_sOrder={}&_idGameRow={game}&_sSearchString={}&_nPage={page}&_nPerpage={PER_PAGE}",
             match sort {
-                BrowseSort::Popular => "best_match",
-                BrowseSort::Newest | BrowseSort::Updated => "date",
+                BrowseSort::Popular | BrowseSort::Downloads => "best_match",
+                BrowseSort::Newest => "date",
+                BrowseSort::Updated => "udate",
             },
-            encode(&search)
+            encode(words)
         )
     };
     let json = get_json(&url)?;
@@ -543,7 +614,7 @@ fn render_download_progress(ui: &mut Ui, state: &BrowserState) {
         }
         text
     } else {
-        format!("{}", format_size(done))
+        format_size(done).to_string()
     };
     ui.label(RichText::new(status).size(12.0).color(palette.muted));
     ui.ctx().request_repaint_after(std::time::Duration::from_millis(60));
@@ -572,10 +643,10 @@ impl BrowserState {
         let request = self.request;
         self.loading = true;
         self.error = None;
-        let (query, sort, page) = (self.query.clone(), self.sort, self.page);
+        let (query, sort, platform, page) = (self.query.clone(), self.sort, self.platform, self.page);
         let tx = self.tx.clone();
         std::thread::spawn(move || {
-            let result = fetch_page(&query, sort, page);
+            let result = fetch_page(&query, sort, platform, page);
             tx.send(BrowseEvent::Page(request, result)).unwrap_or(());
         });
     }
@@ -603,6 +674,9 @@ impl BrowserState {
     }
 
     fn poll(&mut self, ctx: &egui::Context, sender: &Sender<Message>) {
+        for message in self.pending.drain(..) {
+            sender.send(message).unwrap_or(());
+        }
         while let Ok(event) = self.rx.try_recv() {
             match event {
                 BrowseEvent::Page(request, result) if request == self.request => {
@@ -636,11 +710,15 @@ impl BrowserState {
                     });
                     self.thumbnails.insert(id, texture);
                 }
-                BrowseEvent::Downloaded(result) => {
+                BrowseEvent::Downloaded(result, test) => {
                     self.downloading = None;
                     match result {
+                        Ok((path, _)) if test.is_some() => {
+                            let (id, name, file) = test.unwrap_or_default();
+                            sender.send(Message::TestCompat { path, id, name, file, downloaded: true }).unwrap_or(())
+                        }
                         Ok((path, source)) => sender.send(Message::OpenDownloadedMod(path, source)).unwrap_or(()),
-                        Err(e) => sender.send(Message::Error(e.into())).unwrap_or(()),
+                        Err(e) => sender.send(Message::Error(e)).unwrap_or(()),
                     }
                 }
             }
@@ -648,7 +726,7 @@ impl BrowserState {
         }
     }
 
-    fn start_download(&mut self, file: BrowseFile, details: BrowseDetails) {
+    fn start_download(&mut self, file: BrowseFile, details: BrowseDetails, test: bool) {
         self.downloading = Some(file.name.clone());
         self.download_done.store(0, Ordering::Relaxed);
         self.download_total = file.size;
@@ -656,8 +734,10 @@ impl BrowserState {
         let tx = self.tx.clone();
         let done = self.download_done.clone();
         std::thread::spawn(move || {
-            let result = download(file, &done).map(|path| (path, source_info(&details)));
-            tx.send(BrowseEvent::Downloaded(result)).unwrap_or(());
+            let test = test.then(|| (details.id, details.name.clone(), file.name.clone()));
+            let source = if test.is_some() { SourceInfo::default() } else { source_info(&details) };
+            let result = download(file, &done).map(|path| (path, source));
+            tx.send(BrowseEvent::Downloaded(result, test)).unwrap_or(());
         });
     }
 }
@@ -674,33 +754,18 @@ impl App {
         let palette = visuals::palette(ui);
         let mut changed = false;
         ui.horizontal(|ui| {
-            let filter_width = 150.0;
+            let filter_width = 210.0;
             let refresh_width = 34.0;
             let search_width =
                 (ui.available_width() - filter_width - refresh_width - 2.0 * ui.spacing().item_spacing.x).max(140.0);
-            egui::Frame::none()
-                .fill(palette.raised)
-                .stroke(Stroke::new(1.0_f32, palette.border))
-                .rounding(8.0)
-                .inner_margin(Margin::symmetric(10.0, 6.0))
-                .show(ui, |ui| {
-                    ui.set_width(search_width - 22.0);
-                    ui.horizontal(|ui| {
-                        ui.label(Icon::Search.rich(12.0).color(palette.muted));
-                        let search = ui.add(
-                            egui::TextEdit::singleline(&mut state.query)
-                                .frame(false)
-                                .hint_text("Browse_Search".localize())
-                                .desired_width(f32::INFINITY),
-                        );
-                        if search.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                            changed = true;
-                        }
-                    });
-                });
+            let search = chrome::search_box(ui, search_width, &mut state.query, &"Browse_Search".localize());
+            if search.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                changed = true;
+            }
             let current = state.sort;
-            let label = swmm_widgets::icons::icon_text_job(ui, Icon::Filter, &current.key().localize(), None);
-            let button = ui.add(egui::Button::new(label).min_size(Vec2::new(filter_width, 32.0)));
+            let shown = format!("{} · {}", current.key().localize(), state.platform.key().localize());
+            let label = swmm_widgets::icons::icon_text_job(ui, Icon::Filter, &shown, None);
+            let button = ui.add(egui::Button::new(label).min_size(Vec2::new(filter_width, chrome::CONTROL_HEIGHT)));
             let popup = ui.make_persistent_id("browseFilters");
             if button.clicked() {
                 ui.memory_mut(|m| m.toggle_popup(popup));
@@ -709,7 +774,7 @@ impl App {
                 ui.set_min_width(filter_width + 40.0);
                 ui.label(RichText::new("Browse_Sort".localize()).size(12.0).color(palette.muted));
                 ui.add_space(2.0);
-                for sort in [BrowseSort::Popular, BrowseSort::Newest, BrowseSort::Updated] {
+                for sort in [BrowseSort::Popular, BrowseSort::Downloads, BrowseSort::Newest, BrowseSort::Updated] {
                     let picked = sort == current;
                     let job = swmm_widgets::icons::icon_text_job(
                         ui,
@@ -726,9 +791,30 @@ impl App {
                         changed = true;
                     }
                 }
+                ui.add_space(6.0);
+                ui.label(RichText::new("Browse_Platform".localize()).size(12.0).color(palette.muted));
+                ui.add_space(2.0);
+                let current_platform = state.platform;
+                for platform in [BrowsePlatform::Switch, BrowsePlatform::WiiU, BrowsePlatform::All] {
+                    let picked = platform == current_platform;
+                    let job = swmm_widgets::icons::icon_text_job(
+                        ui,
+                        if picked { Icon::Check } else { Icon::Blank },
+                        &platform.key().localize(),
+                        Some(if picked { palette.text } else { palette.muted }),
+                    );
+                    if ui
+                        .add(egui::Button::new(job).frame(false).min_size(Vec2::new(filter_width + 40.0, 28.0)))
+                        .clicked()
+                        && !picked
+                    {
+                        state.platform = platform;
+                        changed = true;
+                    }
+                }
             });
             if ui
-                .add(egui::Button::new(Icon::Refresh.rich(13.0)).min_size(Vec2::new(refresh_width, 32.0)))
+                .add(egui::Button::new(Icon::Refresh.rich(13.0)).min_size(Vec2::new(refresh_width, chrome::CONTROL_HEIGHT)))
                 .on_hover_text("Browse_Refresh".localize())
                 .clicked()
             {
@@ -825,9 +911,7 @@ impl App {
             .frame(egui::Frame::none())
             .show_inside(ui, |ui| {
                 if state.loading && state.results.is_empty() {
-                    ui.centered_and_justified(|ui| {
-                        chrome::progress_ring(ui, 28.0, palette.accent_text);
-                    });
+                    render_skeleton_grid(ui);
                     return;
                 }
                 if let Some(error) = state.error.clone() {
@@ -883,6 +967,51 @@ impl App {
                         }
                     });
             });
+    }
+}
+
+fn render_skeleton_grid(ui: &mut Ui) {
+    let palette = visuals::palette(ui);
+    let time = ui.input(|i| i.time);
+    ui.ctx().request_repaint();
+    let available = ui.available_width() - 6.0;
+    let columns = (((available + CARD_GAP) / (MIN_CARD_WIDTH + CARD_GAP)).floor() as usize).max(1);
+    let card_width = ((available - CARD_GAP * (columns - 1) as f32) / columns as f32).floor();
+    let image_height = (card_width * 9.0 / 16.0).round();
+    let card_size = Vec2::new(card_width, image_height + CARD_TEXT_HEIGHT);
+    let rows = ((ui.available_height() / (card_size.y + CARD_GAP)).ceil() as usize).max(1);
+    let appear = chrome::shown_for(ui.ctx(), egui::Id::new("browseSkeleton"));
+    ui.add_space(4.0);
+    for row in 0..rows {
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = CARD_GAP;
+            for column in 0..columns {
+                let (rect, _) = ui.allocate_exact_size(card_size, egui::Sense::hover());
+                let index = row * columns + column;
+                let fade = chrome::stagger(appear, index, 0.04, 0.3);
+                let rounding = egui::Rounding::same(10.0);
+                ui.painter().rect(
+                    rect,
+                    rounding,
+                    palette.raised.gamma_multiply(fade),
+                    egui::Stroke::new(1.0_f32, palette.border.gamma_multiply(fade)),
+                );
+                let image = egui::Rect::from_min_size(rect.min, Vec2::new(rect.width(), image_height));
+                let bar = |y: f32, width: f32| {
+                    egui::Rect::from_min_size(
+                        egui::pos2(rect.left() + 12.0, image.bottom() + y),
+                        Vec2::new((rect.width() - 24.0) * width, 10.0),
+                    )
+                };
+                let block = palette.hover.gamma_multiply(fade);
+                ui.painter().rect_filled(image, egui::Rounding { nw: 10.0, ne: 10.0, sw: 0.0, se: 0.0 }, block);
+                ui.painter().rect_filled(bar(14.0, 0.75), egui::Rounding::same(5.0), block);
+                ui.painter().rect_filled(bar(32.0, 0.45), egui::Rounding::same(5.0), block);
+                let phase = ((time * 0.8 - column as f64 * 0.08 - row as f64 * 0.05).rem_euclid(1.4) / 1.4) as f32;
+                chrome::paint_shimmer(ui.painter(), rect, phase, fade);
+            }
+        });
+        ui.add_space(CARD_GAP - ui.spacing().item_spacing.y);
     }
 }
 
@@ -1140,6 +1269,17 @@ fn render_details_body(ui: &mut Ui, state: &mut BrowserState) {
     if ui.icon_text_button("Browse_OpenPage".localize(), Icon::External).clicked() {
         open::that(&details.url).unwrap_or(());
     }
+    if let Some(entry) = swmm_core::compat::lookup(details.id) {
+        ui.add_space(10.0);
+        let (color, label) = super::compat::look(entry.status);
+        ui.horizontal(|ui| {
+            super::frame::chip(ui, &label, color);
+            if ui.link("Browse_Compat_See".localize()).clicked() {
+                state.pending.push(Message::ShowCompat(entry.name.clone()));
+                ui.ctx().request_repaint();
+            }
+        });
+    }
     ui.add_space(14.0);
     ui.label(RichText::new("Browse_Files".localize()).size(13.0).strong().color(palette.muted));
     ui.add_space(4.0);
@@ -1174,14 +1314,21 @@ fn render_details_body(ui: &mut Ui, state: &mut BrowserState) {
                 if downloading {
                     render_download_progress(ui, state);
                 } else {
-                    let clicked = ui
+                    let (install, test) = ui
                         .add_enabled_ui(busy.is_none(), |ui| {
-                            chrome::fancy_button(ui, Icon::Download, &"Browse_Install".localize(), ui.available_width(), 30.0)
+                            let install = chrome::fancy_button(ui, Icon::Download, &"Browse_Install".localize(), ui.available_width(), 30.0);
+                            ui.add_space(2.0);
+                            let test = ui
+                                .add_sized(
+                                    Vec2::new(ui.available_width(), 26.0),
+                                    egui::Button::new(swmm_widgets::icons::icon_text_job(ui, Icon::ListCheck, &"Browse_TestCompat".localize(), None)),
+                                )
+                                .on_hover_text("Browse_TestCompat_Help".localize());
+                            (install.clicked(), test.clicked())
                         })
-                        .inner
-                        .clicked();
-                    if clicked {
-                        state.start_download(file.clone(), details.clone());
+                        .inner;
+                    if install || test {
+                        state.start_download(file.clone(), details.clone(), test);
                     }
                 }
             });

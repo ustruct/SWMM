@@ -13,6 +13,7 @@ use swmm_widgets::{
 use super::*;
 
 pub const TITLE_HEIGHT: f32 = 42.0;
+pub const CONTROL_HEIGHT: f32 = 32.0;
 pub const WINDOW_ROUNDING: f32 = if cfg!(windows) { 8.0 } else { 10.0 };
 const CAPTION_WIDTH: f32 = 46.0;
 const RESIZE_MARGIN: f32 = 5.0;
@@ -65,10 +66,85 @@ pub fn window_in(ctx: &egui::Context, id: Id, duration: f32) -> f32 {
         d.insert_temp(frame_id, frame);
         last
     });
-    if last.map_or(true, |l| frame > l + 1) {
+    if last.is_none_or(|l| frame > l + 1) {
         appear(ctx, id.with("windowIn"), false, duration);
     }
     appear(ctx, id.with("windowIn"), true, duration)
+}
+
+pub fn shown_for(ctx: &egui::Context, id: Id) -> f32 {
+    let frame_id = id.with("shownFrame");
+    let since_id = id.with("shownSince");
+    let frame = ctx.frame_nr();
+    let time = now(ctx);
+    ctx.data_mut(|d| {
+        let last = d.get_temp::<u64>(frame_id);
+        d.insert_temp(frame_id, frame);
+        if last.is_none_or(|l| frame > l + 1) {
+            d.insert_temp(since_id, time);
+        }
+        (time - d.get_temp::<f64>(since_id).unwrap_or(time)) as f32
+    })
+}
+
+pub fn stagger(elapsed: f32, index: usize, step: f32, duration: f32) -> f32 {
+    ease((elapsed - index.min(16) as f32 * step) / duration)
+}
+
+fn paint_shine(painter: &egui::Painter, rect: Rect, progress: f32) {
+    let half = rect.height() * 0.8;
+    let skew = rect.height() * 0.45;
+    let reach = half + skew;
+    let center = egui::lerp((rect.left() - reach)..=(rect.right() + reach), progress);
+    let glow = Color32::WHITE.gamma_multiply(0.3);
+    let mut mesh = egui::Mesh::default();
+    for (dx, color) in [(-half, Color32::TRANSPARENT), (0.0, glow), (half, Color32::TRANSPARENT)] {
+        mesh.colored_vertex(pos2(center + dx + skew, rect.top()), color);
+        mesh.colored_vertex(pos2(center + dx - skew, rect.bottom()), color);
+    }
+    for i in [0, 2] {
+        mesh.add_triangle(i, i + 1, i + 2);
+        mesh.add_triangle(i + 1, i + 3, i + 2);
+    }
+    painter.with_clip_rect(rect).add(Shape::mesh(mesh));
+}
+
+pub fn paint_shimmer(painter: &egui::Painter, rect: Rect, progress: f32, strength: f32) {
+    let half = rect.width() * 0.35;
+    let center = egui::lerp((rect.left() - half)..=(rect.right() + half), progress);
+    let glow = Color32::WHITE.gamma_multiply(0.06 * strength);
+    let mut mesh = egui::Mesh::default();
+    for (dx, color) in [(-half, Color32::TRANSPARENT), (0.0, glow), (half, Color32::TRANSPARENT)] {
+        mesh.colored_vertex(pos2(center + dx + 20.0, rect.top()), color);
+        mesh.colored_vertex(pos2(center + dx - 20.0, rect.bottom()), color);
+    }
+    for i in [0, 2] {
+        mesh.add_triangle(i, i + 1, i + 2);
+        mesh.add_triangle(i + 1, i + 3, i + 2);
+    }
+    painter.with_clip_rect(rect.shrink(1.0)).add(Shape::mesh(mesh));
+}
+
+fn paint_ripple(ui: &Ui, response: &egui::Response, rect: Rect, rounding: Rounding) {
+    let id = response.id.with("ripple");
+    let time = now(ui.ctx());
+    if response.clicked() {
+        let origin = response.interact_pointer_pos().unwrap_or(rect.center());
+        ui.ctx().data_mut(|d| d.insert_temp(id, (time, origin)));
+    }
+    let Some((start, origin)) = ui.ctx().data(|d| d.get_temp::<(f64, egui::Pos2)>(id)) else {
+        return;
+    };
+    let t = ((time - start) / 0.55) as f32;
+    if t >= 1.0 {
+        ui.ctx().data_mut(|d| d.remove::<(f64, egui::Pos2)>(id));
+        return;
+    }
+    let radius = ease(t) * rect.width().max(rect.height()) * 1.1;
+    let painter = ui.painter().with_clip_rect(rect);
+    painter.circle_filled(origin, radius, Color32::WHITE.gamma_multiply(0.28 * (1.0 - t)));
+    painter.rect_stroke(rect, rounding, Stroke::new(1.0_f32, Color32::WHITE.gamma_multiply(0.35 * (1.0 - t))));
+    ui.ctx().request_repaint();
 }
 
 fn inline_job(ui: &Ui, text: &str, size: f32, color: Color32, accent: Color32, width: f32) -> egui::text::LayoutJob {
@@ -216,6 +292,14 @@ pub fn indeterminate_bar(painter: &egui::Painter, rect: Rect, time: f64, color: 
 }
 
 pub fn fancy_button(ui: &mut Ui, icon: Icon, text: &str, min_width: f32, height: f32) -> egui::Response {
+    styled_button(ui, icon, text, min_width, height, false)
+}
+
+pub fn hero_button(ui: &mut Ui, icon: Icon, text: &str, min_width: f32, height: f32) -> egui::Response {
+    styled_button(ui, icon, text, min_width, height, true)
+}
+
+fn styled_button(ui: &mut Ui, icon: Icon, text: &str, min_width: f32, height: f32, shine: bool) -> egui::Response {
     let enabled = ui.is_enabled();
     let job = icon_text_job(ui, icon, text, Some(Color32::WHITE));
     let galley = ui.fonts(|f| f.layout_job(job));
@@ -227,8 +311,10 @@ pub fn fancy_button(ui: &mut Ui, icon: Icon, text: &str, min_width: f32, height:
     }
     let palette = visuals::palette(ui);
     let hover = ui.ctx().animate_bool_with_time(response.id.with("hover"), response.hovered() && enabled, 0.14);
-    let pressed = response.is_pointer_button_down_on() && enabled;
-    let shape_rect = if pressed { rect.shrink(1.0) } else { rect };
+    let pressed = ui
+        .ctx()
+        .animate_bool_with_time(response.id.with("press"), response.is_pointer_button_down_on() && enabled, 0.08);
+    let shape_rect = rect.translate(vec2(0.0, -hover * (1.0 - pressed))).shrink(pressed);
     let rounding = Rounding::same(6.0);
     let painter = ui.painter();
     if enabled && hover > 0.0 {
@@ -246,10 +332,22 @@ pub fn fancy_button(ui: &mut Ui, icon: Icon, text: &str, min_width: f32, height:
         palette.hover
     };
     painter.rect_filled(shape_rect, rounding, fill);
+    if enabled && shine {
+        const PERIOD: f64 = 5.0;
+        const SWEEP: f64 = 1.1;
+        let phase = now(ui.ctx()) % PERIOD;
+        if phase < SWEEP {
+            paint_shine(painter, shape_rect, easing::quadratic_in_out((phase / SWEEP) as f32));
+            ui.ctx().request_repaint();
+        } else {
+            ui.ctx().request_repaint_after(std::time::Duration::from_secs_f64(PERIOD - phase));
+        }
+    }
     let text_color = if enabled { Color32::WHITE } else { palette.muted };
     let job = icon_text_job(ui, icon, text, Some(text_color));
     let galley = ui.fonts(|f| f.layout_job(job));
     painter.galley(shape_rect.center() - galley.size() / 2.0, galley, text_color);
+    paint_ripple(ui, &response, shape_rect, rounding);
     if enabled {
         response.on_hover_cursor(CursorIcon::PointingHand)
     } else {
@@ -497,7 +595,7 @@ pub fn close_when_minimized(cc: &eframe::CreationContext, hook: impl Fn() + Send
     }
     let hwnd = handle.hwnd.get();
     let proc: unsafe extern "system" fn(isize, u32, usize, isize) -> isize = window_proc;
-    let original = unsafe { SetWindowLongPtrW(hwnd, GWLP_WNDPROC, proc as isize) };
+    let original = unsafe { SetWindowLongPtrW(hwnd, GWLP_WNDPROC, proc as usize as isize) };
     ORIGINAL_PROC.store(original, std::sync::atomic::Ordering::Relaxed);
 }
 
@@ -725,4 +823,98 @@ pub fn dialog_buttons(ui: &mut Ui, add: impl FnOnce(&mut Ui)) {
         Layout::right_to_left(Align::Center),
         add,
     );
+}
+
+const CELEBRATE_NEXT: &str = "celebrateNext";
+const SUCCESS_BURST: &str = "successBurst";
+const BURST_SECONDS: f32 = 1.0;
+
+pub fn celebrate_next(ctx: &egui::Context) {
+    ctx.data_mut(|d| d.insert_temp(Id::new(CELEBRATE_NEXT), true));
+}
+
+pub fn celebrate_cancel(ctx: &egui::Context) {
+    ctx.data_mut(|d| d.remove::<bool>(Id::new(CELEBRATE_NEXT)));
+}
+
+pub fn celebrate_if_pending(ctx: &egui::Context) {
+    let pending = ctx.data_mut(|d| d.remove_temp::<bool>(Id::new(CELEBRATE_NEXT))).unwrap_or(false);
+    if pending {
+        celebrate(ctx);
+    }
+}
+
+pub fn celebrate(ctx: &egui::Context) {
+    let time = now(ctx);
+    ctx.data_mut(|d| d.insert_temp(Id::new(SUCCESS_BURST), time));
+    ctx.request_repaint();
+}
+
+pub fn paint_success_burst(ctx: &egui::Context, center: egui::Pos2) -> bool {
+    let Some(start) = ctx.data(|d| d.get_temp::<f64>(Id::new(SUCCESS_BURST))) else {
+        return false;
+    };
+    let t = ((now(ctx) - start) as f32 / BURST_SECONDS).clamp(0.0, 1.0);
+    if t >= 1.0 {
+        ctx.data_mut(|d| d.remove::<f64>(Id::new(SUCCESS_BURST)));
+        return false;
+    }
+    ctx.request_repaint();
+    let painter = ctx.layer_painter(egui::LayerId::new(Order::Foreground, Id::new(SUCCESS_BURST)));
+    let green = visuals::GREEN;
+    let ring = ease(t);
+    painter.circle_stroke(
+        center,
+        5.0 + ring * 22.0,
+        Stroke::new(2.0 * (1.0 - ring), green.gamma_multiply(1.0 - ring)),
+    );
+    for i in 0..10 {
+        let angle = i as f32 / 10.0 * TAU + 0.3;
+        let distance = 6.0 + easing::quadratic_out(t) * 26.0;
+        let fade = (1.0 - t).powf(1.5);
+        let spot = center + distance * vec2(angle.cos(), angle.sin());
+        let color = if i % 2 == 0 { green } else { visuals::ACCENT };
+        painter.circle_filled(spot, 2.2 * fade + 0.4, color.gamma_multiply(fade));
+    }
+    let pop = easing::back_out((t / 0.45).min(1.0));
+    let fade = 1.0 - ((t - 0.7) / 0.3).clamp(0.0, 1.0);
+    painter.circle_filled(center, 8.0 * pop, green.gamma_multiply(fade));
+    let s = 4.2 * pop;
+    painter.add(Shape::line(
+        vec![center + vec2(-s, 0.1 * s), center + vec2(-0.3 * s, 0.75 * s), center + vec2(s, -0.6 * s)],
+        Stroke::new(1.8_f32, Color32::WHITE.gamma_multiply(fade)),
+    ));
+    true
+}
+
+pub fn search_box(ui: &mut Ui, width: f32, text: &mut String, hint: &str) -> egui::Response {
+    let palette = visuals::palette(ui);
+    let inner = vec2((width - 20.0).max(60.0), CONTROL_HEIGHT);
+    egui::Frame::none()
+        .fill(palette.raised)
+        .stroke(Stroke::new(1.0_f32, palette.border))
+        .rounding(8.0)
+        .inner_margin(Margin::symmetric(10.0, 0.0))
+        .show(ui, |ui| {
+            ui.allocate_ui_with_layout(inner, Layout::left_to_right(Align::Center), |ui| {
+                ui.set_min_size(inner);
+                ui.label(Icon::Search.rich(12.0).color(palette.muted));
+                ui.add(
+                    egui::TextEdit::singleline(text)
+                        .frame(false)
+                        .hint_text(hint)
+                        .desired_width(f32::INFINITY),
+                )
+            })
+            .inner
+        })
+        .inner
+}
+
+pub fn control_sized<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
+    let old = ui.spacing().interact_size.y;
+    ui.spacing_mut().interact_size.y = CONTROL_HEIGHT;
+    let result = add(ui);
+    ui.spacing_mut().interact_size.y = old;
+    result
 }

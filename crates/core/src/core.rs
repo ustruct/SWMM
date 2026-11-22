@@ -17,6 +17,7 @@ impl std::panic::RefUnwindSafe for Manager {}
 impl Manager {
     pub fn init() -> Result<Self> {
         let settings = Settings::load();
+        crate::util::set_temp_root(&settings.read().storage_dir);
         let mod_manager = Arc::new(RwLock::new(
             mods::Manager::init(&settings).context("Failed to initialize mod manager")?,
         ));
@@ -32,6 +33,7 @@ impl Manager {
 
     pub fn reload(&self) -> Result<()> {
         self.settings.write().reload();
+        crate::util::set_temp_root(&self.settings.read().storage_dir);
         *self.mod_manager.write() =
             mods::Manager::init(&self.settings).context("Failed to initialize mod manager")?;
         *self.deploy_manager.write() = deploy::Manager::init(&self.settings, &self.mod_manager)
