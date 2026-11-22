@@ -258,6 +258,32 @@ impl Profile {
     }
 }
 
+pub fn load_unapplied(profiles_dir: &Path, profile: &str) -> Manifest {
+    let path = profiles_dir.join(profile).join(UNAPPLIED_FILE);
+    match fs::read_to_string(&path) {
+        Ok(text) => serde_yaml::from_str(&text).unwrap_or_else(|e| {
+            log::warn!("Couldn't read the unapplied changes of {profile}: {e}");
+            Manifest::default()
+        }),
+        Err(_) => Manifest::default(),
+    }
+}
+
+pub fn save_unapplied(profiles_dir: &Path, profile: &str, changes: &Manifest) -> Result<()> {
+    let dir = profiles_dir.join(profile);
+    let path = dir.join(UNAPPLIED_FILE);
+    if changes.is_empty() {
+        if path.exists() {
+            fs::remove_file(&path)?;
+        }
+    } else if dir.is_dir() {
+        fs::write(&path, serde_yaml::to_string(changes)?)?;
+    }
+    Ok(())
+}
+
+const UNAPPLIED_FILE: &str = "unapplied.yml";
+
 fn path_key(path: &Path) -> String {
     path.to_string_lossy().replace('/', "\\").to_lowercase().into()
 }
@@ -330,6 +356,59 @@ impl Manager {
 
     pub fn has_profile(&self, name: &str) -> bool {
         self.profiles.contains_key(name)
+    }
+
+    pub fn ensure_profile(&self, name: &str) -> Result<()> {
+        if self.profiles.contains_key(name) {
+            return Ok(());
+        }
+        let path = self.dir.join(name).join("profile.yml");
+        if !path.is_file() {
+            anyhow_ext::bail!("The profile {name} doesn't exist");
+        }
+        self.add_profile(name.into())
+    }
+
+    pub fn rename_profile(&mut self, old: &str, new: &str) -> Result<()> {
+        let new = new.trim();
+        if new.is_empty() || new == old {
+            return Ok(());
+        }
+        let (from, to) = (self.dir.join(old), self.dir.join(new));
+        let only_case_differs = old.eq_ignore_ascii_case(new);
+        if to.exists() && !only_case_differs {
+            anyhow_ext::bail!("A profile named {new} already exists");
+        }
+        if old == self.current_profile && from.is_dir() {
+            self.save().context("Couldn't save the profile before renaming it")?;
+        }
+        fs::rename(&from, &to).with_context(|| format!("Couldn't rename the profile {old}"))?;
+        if let Some((_, profile)) = self.profiles.remove(old) {
+            self.profiles.insert(new.into(), profile);
+        }
+        if self.current_profile == old {
+            self.current_profile = new.into();
+        }
+        log::info!("Renamed profile {old} to {new}");
+        Ok(())
+    }
+
+    fn path_used_elsewhere(&self, path: &Path, except: &str) -> bool {
+        let key = path_key(path);
+        self.profiles.iter().any(|p| {
+            p.key().as_str() != except && p.value().mods().values().any(|m| path_key(&m.path) == key)
+        })
+    }
+
+    fn free_stored_path(mods_dir: &Path, sanitized: &str, hash: Option<usize>) -> PathBuf {
+        let mut k = 2;
+        loop {
+            let candidate = mods_dir.join(format!("{sanitized}-{k}.zip"));
+            if !candidate.exists() || (hash.is_some() && meta_hash(&candidate) == hash) {
+                return candidate;
+            }
+            k += 1;
+        }
     }
 
     pub fn add_profile(&self, name: String) -> Result<()> {
@@ -507,19 +586,19 @@ impl Manager {
             .context("Settings are unavailable")?
             .read()
             .mods_dir();
+        let profile_name = profile.unwrap_or(&self.current_profile).to_string();
         let mut stored_path = mods_dir.join(sanitized.clone() + ".zip");
-        if old_version.is_none() && stored_path.exists() && meta_hash(&stored_path) != new_hash {
-            let mut k = 2;
-            stored_path = loop {
-                let candidate = mods_dir.join(format!("{sanitized}-{k}.zip"));
-                if !candidate.exists() || meta_hash(&candidate) == new_hash {
-                    break candidate;
-                }
-                k += 1;
-            };
-            log::info!("Another version of {mod_name} is already stored, keeping this one as {}", stored_path.display());
+        if stored_path.exists() && meta_hash(&stored_path) != new_hash {
+            let can_overwrite = old_version.as_ref().is_some_and(|old| {
+                path_key(&old.path) == path_key(&stored_path)
+                    && !self.path_used_elsewhere(&stored_path, &profile_name)
+            });
+            if !can_overwrite {
+                stored_path = Self::free_stored_path(&mods_dir, &sanitized, new_hash);
+                log::info!("Another version of {mod_name} is already stored, keeping this one as {}", stored_path.display());
+            }
         }
-        if stored_path.exists() && old_version.is_none() {
+        if stored_path.exists() && meta_hash(&stored_path) == new_hash {
             log::debug!("Mod already stored, no need to store it");
         } else {
             stored_path.parent().map(fs::create_dir_all).transpose()?;
@@ -539,8 +618,34 @@ impl Manager {
         profile_data.load_order_mut().push(mod_.hash);
         profile_data.mods_mut().insert(mod_.hash, mod_.clone());
         if let Some(old_mod) = old_version {
-            profile_data.load_order_mut().retain(|h| *h != old_mod.hash);
+            let mut order = profile_data.load_order_mut();
+            order.retain(|h| *h != mod_.hash);
+            if let Some(idx) = order.iter().position(|h| *h == old_mod.hash) {
+                order[idx] = mod_.hash;
+            } else {
+                order.push(mod_.hash);
+            }
+            drop(order);
             profile_data.mods_mut().remove(&old_mod.hash);
+            drop(profile_data);
+            if path_key(&old_mod.path) != path_key(&stored_path)
+                && !self.path_used_elsewhere(&old_mod.path, "")
+            {
+                let removed = if old_mod.path.is_dir() {
+                    util::remove_dir_all(&old_mod.path)
+                } else {
+                    fs::remove_file(&old_mod.path).map_err(Into::into)
+                };
+                match removed {
+                    Ok(()) => crate::origin::forget(&old_mod.path),
+                    Err(e) => log::warn!("Couldn't remove the old version of {}: {e}", old_mod.meta.name),
+                }
+            }
+            let profile_data = self.get_profile(profile);
+            mod_.enabled = old_mod.enabled;
+            if let Some(m) = profile_data.mods_mut().get_mut(&mod_.hash) {
+                m.enabled = old_mod.enabled;
+            }
             log::info!(
                 "Updated mod {} in profile {} to version {}",
                 mod_.meta.name,
@@ -591,27 +696,41 @@ impl Manager {
     }
 
     pub fn replace(&self, mut mod_: Mod, old_hash: usize) -> Result<Mod> {
-        let profile_data = self.profile();
-        let old_path = profile_data
+        let old_path = self
+            .profile()
             .mods()
             .get(&old_hash)
             .map(|m| m.path.clone())
             .context("The mod being updated isn't in this profile")?;
+        let mut stored_path = old_path.clone();
         if mod_.path != old_path && mod_.path.is_file() {
-            fs::copy(&mod_.path, &old_path).context("Failed to copy the updated mod to the storage folder")?;
-            self.slim_stored(&old_path, &mod_.meta.name);
-            crate::origin::forget(&old_path);
+            let shared = self.path_used_elsewhere(&old_path, &self.current_profile);
+            if shared || old_path.is_dir() {
+                let mods_dir = old_path.parent().context("The stored mod has no folder")?;
+                let stem = old_path
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_else(|| "mod".into());
+                stored_path = Self::free_stored_path(mods_dir, &stem, Some(mod_.hash));
+            }
+            fs::copy(&mod_.path, &stored_path).context("Failed to copy the updated mod to the storage folder")?;
+            self.slim_stored(&stored_path, &mod_.meta.name);
+            crate::origin::forget(&stored_path);
         }
+        let profile_data = self.profile();
         let old_mod = profile_data
             .mods_mut()
             .remove(&old_hash)
             .context("The mod being updated isn't in this profile")?;
         mod_.enabled = old_mod.enabled;
-        mod_.path = old_mod.path;
+        mod_.path = stored_path;
         profile_data.mods_mut().insert(mod_.hash, mod_.clone());
         let mut load_order = profile_data.load_order_mut();
+        load_order.retain(|m| *m != mod_.hash || old_hash == mod_.hash);
         if let Some(idx) = load_order.iter().position(|m| *m == old_hash) {
             load_order[idx] = mod_.hash;
+        } else {
+            load_order.push(mod_.hash);
         }
         Ok(mod_)
     }
@@ -803,4 +922,22 @@ fn load_order_skips_missing_mods() {
     profiles.insert("test".into(), profile);
     let found = Profile::iter(profiles.get("test").unwrap().map(|p| p)).count();
     assert_eq!(found, 0);
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+#[test]
+fn unapplied_changes_survive_a_restart() {
+    let dir = std::env::temp_dir().join(format!("swmm-unapplied-{}", std::process::id()));
+    fs::create_dir_all(dir.join("Pack")).unwrap();
+    let mut changes = Manifest::default();
+    changes.content_files.insert("Actor/Pack/Foo.sbactorpack".into());
+    save_unapplied(&dir, "Pack", &changes).unwrap();
+    assert_eq!(load_unapplied(&dir, "Pack"), changes);
+    save_unapplied(&dir, "Pack", &Manifest::default()).unwrap();
+    assert!(load_unapplied(&dir, "Pack").is_empty());
+    assert!(!dir.join("Pack").join(UNAPPLIED_FILE).exists());
+    save_unapplied(&dir, "Gone", &changes).unwrap();
+    assert!(!dir.join("Gone").exists());
+    fs::remove_dir_all(&dir).unwrap();
 }

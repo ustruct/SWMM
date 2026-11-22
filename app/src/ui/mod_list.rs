@@ -34,6 +34,7 @@ enum RowAction {
     CopyToProfile(smartstring::alias::String),
     Update,
     Uninstall,
+    Reinstall,
     Toggle(bool),
     Move(usize),
 }
@@ -235,8 +236,9 @@ impl App {
                     }
                     let toggled = switch(ui, toggle_rect, id.with("switch"), mod_.enabled).clicked();
                     let menu_mod = mod_.clone();
+                    let menu_count = if selected { self.selected.len().max(1) } else { 1 };
                     response.context_menu(|ui| {
-                        if let Some(action) = Self::render_mod_context_menu(&self.core, menu_mod, ui) {
+                        if let Some(action) = Self::render_mod_context_menu(&self.core, menu_mod, menu_count, ui) {
                             pending = Some((index, action));
                         }
                     });
@@ -311,6 +313,10 @@ impl App {
             return;
         }
         let (down, up, shift) = ui.input(|i| (i.key_pressed(Key::ArrowDown), i.key_pressed(Key::ArrowUp), i.modifiers.shift));
+        if ui.input(|i| i.modifiers.command && i.key_pressed(Key::A)) {
+            self.do_update(Message::SelectAll);
+            return;
+        }
         if down {
             if let Some(last) = self.mods.iter().rposition(|m| self.selected.contains(m)) {
                 let next = (last + 1).min(self.mods.len().saturating_sub(1));
@@ -335,17 +341,24 @@ impl App {
             RowAction::CopyToProfile(profile) => self.do_update(Message::AddToProfile(profile)),
             RowAction::Update => self.do_update(Message::ModUpdate),
             RowAction::Uninstall => {
-                let message = "Mod_Uninstall_Confirmation".localize();
-                let vars = HashMap::from([("mod_name".to_string(), mod_.meta.name.to_string())]);
-                let prompt = message.format(&vars).unwrap_or_else(|_| message.to_string());
-                self.do_update(Message::Confirm(Message::UninstallMods(None).into(), prompt));
+                let count = if self.selected.contains(mod_) { self.selected.len() } else { 1 };
+                self.do_update(Message::Confirm(
+                    Message::UninstallMods(None).into(),
+                    uninstall_prompt(&mod_.meta.name, count),
+                ));
             }
+            RowAction::Reinstall => self.do_update(Message::ReinstallMods(None)),
             RowAction::Toggle(state) => self.do_update(Message::ToggleMods(None, state)),
             RowAction::Move(dest) => self.do_update(Message::MoveSelected(dest)),
         }
     }
 
-    fn render_mod_context_menu(core: &swmm_core::core::Manager, mod_: Mod, ui: &mut Ui) -> Option<RowAction> {
+    fn render_mod_context_menu(
+        core: &swmm_core::core::Manager,
+        mod_: Mod,
+        count: usize,
+        ui: &mut Ui,
+    ) -> Option<RowAction> {
         let mut result = None;
         let item = |ui: &mut Ui, icon: Icon, text: std::borrow::Cow<'static, str>| -> bool {
             ui.spacing_mut().button_padding = vec2(10.0, 4.0);
@@ -356,12 +369,30 @@ impl App {
             }
             clicked
         };
-        let toggle_text = if mod_.enabled { "Mod_Disable" } else { "Mod_Enable" };
-        if item(ui, if mod_.enabled { Icon::Blank } else { Icon::Check }, toggle_text.localize()) {
-            result = Some(RowAction::Toggle(!mod_.enabled));
-        }
-        if item(ui, Icon::FileUpload, "Generic_Update".localize()) {
-            result = Some(RowAction::Update);
+        if count > 1 {
+            let label = |key: &'static str| -> std::borrow::Cow<'static, str> {
+                format!("{} ({count})", key.localize()).into()
+            };
+            if item(ui, Icon::Check, label("Mod_Enable_Selected")) {
+                result = Some(RowAction::Toggle(true));
+            }
+            if item(ui, Icon::Blank, label("Mod_Disable_Selected")) {
+                result = Some(RowAction::Toggle(false));
+            }
+            if item(ui, Icon::Refresh, label("Mod_Reinstall")) {
+                result = Some(RowAction::Reinstall);
+            }
+        } else {
+            let toggle_text = if mod_.enabled { "Mod_Disable" } else { "Mod_Enable" };
+            if item(ui, if mod_.enabled { Icon::Blank } else { Icon::Check }, toggle_text.localize()) {
+                result = Some(RowAction::Toggle(!mod_.enabled));
+            }
+            if item(ui, Icon::Refresh, "Mod_Reinstall".localize()) {
+                result = Some(RowAction::Reinstall);
+            }
+            if item(ui, Icon::FileUpload, "Generic_Update".localize()) {
+                result = Some(RowAction::Update);
+            }
         }
         if item(ui, Icon::FolderOpen, "Mod_View".localize()) {
             let folder = if mod_.path.is_dir() { mod_.path.clone() } else { mod_.path.parent().map(|p| p.to_path_buf()).unwrap_or_default() };
@@ -390,9 +421,25 @@ impl App {
             });
         }
         ui.separator();
-        if item(ui, Icon::Delete, "Mod_Uninstall".localize()) {
+        let uninstall = if count > 1 {
+            format!("{} ({count})", "Mod_Uninstall".localize()).into()
+        } else {
+            "Mod_Uninstall".localize()
+        };
+        if item(ui, Icon::Delete, uninstall) {
             result = Some(RowAction::Uninstall);
         }
         result
     }
+}
+
+pub fn uninstall_prompt(name: &str, count: usize) -> String {
+    let (key, var, value) = if count > 1 {
+        ("Mod_Uninstall_Confirmation_Many", "count", count.to_string())
+    } else {
+        ("Mod_Uninstall_Confirmation", "mod_name", name.to_string())
+    };
+    let message = key.localize();
+    let vars = HashMap::from([(var.to_string(), value)]);
+    message.format(&vars).unwrap_or_else(|_| message.to_string())
 }

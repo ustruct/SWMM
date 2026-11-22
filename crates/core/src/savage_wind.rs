@@ -106,60 +106,216 @@ fn same_file(a: &Path, b: &Path) -> bool {
         )
 }
 
-fn find_exe_in(dir: &Path) -> Option<PathBuf> {
-    let entries = std::fs::read_dir(dir).ok()?;
-    entries
-        .filter_map(|e| e.ok().map(|e| e.path()))
-        .find(|p| p.is_file() && is_savage_wind_exe(p))
+const SKIP_DIRS: &[&str] = &[
+    "windows",
+    "$recycle.bin",
+    "system volume information",
+    "programdata",
+    "appdata",
+    "node_modules",
+    "winsxs",
+    "recovery",
+    "perflogs",
+    "microsoft",
+    "windowsapps",
+    "common files",
+];
+
+fn names_the_game(name: &str) -> bool {
+    name.chars().filter(|c| c.is_alphanumeric()).collect::<std::string::String>().to_lowercase().contains("savage")
+}
+
+struct Search {
+    seen: std::collections::HashSet<PathBuf>,
+    found: Vec<PathBuf>,
+    budget: usize,
+}
+
+impl Search {
+    fn visit(&mut self, dir: &Path, depth: usize) {
+        if self.budget == 0 || self.found.len() >= 12 || !self.seen.insert(dir.to_path_buf()) {
+            return;
+        }
+        self.budget -= 1;
+        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        let mut subs = Vec::new();
+        for entry in entries.flatten() {
+            let Ok(kind) = entry.file_type() else { continue };
+            let path = entry.path();
+            if is_savage_wind_exe(&path) && (kind.is_file() || cfg!(target_os = "macos") && kind.is_dir()) {
+                if !self.found.contains(&path) {
+                    self.found.push(path);
+                }
+            } else if kind.is_dir() {
+                subs.push(path);
+            }
+        }
+        for sub in subs {
+            let name = sub.file_name().map(|n| n.to_string_lossy().to_lowercase()).unwrap_or_default();
+            if name.starts_with('.') || name.starts_with('$') || SKIP_DIRS.contains(&name.as_str()) {
+                continue;
+            }
+            let next = if names_the_game(&name) {
+                depth.max(4) - 1
+            } else if depth > 0 {
+                depth - 1
+            } else {
+                continue;
+            };
+            self.visit(&sub, next);
+        }
+    }
+}
+
+fn running_executable() -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let names = EXE_NAMES.iter().map(|n| n.trim_end_matches(".exe")).collect::<Vec<_>>().join(",");
+        let output = Command::new("powershell.exe")
+            .args(["-NoProfile", "-NonInteractive", "-Command"])
+            .arg(format!("Get-Process -Name {names} -ErrorAction SilentlyContinue | ForEach-Object {{ $_.Path }}"))
+            .creation_flags(0x0800_0000)
+            .output()
+            .ok()?;
+        std::string::String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .map(|l| PathBuf::from(l.trim()))
+            .find(|p| p.is_file() && is_savage_wind_exe(p))
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        std::fs::read_dir("/proc")
+            .ok()?
+            .flatten()
+            .filter_map(|e| std::fs::read_link(e.path().join("exe")).ok())
+            .find(|p| is_savage_wind_exe(p))
+    }
+    #[cfg(target_os = "macos")]
+    {
+        None
+    }
+}
+
+fn steam_libraries() -> Vec<PathBuf> {
+    let mut roots: Vec<PathBuf> = Vec::new();
+    if cfg!(windows) {
+        for var in ["ProgramFiles(x86)", "ProgramFiles"] {
+            if let Some(dir) = std::env::var_os(var) {
+                roots.push(PathBuf::from(dir).join("Steam"));
+            }
+        }
+    } else if let Some(home) = dirs2::home_dir() {
+        roots.push(home.join(".steam/steam"));
+        roots.push(home.join(".local/share/Steam"));
+        roots.push(home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam"));
+        roots.push(home.join("Library/Application Support/Steam"));
+    }
+    let mut libraries: Vec<PathBuf> = Vec::new();
+    for root in roots {
+        let Ok(text) = std::fs::read_to_string(root.join("steamapps").join("libraryfolders.vdf")) else { continue };
+        libraries.push(root.join("steamapps").join("common"));
+        for line in text.lines() {
+            let mut parts = line.split('"').filter(|p| !p.trim().is_empty());
+            if parts.next().map(str::trim) == Some("path")
+                && let Some(path) = parts.next()
+            {
+                let library = PathBuf::from(path.replace("\\\\", "\\")).join("steamapps").join("common");
+                if !libraries.contains(&library) {
+                    libraries.push(library);
+                }
+            }
+        }
+    }
+    libraries
+}
+
+#[cfg(windows)]
+fn local_drives() -> Vec<PathBuf> {
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GetDriveTypeW(root: *const u16) -> u32;
+    }
+    (b'A'..=b'Z')
+        .map(|letter| format!("{}:\\", letter as char))
+        .filter(|root| {
+            let wide: Vec<u16> = root.encode_utf16().chain(Some(0)).collect();
+            let kind = unsafe { GetDriveTypeW(wide.as_ptr()) };
+            kind == 2 || kind == 3
+        })
+        .map(PathBuf::from)
+        .collect()
+}
+
+fn search_roots() -> Vec<(PathBuf, usize)> {
+    let mut roots: Vec<(PathBuf, usize)> = Vec::new();
+    if let Some(dir) = std::env::current_exe().ok().and_then(|e| e.parent().map(Path::to_path_buf)) {
+        if let Some(parent) = dir.parent() {
+            roots.push((parent.to_path_buf(), 2));
+        }
+        roots.push((dir, 1));
+    }
+    for library in steam_libraries() {
+        roots.push((library, 2));
+    }
+    for dir in [dirs2::download_dir(), dirs2::desktop_dir(), dirs2::document_dir()].into_iter().flatten() {
+        roots.push((dir, 2));
+    }
+    if let Some(home) = dirs2::home_dir() {
+        roots.push((home.join("Games"), 3));
+        roots.push((home.join("Applications"), 2));
+        roots.push((home, 1));
+    }
+    #[cfg(windows)]
+    {
+        for var in ["ProgramFiles", "ProgramFiles(x86)"] {
+            if let Some(dir) = std::env::var_os(var) {
+                roots.push((PathBuf::from(dir), 2));
+            }
+        }
+        if let Some(dir) = dirs2::data_local_dir() {
+            roots.push((dir.join("Programs"), 2));
+        }
+        for drive in local_drives() {
+            roots.push((drive.join("Games"), 3));
+            roots.push((drive, 2));
+        }
+    }
+    #[cfg(target_os = "macos")]
+    roots.push((PathBuf::from("/Applications"), 1));
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        roots.push((PathBuf::from("/opt"), 2));
+        roots.push((PathBuf::from("/run/media"), 3));
+        roots.push((PathBuf::from("/media"), 3));
+        roots.push((PathBuf::from("/mnt"), 3));
+    }
+    roots
+}
+
+fn rank(exe: &Path) -> (bool, std::time::SystemTime) {
+    let ready = exe.parent().is_some_and(|dir| dir.join("extracted").is_dir());
+    let modified = std::fs::metadata(exe).and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH);
+    (ready, modified)
 }
 
 pub fn detect_executable() -> Option<PathBuf> {
-    let mut roots: Vec<PathBuf> = Vec::new();
-    if let Some(dir) = std::env::current_exe().ok().and_then(|e| e.parent().map(Path::to_path_buf)) {
-        if let Some(parent) = dir.parent() {
-            roots.push(parent.to_path_buf());
-        }
-        roots.push(dir);
+    if let Some(exe) = running_executable() {
+        return Some(exe);
     }
-    for dir in [dirs2::download_dir(), dirs2::desktop_dir(), dirs2::document_dir(), dirs2::home_dir()]
-        .into_iter()
-        .flatten()
-    {
-        roots.push(dir);
-    }
-    if let Some(home) = dirs2::home_dir() {
-        roots.push(home.join("Games"));
-        roots.push(home.join("Applications"));
-    }
-    if cfg!(windows) {
-        for drive in ["C:\\", "D:\\", "E:\\"] {
-            let drive = PathBuf::from(drive);
-            roots.push(drive.join("Games"));
-            roots.push(drive.join("Program Files"));
+    let mut search = Search {
+        seen: Default::default(),
+        found: Vec::new(),
+        budget: 20_000,
+    };
+    for (root, depth) in search_roots() {
+        search.visit(&root, depth);
+        if search.found.iter().any(|exe| rank(exe).0) {
+            break;
         }
     }
-    for root in roots {
-        if let Some(exe) = find_exe_in(&root) {
-            return Some(exe);
-        }
-
-        let Ok(entries) = std::fs::read_dir(&root) else { continue };
-        for sub in entries.filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.is_dir()) {
-            if let Some(exe) = find_exe_in(&sub) {
-                return Some(exe);
-            }
-            let name = sub.file_name().map(|n| n.to_string_lossy().to_lowercase()).unwrap_or_default();
-            if (name.contains("savage") || name.contains("wind"))
-                && let Ok(entries) = std::fs::read_dir(&sub) {
-                    for sub2 in entries.filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.is_dir()) {
-                        if let Some(exe) = find_exe_in(&sub2) {
-                            return Some(exe);
-                        }
-                    }
-                }
-        }
-    }
-    None
+    log::debug!("Savage Wind candidates: {:?}", search.found);
+    search.found.into_iter().max_by_key(|exe| rank(exe))
 }
 
 pub fn data_root(config: &SavageWindSettings) -> Option<PathBuf> {
@@ -334,7 +490,7 @@ pub fn auto_configure(settings: &mut Settings) -> Result<AutoConfig> {
         .savage_wind
         .executable
         .as_ref()
-        .map(|p| !p.as_os_str().is_empty())
+        .map(|p| !p.as_os_str().is_empty() && p.exists())
         .unwrap_or(false);
     if !has_exe
         && let Some(exe) = detect_executable() {
@@ -1224,6 +1380,20 @@ pub fn validate_overlay(overlay: &Path, game: &GameFiles) -> Vec<OverlayIssue> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn search_follows_game_folders() {
+        let root = tempfile::tempdir().unwrap();
+        let deep = root.path().join("Savage Wind").join("0.6.0");
+        std::fs::create_dir_all(deep.join("extracted")).unwrap();
+        std::fs::write(deep.join(EXE_NAMES[0]), b"").unwrap();
+        let other = root.path().join("Stuff").join("More").join("Deeper");
+        std::fs::create_dir_all(&other).unwrap();
+        std::fs::write(other.join(EXE_NAMES[0]), b"").unwrap();
+        let mut search = Search { seen: Default::default(), found: Vec::new(), budget: 1000 };
+        search.visit(root.path(), 1);
+        assert_eq!(search.found, vec![deep.join(EXE_NAMES[0])]);
+    }
 
     #[test]
     fn launch_flags() {

@@ -288,7 +288,7 @@ impl Default for SavageWindSettings {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum UpdatePreference {
     None,
     #[default]
@@ -320,7 +320,7 @@ impl Default for Settings {
             system_7z: true,
             storage_dir: default_storage(),
             switch_config: None,
-            check_updates: UpdatePreference::None,
+            check_updates: UpdatePreference::Stable,
             show_changelog: true,
             last_version: None,
             lang: LocLang::English,

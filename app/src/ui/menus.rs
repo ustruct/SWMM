@@ -96,8 +96,25 @@ impl App {
             self.do_update(Message::ModUpdate);
         }
         ui.separator();
+        if menu_item(ui, Icon::ListCheck, &format!("{}  (Ctrl+A)", "Mod_Select_All".localize()), !self.mods.is_empty()) {
+            self.do_update(Message::SelectAll);
+        }
+        if menu_item(ui, Icon::Check, &"Mod_Enable_Selected".localize(), has_selection) {
+            self.do_update(Message::ToggleMods(None, true));
+        }
+        if menu_item(ui, Icon::Blank, &"Mod_Disable_Selected".localize(), has_selection) {
+            self.do_update(Message::ToggleMods(None, false));
+        }
+        if menu_item(ui, Icon::Refresh, &"Mod_Reinstall".localize(), has_selection) {
+            self.do_update(Message::ReinstallMods(None));
+        }
+        ui.separator();
         if menu_item(ui, Icon::Delete, &"SW_Menu_Uninstall".localize(), has_selection) {
-            self.do_update(Message::UninstallMods(None));
+            let name = self.selected.first().map(|m| m.meta.name.to_string()).unwrap_or_default();
+            self.do_update(Message::Confirm(
+                Message::UninstallMods(None).into(),
+                super::mod_list::uninstall_prompt(&name, self.selected.len()),
+            ));
         }
     }
 
@@ -136,6 +153,9 @@ impl App {
     pub fn help_menu(&self, ui: &mut Ui) {
         if menu_item(ui, Icon::Book, &"SW_Menu_Readme".localize(), true) {
             open::that("https://github.com/Revivedx/SavageWindRecomp").unwrap_or(());
+        }
+        if menu_item(ui, Icon::Refresh, &"Update_Check".localize(), true) {
+            self.do_update(Message::CheckForUpdates);
         }
         ui.separator();
         if menu_item(ui, Icon::Info, &"Menu_Help_About".localize(), true) {

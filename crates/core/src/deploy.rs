@@ -148,10 +148,13 @@ impl Manager {
     }
 
     pub fn save(&self) -> Result<()> {
-        fs::write(
-            Self::log_path(&self.settings.upgrade().unwrap().read()),
-            serde_yaml::to_string(&self.pending_log.read().clone())?,
-        )?;
+        let path = Self::log_path(&self.settings.upgrade().context("Settings are unavailable")?.read());
+        self.save_to(&path)
+    }
+
+    fn save_to(&self, path: &Path) -> Result<()> {
+        let text = serde_yaml::to_string(&self.pending_log.read().clone())?;
+        fs::write(path, text)?;
         Ok(())
     }
 
@@ -301,7 +304,7 @@ impl Manager {
             log::info!("Deployment complete");
         }
         self.pending_log.write().clear();
-        self.save()?;
+        self.save_to(&Self::log_path(&settings))?;
         Ok(())
     }
 
@@ -566,8 +569,8 @@ impl Manager {
             &dump,
             game_romfs.as_deref(),
         )?;
-        self.save()?;
-        log::info!("All changed applied successfully");
+        self.save_to(&Self::log_path(&settings))?;
+        log::info!("All changes applied successfully");
         Ok(())
     }
 }

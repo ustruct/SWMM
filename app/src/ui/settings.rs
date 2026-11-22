@@ -1,6 +1,6 @@
 use std::{ops::Deref, path::PathBuf};
 
-use swmm_core::{savage_wind, settings::Settings};
+use swmm_core::{savage_wind, settings::{Settings, UpdatePreference}};
 use uk_content::constants::Language;
 use swmm_i18n::{string_ext::LocString, LocLang};
 use swmm_widgets::{
@@ -419,6 +419,15 @@ impl App {
                             }
                         }
                     });
+            });
+            group.row(&"Settings_AutoUpdate".localize(), &"Settings_AutoUpdate_Desc".localize(), 48.0, |ui| {
+                let mut on = settings.check_updates != UpdatePreference::None;
+                toggle(ui, &mut on);
+                settings.check_updates = match (on, settings.check_updates) {
+                    (false, _) => UpdatePreference::None,
+                    (true, UpdatePreference::None) => UpdatePreference::Stable,
+                    (true, other) => other,
+                };
             });
         });
     }

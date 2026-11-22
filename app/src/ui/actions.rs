@@ -10,6 +10,26 @@ impl App {
         _frame: &mut eframe::Frame,
     ) {
         if let Ok(msg) = self.channel.1.try_recv() {
+            self.handle_message(ctx, msg);
+            self.persist_dirty();
+        } else {
+            self.handle_drops(ctx);
+        }
+    }
+
+    fn show_current_profile(&mut self) {
+        self.mods = self.core.mod_manager().all_mods().collect();
+        self.selected = self.mods.first().cloned().into_iter().collect();
+        self.drag_index = None;
+        self.hover_index = None;
+        self.options_mod = None;
+        self.update_mod = None;
+        self.do_update(Message::RefreshModsDisplay);
+        self.do_update(Message::ReloadProfiles);
+    }
+
+    fn handle_message(&mut self, ctx: &eframe::egui::Context, msg: Message) {
+        {
             match msg {
                 Message::Noop => self.busy.set(false),
                 Message::ResetMods(dirty) => {
@@ -62,6 +82,17 @@ impl App {
                 Message::Confirm(msg, prompt) => {
                     self.confirm = Some((*msg, prompt));
                 }
+                msg @ (Message::CheckForUpdates
+                | Message::UpdateAvailable(..)
+                | Message::UpToDate
+                | Message::InstallUpdate(_)
+                | Message::UpdateReady(_)) => self.handle_update_message(ctx, msg),
+                Message::SelectOnly(_)
+                | Message::SelectAlso(_)
+                | Message::Deselect(_)
+                | Message::MoveSelected(_)
+                | Message::StartDrag(_)
+                    if self.mods.is_empty() => {}
                 Message::SelectOnly(i) => {
                     let index = i.clamp(0, self.mods.len() - 1);
                     let mod_ = &self.mods[index];
@@ -81,6 +112,7 @@ impl App {
                     }
                     self.drag_index = None;
                 }
+                Message::SelectThrough(i) if i >= self.mods.len() => {}
                 Message::SelectThrough(i) => {
                     let mods_visible = self.filtered_mods(&self.mod_list_filter);
                     if let Some(index) = mods_visible.iter()
@@ -114,6 +146,32 @@ impl App {
                     self.selected.retain(|m| m != mod_);
                     self.drag_index = None;
                 }
+                Message::SelectAll => {
+                    let filter = self.mod_list_filter.clone();
+                    let visible: Vec<Mod> = self
+                        .filtered_mods(&filter)
+                        .into_iter()
+                        .map(|(_, m)| m.clone())
+                        .collect();
+                    self.selected = visible;
+                    self.drag_index = None;
+                }
+                Message::ReinstallMods(mods) => {
+                    let mods = mods.unwrap_or_else(|| self.selected.clone());
+                    let changes = mods.iter().try_fold(Manifest::default(), |mut all, m| -> Result<Manifest> {
+                        all.extend(m.manifest()?.as_ref());
+                        Ok(all)
+                    });
+                    match changes {
+                        Ok(changes) if !changes.is_empty() => {
+                            log::info!("Reinstalling {} mod(s)", mods.len());
+                            self.dirty_mut().extend(&changes);
+                            self.do_update(Message::Apply);
+                        }
+                        Ok(_) => {}
+                        Err(e) => self.do_update(Message::Error(e)),
+                    }
+                }
                 Message::ClearSelect => {
                     self.selected.clear();
                     self.drag_index = None;
@@ -122,6 +180,7 @@ impl App {
                     if ctx.input(|i| i.pointer.any_released()) {
                         self.drag_index = None;
                     }
+                    let i = i.min(self.mods.len() - 1);
                     self.drag_index = Some(i);
                     let mod_ = &self.mods[i];
                     if !self.selected.contains(mod_) {
@@ -158,9 +217,8 @@ impl App {
                 Message::ChangeProfile(profile) => {
                     match self.core.change_profile(profile) {
                         Ok(()) => {
-                            self.mods = self.core.mod_manager().all_mods().collect();
-                            self.do_update(Message::RefreshModsDisplay);
-                            self.do_update(Message::ReloadProfiles);
+                            self.show_current_profile();
+                            self.do_task(jobs::refresh_pending);
                         }
                         Err(e) => self.do_update(Message::Error(e)),
                     };
@@ -168,25 +226,53 @@ impl App {
                 Message::NewProfile => self.new_profile = Some("".into()),
                 Message::AddProfile => {
                     if let Some(profile) = self.new_profile.take() {
-                        match self.core.change_profile(profile) {
-                            Ok(()) => self.do_update(Message::ResetMods(None)),
-                            Err(e) => self.do_update(Message::Error(e)),
-                        };
+                        let profile = profile.trim().to_string();
+                        let exists = self
+                            .core
+                            .settings()
+                            .profiles()
+                            .any(|p| p.as_str().eq_ignore_ascii_case(&profile));
+                        if exists {
+                            self.do_update(Message::Error(anyhow_ext::anyhow!(
+                                "A profile named {profile} already exists"
+                            )));
+                        } else if !profile.is_empty() {
+                            match self.core.change_profile(&profile) {
+                                Ok(()) => {
+                                    self.show_current_profile();
+                                    self.do_task(jobs::refresh_pending);
+                                }
+                                Err(e) => self.do_update(Message::Error(e)),
+                            };
+                        }
                     }
                 }
                 Message::DeleteProfile(profile) => {
+                    if profile == self.core.mod_manager().current_profile() {
+                        self.do_update(Message::Error(anyhow_ext::anyhow!(
+                            "The active profile can't be deleted. Switch to another profile first."
+                        )));
+                        return;
+                    }
+                    self.dirty.write().remove(profile.as_str());
+                    self.saved_dirty.borrow_mut().remove(profile.as_str());
                     self.do_task(move |core| {
                         let path = core.settings().profiles_dir().join(profile.as_str());
-                        fs::remove_dir_all(path)?;
+                        swmm_core::util::remove_dir_all(path)?;
+                        core.mod_manager().forget_profile(&profile);
                         Ok(Message::CleanProfile(profile))
                     })
                 }
                 Message::DuplicateProfile(profile) => {
                     self.do_task(move |core| {
                         let profiles_dir = core.settings().profiles_dir();
-                        let new_profile = format!("{profile}_copy");
+                        let new_profile =
+                            swmm_core::modpack::free_profile_name(&core, &format!("{profile} copy"));
+                        if core.mod_manager().current_profile() == profile {
+                            core.mod_manager().save()?;
+                        }
                         swmm_core::util::copy_dir(
-                            profiles_dir.join(profile),
+                            profiles_dir.join(&profile),
                             profiles_dir.join(&new_profile),
                         )?;
                         core.mod_manager().add_profile(new_profile.into())?;
@@ -194,11 +280,27 @@ impl App {
                     });
                 }
                 Message::RenameProfile(profile, rename) => {
-                    self.do_task(move |core| {
-                        let profiles_dir = core.settings().profiles_dir();
-                        fs::rename(profiles_dir.join(&profile), profiles_dir.join(rename))?;
-                        Ok(Message::ReloadProfiles)
-                    })
+                    let rename = rename.trim().to_string();
+                    match self.core.rename_profile(&profile, &rename) {
+                        Ok(()) => {
+                            let mut dirty = self.dirty.write();
+                            if let Some(changes) = dirty.remove(profile.as_str()) {
+                                dirty.insert(rename.as_str().into(), changes);
+                            }
+                            drop(dirty);
+                            let mut saved = self.saved_dirty.borrow_mut();
+                            if let Some(changes) = saved.remove(profile.as_str()) {
+                                saved.insert(rename.as_str().into(), changes);
+                            }
+                            drop(saved);
+                            let mut state = self.profiles_state.borrow_mut();
+                            state.selected = Some(rename.as_str().into());
+                            state.rename = None;
+                            drop(state);
+                            self.do_update(Message::ReloadProfiles);
+                        }
+                        Err(e) => self.do_update(Message::Error(e)),
+                    }
                 }
                 Message::CleanProfile(profile) => {
                     let mut state = self.profiles_state.borrow_mut();
@@ -315,7 +417,9 @@ impl App {
                             }
                             mods.save()?;
                             log::info!("Added mod {} to current profile", mod_.meta.name.as_str());
-                            let mod_ = unsafe { mods.get_mod(hash).unwrap_unchecked() };
+                            let mod_ = mods
+                                .get_mod(hash)
+                                .context("The mod was installed but isn't in the profile")?;
                             Ok(Message::AddMod(mod_))
                         }
                     });
@@ -353,9 +457,12 @@ impl App {
                     let dirty = mods.iter().try_fold(
                         Manifest::default(),
                         |mut dirty, m| -> Result<Manifest> {
-                            let mod_ = unsafe {
-                                self.mods.iter_mut().find(|m2| m.eq(m2)).unwrap_unchecked()
+                            let Some(mod_) = self.mods.iter_mut().find(|m2| m.eq(m2)) else {
+                                return Ok(dirty);
                             };
+                            if mod_.enabled == enabled {
+                                return Ok(dirty);
+                            }
                             mod_.enabled = enabled;
                             dirty.extend(m.manifest()?.as_ref());
                             Ok(dirty)
@@ -510,6 +617,10 @@ impl App {
                     }
                     let old_sw = self.core.settings().savage_wind.clone();
                     let sw_paths_changed = old_sw.executable != self.temp_settings.savage_wind.executable;
+                    let active = self.core.mod_manager().current_profile().to_string();
+                    if let Some(config) = self.temp_settings.platform_config_mut() {
+                        config.profile = active.as_str().into();
+                    }
                     let save_res = self.temp_settings.save().and_then(|_| {
                         self.core.reload()?;
                         Ok(())
@@ -662,7 +773,8 @@ impl App {
                         toast.set_duration(Some(Duration::new(3, 0)));
                         toast
                     });
-                    self.do_update(Message::ChangeProfile(profile));
+                    self.dirty_mut().clear();
+                    self.show_current_profile();
                     self.do_update(Message::Remerge);
                 }
                 Message::SelectCompatFile => {
@@ -703,8 +815,6 @@ impl App {
                     });
                 }
             }
-        } else {
-            self.handle_drops(ctx);
         }
     }
 }

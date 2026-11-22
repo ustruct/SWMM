@@ -102,6 +102,15 @@ pub fn test_compat(core: &Manager, path: &Path, id: u64, name: &str, file: &str,
     Ok(Message::CompatTested(Box::new(entry)))
 }
 
+pub fn refresh_pending(core: Arc<Manager>) -> Result<Message> {
+    let deploy = core.deploy_manager();
+    match deploy.reset_pending().and_then(|_| deploy.save()) {
+        Ok(()) => log::info!("{} files differ from the deployed profile", deploy.pending_len()),
+        Err(e) => log::warn!("Couldn't compare the profile with the deployed files: {e:?}"),
+    }
+    Ok(Message::ResetMods(None))
+}
+
 pub fn import_modpack(core: &Manager, path: &Path) -> Result<Message> {
     log::info!("Importing the modpack {}", path.display());
     let profile = swmm_core::modpack::import(core, path)?;
@@ -261,16 +270,27 @@ fn read_mod_inner(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<Mod
 }
 
 pub fn apply_changes(core: &Manager, mods: Vec<Mod>, dirty: Option<Manifest>) -> Result<Message> {
-    let mod_manager = core.mod_manager();
     log::info!("Applying pending changes to mod configuration");
+    let full_remerge = dirty.is_none();
     if !mods.is_empty() {
+        let mod_manager = core.mod_manager();
         log::info!("Updating mod states");
+        let installed: Vec<Mod> = mod_manager.all_mods().collect();
+        let mods: Vec<&Mod> = mods
+            .iter()
+            .filter(|m| {
+                let found = installed.iter().any(|i| i.hash() == m.hash());
+                if !found {
+                    log::warn!("{} isn't in this profile anymore, skipping it", m.meta.name);
+                }
+                found
+            })
+            .collect();
         mods.iter()
             .try_for_each(|m| -> Result<()> {
-                let mod_ = mod_manager
-                    .all_mods()
-                    .find(|m2| m2.hash() == m.hash())
-                    .with_context(|| format!("{} is no longer installed", m.meta.name))?;
+                let Some(mod_) = installed.iter().find(|m2| m2.hash() == m.hash()) else {
+                    return Ok(());
+                };
                 if !mod_.state_eq(m) {
                     mod_manager
                         .set_enabled(m.hash(), m.enabled, None)
@@ -291,7 +311,9 @@ pub fn apply_changes(core: &Manager, mods: Vec<Mod>, dirty: Option<Manifest>) ->
             })
             .context("Failed to update mod state")?;
         log::info!("Updating load order");
-        let order = mods.iter().map(|m| m.hash()).collect();
+        let mut order: Vec<usize> = mods.iter().map(|m| m.hash()).collect();
+        let missing: Vec<usize> = installed.iter().map(|m| m.hash()).filter(|h| !order.contains(h)).collect();
+        order.extend(missing);
         mod_manager.set_order(order);
         mod_manager
             .save()
@@ -302,6 +324,11 @@ pub fn apply_changes(core: &Manager, mods: Vec<Mod>, dirty: Option<Manifest>) ->
     deploy_manager
         .apply(dirty)
         .context("Failed to apply pending mod changes")?;
+    if full_remerge {
+        if let Err(e) = deploy_manager.reset_pending().and_then(|_| deploy_manager.save()) {
+            log::warn!("Couldn't compare the merged mods with the deployed ones: {e:?}");
+        }
+    }
     if core
         .settings()
         .platform_config()
@@ -445,7 +472,16 @@ fn forward_to_ui(message: Message) {
 }
 
 pub fn wait_ipc() {
-    std::thread::spawn(|| match INTERFACE.claim() {
+    std::thread::spawn(|| match (0..20)
+        .map(|attempt| {
+            if attempt > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+            }
+            INTERFACE.claim()
+        })
+        .find(|r| r.is_ok())
+        .unwrap_or_else(|| INTERFACE.claim())
+    {
         Ok(sock) => {
             let mut buf = [0; 4096];
             loop {

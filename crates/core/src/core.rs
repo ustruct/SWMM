@@ -42,9 +42,35 @@ impl Manager {
     }
 
     pub fn change_profile(&self, profile: impl AsRef<str>) -> Result<()> {
-        self.mod_manager.write().set_profile(profile.as_ref())?;
-        if let Some(config) = self.settings.write().platform_config_mut() {
-            config.profile = profile.as_ref().into();
+        let profile = profile.as_ref();
+        {
+            let mut mods = self.mod_manager.write();
+            mods.ensure_profile(profile).unwrap_or(());
+            mods.set_profile(profile)?;
+        }
+        self.remember_profile(profile);
+        Ok(())
+    }
+
+    fn remember_profile(&self, profile: &str) {
+        let mut settings = self.settings.write();
+        if let Some(config) = settings.platform_config_mut() {
+            config.profile = profile.into();
+        }
+        if let Err(e) = settings.save() {
+            log::warn!("Couldn't save which profile is active: {e:?}");
+        }
+    }
+
+    pub fn rename_profile(&self, old: &str, new: &str) -> Result<()> {
+        let was_current = {
+            let mut mods = self.mod_manager.write();
+            let was_current = mods.current_profile() == old;
+            mods.rename_profile(old, new)?;
+            was_current
+        };
+        if was_current {
+            self.remember_profile(new.trim());
         }
         Ok(())
     }

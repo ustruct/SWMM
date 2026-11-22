@@ -5626,7 +5626,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-app"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "anyhow_ext",
@@ -5654,6 +5654,7 @@ dependencies = [
  "serde_json",
  "serde_yaml 0.9.34+deprecated",
  "sevenz-rust",
+ "sha2",
  "smartstring",
  "ssilide",
  "strfmt",
@@ -5662,7 +5663,6 @@ dependencies = [
  "swmm-widgets",
  "uk-content",
  "uk-mod",
- "winreg",
  "winres",
  "xflags",
  "zip",
@@ -5670,7 +5670,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-core"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "anyhow_ext",
@@ -5712,7 +5712,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-i18n"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "parking_lot",
  "serde",
@@ -5721,11 +5721,11 @@ dependencies = [
 
 [[package]]
 name = "swmm-loader"
-version = "0.1.5"
+version = "0.1.6"
 
 [[package]]
 name = "swmm-widgets"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "ab_glyph",
  "eframe",
@@ -5734,7 +5734,6 @@ dependencies = [
  "font-loader",
  "include-flate",
  "rfd",
- "rustc-hash",
  "serde",
 ]
 
@@ -7195,16 +7194,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0592e1c9d151f854e6fd382574c3a0855250e1d9b2f99d9281c6e6391af352f1"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "winreg"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
-dependencies = [
- "cfg-if 1.0.4",
- "windows-sys 0.48.0",
 ]
 
 [[package]]

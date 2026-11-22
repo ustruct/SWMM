@@ -34,9 +34,9 @@ pub struct PackIndex {
 pub fn export(core: &Manager, profile: &str, dest: &Path) -> Result<usize> {
     let mods: Vec<_> = {
         let manager = core.mod_manager();
-        if !manager.has_profile(profile) {
-            anyhow_ext::bail!("The profile {profile} isn't loaded. Restart SWMM and try again.");
-        }
+        manager
+            .ensure_profile(profile)
+            .with_context(|| format!("The profile {profile} couldn't be loaded"))?;
         let name: smartstring::alias::String = profile.into();
         let data = manager.get_profile(Some(&name));
         let all = data.mods();
@@ -45,7 +45,7 @@ pub fn export(core: &Manager, profile: &str, dest: &Path) -> Result<usize> {
     if mods.is_empty() {
         anyhow_ext::bail!("The profile {profile} has no mods to share");
     }
-    let partial = dest.with_extension("partial");
+    let partial = dest.with_extension(format!("{EXTENSION}.partial"));
     let file = fs::File::create(&partial)?;
     let mut zip = zip::ZipWriter::new(file);
     let mut entries = Vec::with_capacity(mods.len());
@@ -70,10 +70,17 @@ pub fn export(core: &Manager, profile: &str, dest: &Path) -> Result<usize> {
         name: profile.to_string(),
         mods: entries,
     };
-    zip.start_file(INDEX, zip::write::SimpleFileOptions::default())?;
-    zip.write_all(serde_json::to_string_pretty(&index)?.as_bytes())?;
-    zip.finish()?;
-    fs::rename(&partial, dest)?;
+    let finished = (|| -> Result<()> {
+        zip.start_file(INDEX, zip::write::SimpleFileOptions::default())?;
+        zip.write_all(serde_json::to_string_pretty(&index)?.as_bytes())?;
+        zip.finish()?;
+        fs::rename(&partial, dest)?;
+        Ok(())
+    })();
+    if let Err(e) = finished {
+        fs::remove_file(&partial).unwrap_or(());
+        return Err(e).context("Couldn't write the modpack");
+    }
     log::info!("Shared {} mods from {profile} as {}", mods.len(), dest.display());
     Ok(mods.len())
 }
@@ -100,6 +107,22 @@ fn add_mod(zip: &mut zip::ZipWriter<fs::File>, name: &str, path: &Path) -> Resul
     zip.start_file(name, stored)?;
     zip.write_all(&bytes)?;
     Ok(())
+}
+
+fn known_options(mod_: &crate::mods::Mod, wanted: &[ModOption]) -> Vec<ModOption> {
+    let offered: Vec<&ModOption> = mod_
+        .meta
+        .options
+        .iter()
+        .flat_map(|group| match group {
+            uk_mod::OptionGroup::Exclusive(g) => g.options.iter(),
+            uk_mod::OptionGroup::Multiple(g) => g.options.iter(),
+        })
+        .collect();
+    wanted
+        .iter()
+        .filter_map(|w| offered.iter().find(|o| o.path == w.path).map(|o| (*o).clone()))
+        .collect()
 }
 
 pub fn read_index(path: &Path) -> Result<PackIndex> {
@@ -167,16 +190,31 @@ fn install_all(core: &Manager, path: &Path, index: &PackIndex, temp: &Path) -> R
             std::io::copy(&mut src, &mut out)?;
         }
         let manager = core.mod_manager();
+        if manager.all_mods().any(|m| m.meta.name.as_str() == entry.name) {
+            log::warn!("The modpack has {} twice, keeping the first one", entry.name);
+            fs::remove_file(&package).unwrap_or(());
+            continue;
+        }
         let mod_ = manager
             .add(&package, None)
             .with_context(|| format!("Failed to install {}", entry.name))?;
-        if !entry.options.is_empty() {
-            manager.set_enabled_options(mod_.hash(), entry.options.clone())?;
+        fs::remove_file(&package).unwrap_or(());
+        let options = known_options(&mod_, &entry.options);
+        if options.len() != entry.options.len() {
+            log::warn!("Some options saved for {} don't exist in this version, they were left off", entry.name);
+        }
+        if !options.is_empty() {
+            manager
+                .set_enabled_options(mod_.hash(), options)
+                .with_context(|| format!("Failed to select the options of {}", entry.name))?;
         }
         manager.set_enabled(mod_.hash(), entry.enabled, None)?;
         order.push(mod_.hash());
     }
     let manager = core.mod_manager();
+    if order.is_empty() {
+        anyhow_ext::bail!("None of the modpack's mods could be installed");
+    }
     manager.set_order(order);
     manager.save()?;
     Ok(())

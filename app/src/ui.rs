@@ -16,6 +16,7 @@ mod mod_options;
 mod net;
 mod profiles;
 mod settings;
+mod updater;
 use std::{
     cell::{Cell, RefCell},
     collections::VecDeque,
@@ -139,6 +140,7 @@ pub enum Message {
     OpenMod(PathBuf),
     OpenDownloadedMod(PathBuf, swmm_core::source::SourceInfo),
     RefreshModsDisplay,
+    ReinstallMods(Option<Vec<Mod>>),
     Remerge,
     ReloadProfiles,
     RemoveMods(Vec<Mod>),
@@ -148,6 +150,7 @@ pub enum Message {
     ResetPending,
     ResetSettings,
     SaveSettings,
+    SelectAll,
     SelectAlso(usize),
     SelectFile,
     SelectOnly(usize),
@@ -182,6 +185,11 @@ pub enum Message {
     TestCompat { path: PathBuf, id: u64, name: String, file: String, downloaded: bool },
     CompatTested(Box<swmm_core::compat::Entry>),
     ShowCompat(String),
+    CheckForUpdates,
+    UpdateAvailable(Box<updater::Release>, bool),
+    UpToDate,
+    InstallUpdate(Box<updater::Release>),
+    UpdateReady(Box<updater::Finish>),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -233,6 +241,7 @@ pub struct App {
     show_about: bool,
     show_licenses: bool,
     dirty: RwLock<HashMap<String, Manifest>>,
+    saved_dirty: RefCell<HashMap<String, Manifest>>,
     options_mod: Option<(Mod, bool)>,
     temp_settings: Settings,
     toasts: egui_notify::Toasts,
@@ -245,6 +254,8 @@ pub struct App {
     saves: RefCell<Option<(f64, Vec<swmm_core::saves::Backup>)>>,
     gamepad: gamepad::Gamepad,
     last_panic: Option<String>,
+    pending_update: Option<Box<updater::Release>>,
+    after_exit: Option<updater::Finish>,
 }
 
 static NO_CHANGES: std::sync::LazyLock<uk_mod::Manifest> = std::sync::LazyLock::new(Default::default);
@@ -270,6 +281,8 @@ impl App {
         }
         swmm_widgets::load_fonts(&cc.egui_ctx);
         let core = Arc::new(Manager::init().context("SWMM couldn't load its settings and profiles")?);
+        updater::clean_old_files();
+        updater::migrate_preference(&core);
         frame::auto_configure_on_start(&core);
         let ui_state: UiState = fs::read_to_string(core.settings().state_file())
             .context("")
@@ -292,7 +305,19 @@ impl App {
         };
         let (send, recv) = flume::unbounded();
         jobs::UI_SENDER.set(send.clone()).unwrap_or(());
+        updater::check_in_background(&core, send.clone());
         let temp_settings = core.settings().clone();
+        let unapplied: HashMap<String, Manifest> = {
+            let settings = core.settings();
+            let dir = settings.profiles_dir();
+            settings
+                .profiles()
+                .map(|p| {
+                    let changes = swmm_core::mods::load_unapplied(&dir, p.as_str());
+                    (p.as_str().into(), changes)
+                })
+                .collect()
+        };
         LOCALIZATION.write().update_language(&temp_settings.lang);
         Ok(Self {
             selected: mods.first().cloned().into_iter().collect(),
@@ -325,15 +350,8 @@ impl App {
             show_about: false,
             show_licenses: false,
             busy: Cell::new(false),
-            dirty: {
-                let settings = core.settings();
-                RwLock::new(
-                    settings
-                        .profiles()
-                        .map(|p| (p.into(), Default::default()))
-                        .collect(),
-                )
-            },
+            dirty: RwLock::new(unapplied.clone()),
+            saved_dirty: RefCell::new(unapplied),
             options_mod: None,
             crash: None,
             conflicts: Default::default(),
@@ -345,6 +363,8 @@ impl App {
             update_mod: Default::default(),
             error_queue: Default::default(),
             last_panic: None,
+            pending_update: None,
+            after_exit: None,
             core,
         })
     }
@@ -359,10 +379,7 @@ impl App {
         let key = self.core.mod_manager().profile().key().to_string();
         let dirty = self.dirty.read();
         RwLockReadGuard::map(dirty, |dirty| {
-            dirty
-                .get(key.as_str())
-                .or_else(|| dirty.values().next())
-                .unwrap_or(&NO_CHANGES)
+            dirty.get(key.as_str()).unwrap_or(&NO_CHANGES)
         })
     }
 
@@ -385,6 +402,23 @@ impl App {
             || self.meta_input.is_open()
             || self.changelog.is_some()
             || self.crash.is_some()
+    }
+
+    fn persist_dirty(&self) {
+        let dirty = self.dirty.read();
+        let mut saved = self.saved_dirty.borrow_mut();
+        let dir = self.core.settings().profiles_dir();
+        for (profile, changes) in dirty.iter() {
+            if saved.get(profile) == Some(changes) {
+                continue;
+            }
+            match swmm_core::mods::save_unapplied(&dir, profile, changes) {
+                Ok(()) => {
+                    saved.insert(profile.clone(), changes.clone());
+                }
+                Err(e) => log::warn!("Couldn't save the unapplied changes of {profile}: {e:?}"),
+            }
+        }
     }
 
     fn do_update(&self, message: Message) {
@@ -494,6 +528,9 @@ impl eframe::App for App {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         self.save_ui_state();
         shutdown(&self.core);
+        if let Some(finish) = self.after_exit.take() {
+            finish.run();
+        }
     }
 }
 
@@ -506,6 +543,11 @@ impl App {
         let size = ctx.screen_rect().size();
         if minimized || size.x < 200.0 || size.y < 200.0 {
             return;
+        }
+        if !self.modal_open() && !self.intro.active() {
+            if let Some(release) = self.pending_update.take() {
+                self.ask_to_update(release);
+            }
         }
         self.render_title_bar(ctx, frame);
         self.render_status_bar(ctx);
