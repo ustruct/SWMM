@@ -83,7 +83,7 @@ pub fn load_fonts(context: &egui::Context) {
             .and_then(|o| {
                 String::from_utf8(o.stdout)
                     .map(|s| {
-                        let last_space = s.rfind(' ').unwrap();
+                        let last_space = s.rfind(' ').unwrap_or(s.len());
                         s[..last_space].trim_matches('\'').to_string()
                     })
                     .ok()

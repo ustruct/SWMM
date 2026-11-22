@@ -17,6 +17,10 @@ use swmm_widgets::{
     PathNode,
 };
 
+#[allow(deprecated)]
+static PREVIEW: LazyLock<RwLock<FxHashMap<usize, Option<Arc<RetainedImage>>>>> =
+    LazyLock::new(|| RwLock::new(FxHashMap::default()));
+
 #[repr(transparent)]
 pub struct ModInfo<'a>(pub &'a Mod);
 
@@ -37,20 +41,20 @@ impl ModInfo<'_> {
             }
             Ok(None)
         }
-        static PREVIEW: LazyLock<RwLock<FxHashMap<usize, Option<Arc<RetainedImage>>>>> =
-            LazyLock::new(|| RwLock::new(FxHashMap::default()));
+        if let Some(found) = PREVIEW.read().get(&self.0.hash()) {
+            return found.clone();
+        }
+        let loaded = match load_preview(self.0) {
+            Ok(pre) => pre,
+            Err(e) => {
+                log::error!("Error loading mod preview: {}", e);
+                None
+            }
+        };
         let mut preview = PREVIEW.write();
         preview
             .entry(self.0.hash())
-            .or_insert_with(|| {
-                match load_preview(self.0) {
-                    Ok(pre) => pre,
-                    Err(e) => {
-                        log::error!("Error loading mod preview: {}", e);
-                        None
-                    }
-                }
-            })
+            .or_insert(loaded)
             .clone()
     }
 }

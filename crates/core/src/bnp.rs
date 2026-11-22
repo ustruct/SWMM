@@ -222,6 +222,7 @@ struct BnpConverter {
     opt_master_cache: Arc<DashMap<PathBuf, Vec<u8>>>,
     root_maps: Arc<DashMap<String, Vec<u8>>>,
     opt_maps: Arc<DashMap<String, Vec<u8>>>,
+    from_wiiu: bool,
 }
 
 impl BnpConverter {
@@ -643,8 +644,32 @@ pub fn unpack_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> {
             .context("Failed to upgrade 2.x BNP")?;
     }
     let (content, aoc) = uk_content::platform_prefixes(core.settings().current_mode.into());
+    let has_wiiu = |root: &Path| root.join("content").is_dir() || root.join("aoc").is_dir();
+    let from_wiiu = content != "content"
+        && (has_wiiu(&tempdir)
+            || fs::read_dir(tempdir.join("options"))
+                .into_iter()
+                .flatten()
+                .flatten()
+                .any(|e| has_wiiu(&e.path())));
+    if from_wiiu {
+        crate::origin::note_wiiu();
+        log::info!("Converting the Wii U files of this BNP for Switch…");
+        let game = crate::savage_wind::current_game_files(&core.settings()).ok();
+        let report = crate::wiiu::convert_bnp_dir(&tempdir, content, aoc, game.as_ref().map(|g| g.romfs.as_path()))
+            .context("Failed to convert the Wii U BNP")?;
+        crate::wiiu::record(&report);
+        log::info!("Converted {} Wii U files for Switch", report.converted);
+        if report.stock > 0 {
+            log::info!("  {} unchanged copies of the game's files (physics, effects, shaders): the Switch game's used", report.stock);
+        }
+        for (f, why) in report.skipped.iter().take(40) {
+            log::warn!("  left out: {f} ({why})");
+        }
+    }
     log::info!("Processing BNP logs…");
     let converter = BnpConverter {
+        from_wiiu,
         platform: core.settings().current_mode,
         game_lang: core
             .settings()
@@ -666,11 +691,37 @@ pub fn unpack_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> {
         opt_maps: Default::default(),
     };
     let path = converter.convert()?;
+    if from_wiiu {
+        let roots = std::iter::once(path.clone()).chain(
+            fs::read_dir(path.join("options"))
+                .into_iter()
+                .flatten()
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.is_dir()),
+        );
+        for root in roots.collect::<Vec<_>>() {
+            for (from, to) in [(root.join("aoc").join("0010"), root.join(aoc)), (root.join("content"), root.join(content))] {
+                if from.is_dir() {
+                    fs::create_dir_all(&to)?;
+                    crate::util::copy_dir(&from, &to)?;
+                    fs::remove_dir_all(&from)?;
+                }
+            }
+            if root.join("aoc").is_dir() && aoc != "aoc" {
+                let _ = fs::remove_dir(root.join("aoc"));
+            }
+        }
+    }
+    if !path.join(content).is_dir() && !path.join(aoc).is_dir() {
+        fs::create_dir_all(path.join(content))?;
+    }
     log::info!("BNP unpacked");
     Ok(path)
 }
 
 pub fn convert_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> {
+    crate::origin::note_kind(crate::origin::Kind::Bnp);
     let tempdir = unpack_bnp(core, path).with_context(|| {
         format!(
             "Failed to unpack {}",
@@ -679,20 +730,24 @@ pub fn convert_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> 
                 .unwrap_or_default()
         )
     })?;
-    let tempfile = std::env::temp_dir();
+    let out = crate::util::get_temp_folder().to_path_buf();
     let meta = if let Some(info_path) = tempdir.join("info.json").exists_then() {
         ModPacker::parse_info(info_path)?
     } else {
         ModPacker::parse_rules(tempdir.join("rules.txt")).context("Failed to parse BNP metadata")?
     };
+    crate::origin::note_own_info();
+    let meta = uk_mod::Meta { platform: uk_mod::ModPlatform::Specific(core.settings().current_mode.into()), ..meta };
     let name = meta.name.clone();
-    let new_mod = ModPacker::new(tempdir, tempfile.as_path(), Some(meta), vec![
+    let new_mod = ModPacker::new(&tempdir, out.as_path(), Some(meta), vec![
         core.settings()
             .dump()
             .context("No dump for current platform")?,
     ])
     .with_context(|| format!("Failed to package converted BNP for mod {}", name))?;
-    new_mod.pack()
+    let packed = new_mod.pack();
+    crate::util::release_temp(&tempdir);
+    packed
 }
 
 #[cfg(test)]
@@ -702,5 +757,8 @@ fn test_convert() {
     let path = dirs2::download_dir()
         .unwrap()
         .join("clearcameraui_nodetection.bnp");
+    if !path.is_file() {
+        return;
+    }
     unpack_bnp(&super::core::Manager::init().unwrap(), path.as_ref()).unwrap();
 }

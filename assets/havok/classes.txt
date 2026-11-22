@@ -1,0 +1,11892 @@
+class ActorInfo
+  U32
+  I32
+  I32
+  I32
+class ShapeDispatchTypeEnum
+  PARENT Enum
+class ShapeInfo
+  I32
+  I32
+  I8
+  U8
+  U16
+class ShapeInfoCodecTypeEnum
+  PARENT Enum
+class ShapeType
+  PARENT Enum
+class ShapeTypeEnum
+  PARENT Enum
+class StaticCompoundInfo
+  U32
+  ARRAY STRUCT ActorInfo
+  ARRAY STRUCT ShapeInfo
+class hclAction
+  PARENT hkReferencedObject
+class hclAntiPinchConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclAntiPinchConstraintSetPerParticle
+  F32
+  F32
+  F32
+  U32
+class hclAntiPinchConstraintSetPerParticle
+  U16
+  U16
+class hclBendLinkConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclBendLinkConstraintSetLink
+class hclBendLinkConstraintSetLink
+  U16
+  U16
+  F32
+  F32
+  F32
+  F32
+class hclBendLinkConstraintSetMx
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclBendLinkConstraintSetMxBatch
+  ARRAY STRUCT hclBendLinkConstraintSetMxSingle
+class hclBendLinkConstraintSetMxBatch
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclBendLinkConstraintSetMxSingle
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+class hclBendLinkSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  BOOL
+  U32
+  U16
+  U8
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+class hclBendStiffnessConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclBendStiffnessConstraintSetLink
+  BOOL
+  U8
+  U16
+  IF8
+  U32
+  END
+class hclBendStiffnessConstraintSetLink
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+class hclBendStiffnessConstraintSetMx
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclBendStiffnessConstraintSetMxBatch
+  ARRAY STRUCT hclBendStiffnessConstraintSetMxSingle
+  BOOL
+  U32
+  U16
+  U8
+class hclBendStiffnessConstraintSetMxBatch
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclBendStiffnessConstraintSetMxSingle
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+class hclBendStiffnessSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  BOOL
+  U32
+  U16
+  U8
+class hclBlendSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclBufferSetupObject
+  POINTER hclBufferSetupObject
+  POINTER hclBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U32
+class hclBlendSomeVerticesOperator
+  PARENT hclOperator
+  ARRAY STRUCT hclBlendSomeVerticesOperatorBlendEntry
+  U32
+  U32
+  U32
+  BOOL
+  BOOL
+  BOOL
+  U8
+class hclBlendSomeVerticesOperatorBlendEntry
+  U16
+  U16
+  F32
+class hclBonePlanesConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclBonePlanesConstraintSetBonePlane
+  U32
+  IF8
+  U32
+  END
+class hclBonePlanesConstraintSetBonePlane
+  V4
+  U16
+  U16
+  F32
+  U64
+class hclBonePlanesSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  POINTER hclTransformSetSetupObject
+  ARRAY STRUCT hclBonePlanesSetupObjectPerParticlePlane
+  ARRAY STRUCT hclBonePlanesSetupObjectGlobalPlane
+  ARRAY STRUCT hclBonePlanesSetupObjectPerParticleAngle
+  BOOL
+  U32
+  U16
+  U8
+class hclBonePlanesSetupObjectGlobalPlane
+  STRING
+  STRUCT hclVertexSelectionInput
+  U64
+  V4
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+class hclBonePlanesSetupObjectPerParticleAngle
+  STRING
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexSelectionInput
+  U64
+  V4
+  V4
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+class hclBonePlanesSetupObjectPerParticlePlane
+  STRING
+  STRUCT hclVertexSelectionInput
+  U64
+  V4
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+class hclBoneSpaceDeformer
+  ARRAY STRUCT hclBoneSpaceDeformerFourBlendEntryBlock
+  ARRAY STRUCT hclBoneSpaceDeformerThreeBlendEntryBlock
+  ARRAY STRUCT hclBoneSpaceDeformerTwoBlendEntryBlock
+  ARRAY STRUCT hclBoneSpaceDeformerOneBlendEntryBlock
+  ARRAY U8
+  U16
+  U16
+  U16
+  BOOL
+  U8
+class hclBoneSpaceDeformerFourBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  BYTES 8
+class hclBoneSpaceDeformerLocalBlockP
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclBoneSpaceDeformerLocalBlockPN
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclBoneSpaceDeformerLocalBlockPNT
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclBoneSpaceDeformerLocalBlockPNTB
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclBoneSpaceDeformerLocalBlockUnpackedP
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclBoneSpaceDeformerLocalBlockUnpackedPN
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclBoneSpaceDeformerLocalBlockUnpackedPNT
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclBoneSpaceDeformerLocalBlockUnpackedPNTB
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclBoneSpaceDeformerOneBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclBoneSpaceDeformerThreeBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  BYTES 8
+class hclBoneSpaceDeformerTwoBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclBoneSpaceMeshMeshDeformOperator
+  PARENT hclOperator
+  U32
+  U32
+  U32
+  ARRAY U16
+  STRUCT hclBoneSpaceDeformer
+class hclBoneSpaceMeshMeshDeformPNOperator
+  PARENT hclBoneSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockPN
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedPN
+class hclBoneSpaceMeshMeshDeformPNTBOperator
+  PARENT hclBoneSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockPNTB
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedPNTB
+class hclBoneSpaceMeshMeshDeformPNTOperator
+  PARENT hclBoneSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockPNT
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedPNT
+class hclBoneSpaceMeshMeshDeformPOperator
+  PARENT hclBoneSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockP
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedP
+class hclBoneSpaceSkinOperator
+  PARENT hclOperator
+  ARRAY U16
+  U32
+  U32
+  STRUCT hclBoneSpaceDeformer
+class hclBoneSpaceSkinPNOperator
+  PARENT hclBoneSpaceSkinOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockPN
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedPN
+class hclBoneSpaceSkinPNTBOperator
+  PARENT hclBoneSpaceSkinOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockPNTB
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedPNTB
+class hclBoneSpaceSkinPNTOperator
+  PARENT hclBoneSpaceSkinOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockPNT
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedPNT
+class hclBoneSpaceSkinPOperator
+  PARENT hclBoneSpaceSkinOperator
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockP
+  ARRAY STRUCT hclBoneSpaceDeformerLocalBlockUnpackedP
+class hclBufferDefinition
+  PARENT hkReferencedObject
+  STRING
+  I32
+  I32
+  U32
+  U32
+  STRUCT hclBufferLayout
+  U16
+  IF8
+  U32
+  END
+class hclBufferLayout
+  STRUCT hclBufferLayoutBufferElement
+  STRUCT hclBufferLayoutBufferElement
+  STRUCT hclBufferLayoutBufferElement
+  STRUCT hclBufferLayoutBufferElement
+  STRUCT hclBufferLayoutSlot
+  STRUCT hclBufferLayoutSlot
+  STRUCT hclBufferLayoutSlot
+  STRUCT hclBufferLayoutSlot
+  U8
+  U8
+class hclBufferLayoutBufferElement
+  U8
+  U8
+  U8
+  U8
+class hclBufferLayoutSlot
+  U8
+  U8
+class hclBufferSetupObject
+  PARENT hkReferencedObject
+class hclBufferUsage
+  U8
+  U8
+  U8
+  U8
+  BOOL
+class hclCapsuleShape
+  PARENT hclShape
+  PAD 16
+  V4
+  V4
+  V4
+  F32
+  F32
+  U64
+class hclClothContainer
+  PARENT hkReferencedObject
+  ARRAY POINTER hclCollidable
+  ARRAY POINTER hclClothData
+class hclClothData
+  PARENT hkReferencedObject
+  STRING
+  ARRAY POINTER hclSimClothData
+  ARRAY POINTER hclBufferDefinition
+  ARRAY POINTER hclTransformSetDefinition
+  ARRAY POINTER hclOperator
+  ARRAY POINTER hclClothState
+  ARRAY POINTER hclAction
+  U32
+  IF8
+  U32
+  END
+class hclClothSetupContainer
+  PARENT hkReferencedObject
+  ARRAY POINTER hclClothSetupObject
+  ARRAY POINTER hclNamedSetupMesh
+  ARRAY POINTER hclNamedTransformSetSetupObject
+class hclClothSetupObject
+  PARENT hkReferencedObject
+  STRING
+  ARRAY POINTER hclBufferSetupObject
+  ARRAY POINTER hclTransformSetSetupObject
+  ARRAY POINTER hclSimClothSetupObject
+  ARRAY POINTER hclOperatorSetupObject
+  ARRAY POINTER hclClothStateSetupObject
+class hclClothState
+  PARENT hkReferencedObject
+  STRING
+  ARRAY U32
+  ARRAY STRUCT hclClothStateBufferAccess
+  ARRAY STRUCT hclClothStateTransformSetAccess
+  ARRAY U32
+class hclClothStateBufferAccess
+  U32
+  STRUCT hclBufferUsage
+  U8
+  U16
+  U32
+class hclClothStateSetupObject
+  PARENT hkReferencedObject
+  STRING
+  ARRAY POINTER hclOperatorSetupObject
+class hclClothStateTransformSetAccess
+  U32
+  IF8
+  U32
+  END
+  STRUCT hclTransformSetUsage
+class hclCollidable
+  PARENT hkReferencedObject
+  STRING
+  PAD 16
+  M4
+  V4
+  V4
+  BOOL
+  I8
+  U16
+  F32
+  POINTER hclShape
+class hclCompressibleLinkConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclCompressibleLinkConstraintSetLink
+class hclCompressibleLinkConstraintSetLink
+  U16
+  U16
+  F32
+  F32
+  F32
+class hclCompressibleLinkConstraintSetMx
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclCompressibleLinkConstraintSetMxBatch
+  ARRAY STRUCT hclCompressibleLinkConstraintSetMxSingle
+class hclCompressibleLinkConstraintSetMxBatch
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclCompressibleLinkConstraintSetMxSingle
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+class hclConstraintSet
+  PARENT hkReferencedObject
+  STRING
+  U32
+  IF8
+  U32
+  END
+class hclConstraintSetSetupObject
+  PARENT hkReferencedObject
+class hclConvexGeometryShape
+  PARENT hclShape
+  ARRAY U16
+  ARRAY U8
+  ARRAY M4
+  M4
+  M4
+  STRUCT hkAabb
+  V4
+  V4
+  U16
+  U64
+  U32
+  U16
+class hclConvexHeightFieldShape
+  PARENT hclShape
+  U16
+  U16
+  U64
+  U32
+  V4
+  ARRAY U8
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  U64
+  M4
+  V4
+class hclConvexPlanesShape
+  PARENT hclShape
+  ARRAY V4
+  M4
+  M4
+  STRUCT hkAabb
+  V4
+class hclCopyVerticesOperator
+  PARENT hclOperator
+  IF8
+  SEEK -4
+  END
+  U32
+  U32
+  U32
+  U32
+  U32
+  BOOL
+  U8
+  U16
+  IF8
+  U32
+  END
+class hclDisplayBufferSetupObject
+  PARENT hclBufferSetupObject
+  POINTER hclSetupMesh
+  STRING
+class hclEdgeSelectionInput
+  U32
+  U32
+  STRING
+class hclGatherAllVerticesOperator
+  PARENT hclOperator
+  ARRAY I16
+  U32
+  U32
+  BOOL
+  BOOL
+  U16
+  IF8
+  U32
+  END
+class hclGatherSomeVerticesOperator
+  PARENT hclOperator
+  ARRAY STRUCT hclGatherSomeVerticesOperatorVertexPair
+  U32
+  U32
+  BOOL
+  U32
+  U16
+  U8
+class hclGatherSomeVerticesOperatorVertexPair
+  U16
+  U16
+class hclInputConvertOperator
+  PARENT hclOperator
+  U32
+  U32
+  STRUCT hclRuntimeConversionInfo
+  U16
+class hclLocalRangeConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclLocalRangeConstraintSetLocalConstraint
+  U32
+  F32
+  U32
+  BOOL
+  U8
+  U16
+class hclLocalRangeConstraintSetLocalConstraint
+  U16
+  U16
+  F32
+  F32
+  F32
+class hclLocalRangeSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  POINTER hclBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  F32
+  U32
+  BOOL
+  BOOL
+  U32
+  U16
+class hclMeshBoneDeformOperator
+  PARENT hclOperator
+  U32
+  U32
+  U32
+  ARRAY STRUCT hclMeshBoneDeformOperatorTriangleBonePair
+  ARRAY U16
+class hclMeshBoneDeformOperatorTriangleBonePair
+  M4
+  F32
+  U16
+  U64
+  U16
+class hclMeshBoneDeformSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclBufferSetupObject
+  STRUCT hclTriangleSelectionInput
+  POINTER hclTransformSetSetupObject
+  ARRAY STR
+  U32
+  F32
+class hclMeshMeshDeformOperator
+  PARENT hclOperator
+  ARRAY U16
+  ARRAY STRUCT hclMeshMeshDeformOperatorTriangleVertexPair
+  ARRAY U16
+  U32
+  U32
+  U16
+  U16
+  U32
+  BOOL
+  BOOL
+  U32
+  U16
+class hclMeshMeshDeformOperatorTriangleVertexPair
+  V4
+  V4
+  U16
+  U16
+  F32
+  U64
+class hclMeshMeshDeformSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclBufferSetupObject
+  STRUCT hclTriangleSelectionInput
+  POINTER hclBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  U32
+  U32
+  F32
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+class hclMoveFixedParticlesSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclSimClothSetupObject
+  POINTER hclBufferSetupObject
+class hclMoveParticlesOperator
+  PARENT hclOperator
+  ARRAY STRUCT hclMoveParticlesOperatorVertexParticlePair
+  U32
+  U32
+class hclMoveParticlesOperatorVertexParticlePair
+  U16
+  U16
+class hclNamedSetupMesh
+  PARENT hclSetupMesh
+  STRING
+  STRING
+  U64
+class hclNamedTransformSetSetupObject
+  PARENT hclTransformSetSetupObject
+  STRING
+  STRING
+  U64
+class hclObjectSpaceDeformer
+  ARRAY STRUCT hclObjectSpaceDeformerEightBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerSevenBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerSixBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerFiveBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerFourBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerThreeBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerTwoBlendEntryBlock
+  ARRAY STRUCT hclObjectSpaceDeformerOneBlendEntryBlock
+  ARRAY U8
+  U16
+  U16
+  U16
+  BOOL
+  U8
+class hclObjectSpaceDeformerEightBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclObjectSpaceDeformerFiveBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclObjectSpaceDeformerFourBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+class hclObjectSpaceDeformerLocalBlockP
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclObjectSpaceDeformerLocalBlockPN
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclObjectSpaceDeformerLocalBlockPNT
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclObjectSpaceDeformerLocalBlockPNTB
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+class hclObjectSpaceDeformerLocalBlockUnpackedP
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclObjectSpaceDeformerLocalBlockUnpackedPN
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclObjectSpaceDeformerLocalBlockUnpackedPNT
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclObjectSpaceDeformerLocalBlockUnpackedPNTB
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hclObjectSpaceDeformerOneBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclObjectSpaceDeformerSevenBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclObjectSpaceDeformerSixBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclObjectSpaceDeformerThreeBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+class hclObjectSpaceDeformerTwoBlendEntryBlock
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+class hclObjectSpaceMeshMeshDeformOperator
+  PARENT hclOperator
+  U32
+  U32
+  U32
+  ARRAY U16
+  ARRAY M4
+  STRUCT hclObjectSpaceDeformer
+  BOOL
+  U32
+  U16
+  U8
+class hclObjectSpaceMeshMeshDeformPNOperator
+  PARENT hclObjectSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockPN
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedPN
+class hclObjectSpaceMeshMeshDeformPNTBOperator
+  PARENT hclObjectSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockPNTB
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedPNTB
+class hclObjectSpaceMeshMeshDeformPNTOperator
+  PARENT hclObjectSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockPNT
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedPNT
+class hclObjectSpaceMeshMeshDeformPOperator
+  PARENT hclObjectSpaceMeshMeshDeformOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockP
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedP
+class hclObjectSpaceSkinOperator
+  PARENT hclOperator
+  ARRAY M4
+  ARRAY U16
+  U32
+  U32
+  STRUCT hclObjectSpaceDeformer
+class hclObjectSpaceSkinPNOperator
+  PARENT hclObjectSpaceSkinOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockPN
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedPN
+class hclObjectSpaceSkinPNTBOperator
+  PARENT hclObjectSpaceSkinOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockPNTB
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedPNTB
+class hclObjectSpaceSkinPNTOperator
+  PARENT hclObjectSpaceSkinOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockPNT
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedPNT
+class hclObjectSpaceSkinPOperator
+  PARENT hclObjectSpaceSkinOperator
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockP
+  ARRAY STRUCT hclObjectSpaceDeformerLocalBlockUnpackedP
+class hclOperator
+  PARENT hkReferencedObject
+  STRING
+  U32
+  IF8
+  U32
+  END
+class hclOperatorSetupObject
+  PARENT hkReferencedObject
+class hclOutputConvertOperator
+  PARENT hclOperator
+  U32
+  U32
+  STRUCT hclRuntimeConversionInfo
+  U16
+class hclPlaneShape
+  PARENT hclShape
+  PAD 16
+  V4
+class hclRuntimeConversionInfo
+  STRUCT hclRuntimeConversionInfoSlotConversion
+  STRUCT hclRuntimeConversionInfoSlotConversion
+  STRUCT hclRuntimeConversionInfoSlotConversion
+  STRUCT hclRuntimeConversionInfoSlotConversion
+  STRUCT hclRuntimeConversionInfoElementConversion
+  STRUCT hclRuntimeConversionInfoElementConversion
+  STRUCT hclRuntimeConversionInfoElementConversion
+  STRUCT hclRuntimeConversionInfoElementConversion
+  U8
+  U8
+class hclRuntimeConversionInfoElementConversion
+  U8
+  U8
+  U8
+class hclRuntimeConversionInfoSlotConversion
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  BOOL
+class hclSceneDataSetupMesh
+  PARENT hclSetupMesh
+  POINTER hkxNode
+  U64
+  M4
+  U64
+  POINTER hkxSkinBinding
+  ARRAY U32
+  ARRAY U32
+  ARRAY U32
+  ARRAY POINTER hclSceneDataSetupMeshSection
+class hclSceneDataSetupMeshSection
+  PARENT hkReferencedObject
+  U64
+  POINTER hclSceneDataSetupMesh
+  POINTER hkxMeshSection
+  BOOL
+  U32
+  U16
+  U8
+class hclScratchBufferDefinition
+  PARENT hclBufferDefinition
+  ARRAY U16
+  BOOL
+  BOOL
+  U16
+  IF8
+  U32
+  END
+class hclScratchBufferSetupObject
+  PARENT hclBufferSetupObject
+  STRING
+  POINTER hclSetupMesh
+  BOOL
+  BOOL
+  BOOL
+  U32
+  U8
+class hclSetupMesh
+  PARENT hkReferencedObject
+class hclSetupMeshSection
+  U64
+class hclSetupMeshSectionTriangle
+  U32
+  U32
+  U32
+class hclShadowBufferDefinition
+  PARENT hclBufferDefinition
+  ARRAY U16
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U32
+class hclShape
+  PARENT hkReferencedObject
+class hclSimClothBufferSetupObject
+  PARENT hclBufferSetupObject
+  U32
+  STRING
+  POINTER hclSimClothSetupObject
+class hclSimClothData
+  PARENT hkReferencedObject
+  STRUCT hclSimClothDataOverridableSimulationInfo
+  STRING
+  ARRAY STRUCT hclSimClothDataParticleData
+  ARRAY U16
+  ARRAY U16
+  ARRAY U8
+  F32
+  IF8
+  U32
+  END
+  STRUCT hclSimClothDataCollidableTransformMap
+  ARRAY POINTER hclCollidable
+  ARRAY POINTER hclConstraintSet
+  ARRAY POINTER hclConstraintSet
+  ARRAY POINTER hclSimClothPose
+  ARRAY POINTER hclAction
+  ARRAY U32
+  ARRAY BOOL
+  ARRAY STRUCT hclSimClothDataCollidablePinchingData
+  U16
+  U16
+  U32
+  F32
+  STRUCT hclSimClothDataLandscapeCollisionData
+  U32
+  BOOL
+  U8
+  U16
+  STRUCT hclSimClothDataTransferMotionData
+class hclSimClothDataCollidablePinchingData
+  BOOL
+  I8
+  U16
+  F32
+class hclSimClothDataCollidableTransformMap
+  I32
+  ARRAY U32
+  ARRAY M4
+class hclSimClothDataLandscapeCollisionData
+  F32
+  BOOL
+  U8
+  U16
+  F32
+  BOOL
+  I8
+  U16
+  F32
+class hclSimClothDataOverridableSimulationInfo
+  PAD 16
+  V4
+  F32
+  F32
+  U32
+  BOOL
+  BOOL
+  BOOL
+  U8
+class hclSimClothDataParticleData
+  F32
+  F32
+  F32
+  F32
+class hclSimClothDataTransferMotionData
+  U32
+  U32
+  BOOL
+  U8
+  U16
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  U8
+  U16
+  F32
+  F32
+  F32
+  F32
+class hclSimClothPose
+  PARENT hkReferencedObject
+  STRING
+  ARRAY V4
+class hclSimClothSetupObject
+  PARENT hkReferencedObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  POINTER hclTransformSetSetupObject
+  U64
+  V4
+  F32
+  BOOL
+  BOOL
+  U16
+  STRUCT hclVertexFloatInput
+  BOOL
+  U16
+  U8
+  F32
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexSelectionInput
+  BOOL
+  U32
+  U16
+  U8
+  STRUCT hclVertexSelectionInput
+  F32
+  F32
+  BOOL
+  U32
+  U16
+  U8
+  POINTER hclBufferSetupObject
+  F32
+  U32
+  STRUCT hclVertexSelectionInput
+  F32
+  BOOL
+  U16
+  U8
+  F32
+  BOOL
+  I8
+  U16
+  F32
+  BOOL
+  U16
+  U8
+  STRUCT hclSimClothSetupObjectTransferMotionSetupData
+  ARRAY POINTER hclConstraintSetSetupObject
+  ARRAY STRUCT hclSimClothSetupObjectPerInstanceCollidable
+  U64
+class hclSimClothSetupObjectPerInstanceCollidable
+  POINTER hclCollidable
+  STRUCT hclVertexSelectionInput
+  STRING
+  BOOL
+  I8
+  U16
+  F32
+class hclSimClothSetupObjectTransferMotionSetupData
+  POINTER hclTransformSetSetupObject
+  STRING
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  F32
+  F32
+class hclSimpleMeshBoneDeformOperator
+  PARENT hclOperator
+  IF8
+  SEEK -4
+  END
+  U32
+  U32
+  ARRAY STRUCT hclSimpleMeshBoneDeformOperatorTriangleBonePair
+  ARRAY M4
+class hclSimpleMeshBoneDeformOperatorTriangleBonePair
+  U16
+  U16
+class hclSimpleWindAction
+  PARENT hclAction
+  V4
+  F32
+  F32
+  F32
+  F32
+  V4
+  F32
+  U64
+  U32
+class hclSimulateOperator
+  PARENT hclOperator
+  IF8
+  SEEK -4
+  END
+  U32
+  U32
+  I32
+  ARRAY I32
+  BOOL
+  U8
+  U16
+  IF8
+  U32
+  END
+class hclSimulateSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclSimClothSetupObject
+  U32
+  U32
+  BOOL
+  BOOL
+  U32
+  U16
+  ARRAY POINTER hclConstraintSetSetupObject
+class hclSimulationSetupMesh
+  PARENT hclSetupMesh
+  U64
+  POINTER hclSetupMesh
+  STRUCT hclSimulationSetupMeshMapOptions
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+class hclSimulationSetupMeshMapOptions
+  BOOL
+  U16
+  U8
+  F32
+  STRUCT hclVertexSelectionInput
+class hclSkinOperator
+  PARENT hclOperator
+  ARRAY STRUCT hclSkinOperatorBoneInfluence
+  ARRAY U16
+  ARRAY M4
+  ARRAY U16
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U32
+  U32
+  U32
+  U16
+  U16
+  BOOL
+  BOOL
+  U8
+  U8
+class hclSkinOperatorBoneInfluence
+  U8
+  U8
+class hclSkinSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclTransformSetSetupObject
+  POINTER hclBufferSetupObject
+  POINTER hclBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U32
+class hclSphereShape
+  PARENT hclShape
+  STRUCT hkSphere
+class hclStandardLinkConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclStandardLinkConstraintSetLink
+class hclStandardLinkConstraintSetLink
+  U16
+  U16
+  F32
+  F32
+class hclStandardLinkConstraintSetMx
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclStandardLinkConstraintSetMxBatch
+  ARRAY STRUCT hclStandardLinkConstraintSetMxSingle
+class hclStandardLinkConstraintSetMxBatch
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclStandardLinkConstraintSetMxSingle
+  F32
+  F32
+  F32
+  U16
+  U16
+class hclStandardLinkSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  STRUCT hclVertexSelectionInput
+  STRUCT hclEdgeSelectionInput
+  BOOL
+  U32
+  U16
+  U8
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+class hclStaticDisplayBufferSetupObject
+  PARENT hclBufferSetupObject
+  POINTER hclSetupMesh
+  STRING
+class hclStaticShadowBufferDefinition
+  PARENT hclBufferDefinition
+  ARRAY V4
+  ARRAY V4
+  ARRAY V4
+  ARRAY V4
+  ARRAY U16
+class hclStorageSetupMesh
+  PARENT hclSetupMesh
+  STRING
+  U64
+  M4
+  ARRAY POINTER hclStorageSetupMeshSection
+  ARRAY STRUCT hclStorageSetupMeshVertexChannel
+  ARRAY STRUCT hclStorageSetupMeshEdgeChannel
+  ARRAY STRUCT hclStorageSetupMeshTriangleChannel
+  ARRAY STRUCT hclStorageSetupMeshBone
+  BOOL
+  U64
+  U32
+  U16
+  U8
+class hclStorageSetupMeshBone
+  STRING
+  U64
+  M4
+class hclStorageSetupMeshEdgeChannel
+  STRING
+  U32
+  U32
+class hclStorageSetupMeshSection
+  PARENT hkReferencedObject
+  U64
+  POINTER hclSetupMesh
+  ARRAY V4
+  ARRAY V4
+  ARRAY V4
+  ARRAY V4
+  ARRAY STRUCT hclSetupMeshSectionTriangle
+  ARRAY POINTER hclStorageSetupMeshSectionSectionVertexChannel
+  ARRAY POINTER hclStorageSetupMeshSectionSectionEdgeSelectionChannel
+  ARRAY POINTER hclStorageSetupMeshSectionSectionTriangleSelectionChannel
+  ARRAY POINTER hclStorageSetupMeshSectionBoneInfluences
+  ARRAY U16
+class hclStorageSetupMeshSectionBoneInfluences
+  PARENT hkReferencedObject
+  ARRAY U32
+  ARRAY F32
+class hclStorageSetupMeshSectionSectionEdgeSelectionChannel
+  PARENT hkReferencedObject
+  ARRAY U32
+class hclStorageSetupMeshSectionSectionTriangleSelectionChannel
+  PARENT hkReferencedObject
+  ARRAY U32
+class hclStorageSetupMeshSectionSectionVertexChannel
+  PARENT hkReferencedObject
+class hclStorageSetupMeshSectionSectionVertexFloatChannel
+  PARENT hclStorageSetupMeshSectionSectionVertexChannel
+  ARRAY F32
+class hclStorageSetupMeshSectionSectionVertexSelectionChannel
+  PARENT hclStorageSetupMeshSectionSectionVertexChannel
+  ARRAY U32
+class hclStorageSetupMeshTriangleChannel
+  STRING
+  U32
+  U32
+class hclStorageSetupMeshVertexChannel
+  STRING
+  U32
+  U32
+class hclStretchLinkConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclStretchLinkConstraintSetLink
+class hclStretchLinkConstraintSetLink
+  U16
+  U16
+  F32
+  F32
+class hclStretchLinkConstraintSetMx
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclStretchLinkConstraintSetMxBatch
+  ARRAY STRUCT hclStretchLinkConstraintSetMxSingle
+class hclStretchLinkConstraintSetMxBatch
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hclStretchLinkConstraintSetMxSingle
+  F32
+  F32
+  U32
+  U32
+class hclStretchLinkSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  V4
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U64
+  U32
+class hclTaperedCapsuleShape
+  PARENT hclShape
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hclToolNamedObjectReference
+  STRING
+  STRING
+  U32
+  U32
+class hclTransformSetDefinition
+  PARENT hkReferencedObject
+  STRING
+  I32
+  U32
+class hclTransformSetSetupObject
+  PARENT hkReferencedObject
+class hclTransformSetUsage
+  U8
+  U8
+  U16
+  IF8
+  U32
+  END
+  ARRAY STRUCT hclTransformSetUsageTransformTracker
+class hclTransformSetUsageTransformTracker
+  STRUCT hkBitField
+  STRUCT hkBitField
+  STRUCT hkBitField
+class hclTransitionConstraintSet
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclTransitionConstraintSetPerParticle
+  F32
+  F32
+  F32
+  F32
+  U32
+  IF8
+  U32
+  END
+class hclTransitionConstraintSetPerParticle
+  U16
+  U16
+  F32
+  F32
+  F32
+class hclTransitionSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexFloatInput
+  F32
+  F32
+  POINTER hclBufferSetupObject
+class hclTriangleSelectionInput
+  U32
+  U32
+  STRING
+class hclUpdateAllVertexFramesOperator
+  PARENT hclOperator
+  ARRAY U16
+  ARRAY U8
+  ARRAY U16
+  ARRAY F32
+  ARRAY F32
+  ARRAY F32
+  U32
+  U32
+  BOOL
+  BOOL
+  BOOL
+  U32
+  U8
+class hclUpdateSomeVertexFramesOperator
+  PARENT hclOperator
+  ARRAY STRUCT hclUpdateSomeVertexFramesOperatorTriangle
+  ARRAY U16
+  ARRAY U16
+  ARRAY U16
+  ARRAY U8
+  ARRAY U16
+  ARRAY F32
+  ARRAY F32
+  ARRAY F32
+  U32
+  U32
+  BOOL
+  BOOL
+  BOOL
+  U32
+  U8
+class hclUpdateSomeVertexFramesOperatorTriangle
+  U16
+  U16
+  U16
+class hclUpdateVertexFramesSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  BOOL
+  BOOL
+  BOOL
+  U32
+  U8
+class hclVertexCopySetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  POINTER hclBufferSetupObject
+  POINTER hclBufferSetupObject
+  BOOL
+  U32
+  U16
+  U8
+class hclVertexFloatInput
+  U32
+  F32
+  STRING
+class hclVertexGatherSetupObject
+  PARENT hclOperatorSetupObject
+  STRING
+  U32
+  U32
+  POINTER hclSimClothBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  POINTER hclBufferSetupObject
+  STRUCT hclVertexSelectionInput
+  F32
+  BOOL
+  U16
+  U8
+class hclVertexSelectionInput
+  U32
+  U32
+  STRING
+class hclVolumeConstraint
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclVolumeConstraintFrameData
+  ARRAY STRUCT hclVolumeConstraintApplyData
+class hclVolumeConstraintApplyData
+  PAD 16
+  V4
+  U16
+  U16
+  F32
+  IF8
+  U64
+  END
+class hclVolumeConstraintFrameData
+  PAD 16
+  V4
+  U16
+  U16
+  F32
+  IF8
+  U64
+  END
+class hclVolumeConstraintMx
+  PARENT hclConstraintSet
+  ARRAY STRUCT hclVolumeConstraintMxFrameBatchData
+  ARRAY STRUCT hclVolumeConstraintMxFrameSingleData
+  ARRAY STRUCT hclVolumeConstraintMxApplyBatchData
+  ARRAY STRUCT hclVolumeConstraintMxApplySingleData
+class hclVolumeConstraintMxApplyBatchData
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hclVolumeConstraintMxApplySingleData
+  V4
+  U16
+  U16
+  F32
+  U64
+class hclVolumeConstraintMxFrameBatchData
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hclVolumeConstraintMxFrameSingleData
+  V4
+  U16
+  U16
+  F32
+  U64
+class hclVolumeConstraintSetupObject
+  PARENT hclConstraintSetSetupObject
+  STRING
+  POINTER hclSimulationSetupMesh
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+  STRUCT hclVertexSelectionInput
+  STRUCT hclVertexFloatInput
+class hkAabb
+  V4
+  V4
+class hkAabb16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hkAabbHalf
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+  U16
+class hkAabbUint32
+  U32
+  U32
+  U32
+  U8
+  U8
+  U8
+  U8
+  U32
+  U32
+  U32
+  U8
+  U8
+  U8
+  U8
+class hkAlignSceneToNodeOptions
+  PARENT hkReferencedObject
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U8
+  I32
+  STRING
+class hkArrayTypeAttribute
+  I8
+class hkAttributeHideCriteria
+  U8
+class hkBaseObject
+  USIZE
+class hkBitField
+  PARENT hkBitFieldBasehkBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+class hkBitFieldBasehkBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+  STRUCT hkBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+class hkBitFieldBasehkOffsetBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+  STRUCT hkOffsetBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+class hkBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+  ARRAY U32
+  I32
+  IF8
+  U32
+  END
+class hkClass
+  STRING
+  POINTER hkClass
+  I32
+  I32
+  U64
+  U64
+  U32
+  I32
+class hkClassEnum
+  STRING
+  U64
+  U32
+  U32
+class hkClassEnumItem
+  I32
+  U32
+  STRING
+class hkClassMember
+  STRING
+  POINTER hkClass
+  POINTER hkClassEnum
+  U8
+  U8
+  I16
+  U16
+  U16
+  U64
+class hkColor
+  U8
+class hkCompressedMassProperties
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  F32
+  F32
+class hkContactPoint
+  V4
+  V4
+class hkContactPointMaterial
+  U64
+  STRUCT hkUFloat8
+  U8
+  STRUCT hkUFloat8
+  U8
+  U32
+class hkCustomAttributes
+class hkCustomAttributesAttribute
+  STRING
+  U64
+class hkDataObjectTypeAttribute
+  STRING
+class hkDescriptionAttribute
+  STRING
+class hkDocumentationAttribute
+  U64
+class hkFloat16
+  U16
+class hkFloat16Transform
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+  STRUCT hkFloat16
+class hkFourTransposedPointsf
+  V4
+  V4
+  V4
+class hkGeometry
+  PARENT hkReferencedObject
+  ARRAY V4
+  ARRAY STRUCT hkGeometryTriangle
+class hkGeometryTriangle
+  I32
+  I32
+  I32
+  I32
+class hkGizmoAttribute
+  BOOL
+  U32
+  U16
+  U8
+  STRING
+  I8
+  U32
+  U16
+  U8
+class hkIndexedTransformSet
+  PARENT hkReferencedObject
+  ARRAY M4
+  ARRAY M4
+  ARRAY I16
+  ARRAY STR
+  ARRAY STRUCT hkMeshBoneIndexMapping
+  BOOL
+  U32
+  U16
+  U8
+class hkIntRealPair
+  I32
+  F32
+class hkLinkAttribute
+  I8
+class hkLocalFrame
+  PARENT hkReferencedObject
+class hkLocalFrameGroup
+  PARENT hkReferencedObject
+  STRING
+class hkMassProperties
+  F32
+  F32
+  U64
+  V4
+  M3
+class hkMemoryMeshBody
+  PARENT hkMeshBody
+  M4
+  POINTER hkIndexedTransformSet
+  POINTER hkMeshShape
+  ARRAY POINTER hkMeshVertexBuffer
+  STRING
+  U64
+class hkMemoryMeshMaterial
+  PARENT hkMeshMaterial
+  STRING
+  ARRAY POINTER hkMeshTexture
+  U64
+  V4
+  V4
+  V4
+  V4
+  U64
+  F32
+  F32
+class hkMemoryMeshShape
+  PARENT hkMeshShape
+  ARRAY STRUCT hkMemoryMeshShapeSection
+  ARRAY U16
+  ARRAY U32
+  STRING
+class hkMemoryMeshShapeSection
+  POINTER hkMeshVertexBuffer
+  POINTER hkMeshMaterial
+  STRUCT hkMeshBoneIndexMapping
+  U8
+  U16
+  U8
+  I32
+  U8
+  U16
+  U8
+  I32
+  I32
+  I32
+class hkMemoryMeshTexture
+  PARENT hkMeshTexture
+  STRING
+  ARRAY U8
+  I8
+  BOOL
+  I8
+  I8
+  I32
+class hkMemoryMeshVertexBuffer
+  PARENT hkMeshVertexBuffer
+  STRUCT hkVertexFormat
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  ARRAY U8
+  I32
+  BOOL
+  U16
+  U8
+  I32
+  BOOL
+  BOOL
+  U16
+class hkMemoryResourceContainer
+  PARENT hkResourceContainer
+  STRING
+  U64
+  ARRAY POINTER hkMemoryResourceHandle
+  ARRAY POINTER hkMemoryResourceContainer
+class hkMemoryResourceHandle
+  PARENT hkResourceHandle
+  POINTER hkReferencedObject
+  STRING
+  ARRAY STRUCT hkMemoryResourceHandleExternalLink
+class hkMemoryResourceHandleExternalLink
+  STRING
+  STRING
+class hkMeshBody
+  PARENT hkReferencedObject
+class hkMeshBoneIndexMapping
+  ARRAY I16
+class hkMeshMaterial
+  PARENT hkReferencedObject
+class hkMeshSection
+  U8
+  U16
+  U8
+  I32
+  I32
+  I32
+  I32
+  U8
+  U64
+  U16
+  U8
+  POINTER hkMeshVertexBuffer
+  POINTER hkMeshMaterial
+  POINTER hkMeshBoneIndexMapping
+  I32
+  U32
+class hkMeshSectionCinfo
+  POINTER hkMeshVertexBuffer
+  POINTER hkMeshMaterial
+  STRUCT hkMeshBoneIndexMapping
+  U8
+  U16
+  U8
+  I32
+  U8
+  U64
+  U32
+  U16
+  U8
+  I32
+  I32
+class hkMeshShape
+  PARENT hkReferencedObject
+class hkMeshTexture
+  PARENT hkReferencedObject
+class hkMeshTextureRawBufferDescriptor
+  I64
+  U32
+  U32
+class hkMeshVertexBuffer
+  PARENT hkReferencedObject
+class hkModelerNodeTypeAttribute
+  I8
+class hkMonitorStreamColorTable
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkMonitorStreamColorTableColorPair
+  U32
+  U32
+class hkMonitorStreamColorTableColorPair
+  STRING
+  U32
+  U32
+class hkMonitorStreamFrameInfo
+  STRING
+  I32
+  I32
+  U32
+  F32
+  F32
+  I32
+  I32
+  I32
+class hkMonitorStreamStringMap
+  ARRAY STRUCT hkMonitorStreamStringMapStringMap
+class hkMonitorStreamStringMapStringMap
+  U64
+  STRING
+class hkMoppBvTreeShapeBase
+  PARENT hkpBvTreeShape
+  POINTER hkpMoppCode
+  U64
+  U64
+  U64
+  U64
+  U64
+class hkMotionState
+  M4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  F32
+  I16
+  I16
+  I16
+  STRUCT hkUFloat8
+  STRUCT hkUFloat8
+  U8
+  U16
+  U8
+class hkMultiThreadCheck
+  U32
+  I32
+  U16
+  U16
+class hkMultipleVertexBuffer
+  PARENT hkMeshVertexBuffer
+  STRUCT hkVertexFormat
+  ARRAY STRUCT hkMultipleVertexBufferLockedElement
+  POINTER hkMemoryMeshVertexBuffer
+  ARRAY STRUCT hkMultipleVertexBufferElementInfo
+  ARRAY STRUCT hkMultipleVertexBufferVertexBufferInfo
+  I32
+  BOOL
+  U16
+  U8
+  U32
+  BOOL
+  BOOL
+  BOOL
+  U8
+class hkMultipleVertexBufferElementInfo
+  U8
+  U8
+class hkMultipleVertexBufferLockedElement
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  I8
+class hkMultipleVertexBufferVertexBufferInfo
+  POINTER hkMeshVertexBuffer
+  U64
+  BOOL
+  U32
+  U16
+  U8
+class hkOffsetBitField
+  PARENT hkBitFieldBasehkOffsetBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+class hkOffsetBitFieldStoragehkArrayunsignedinthkContainerHeapAllocator
+  ARRAY U32
+  I32
+  U32
+class hkPackedVector3
+  I16
+  I16
+  I16
+  I16
+class hkPackedVector8
+  I8
+  I8
+  I8
+  I8
+class hkPackfileHeader
+  I32
+  I32
+  I32
+  I32
+  U8
+  U8
+  U8
+  U8
+  I32
+  I32
+  I32
+  I32
+  I32
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I32
+  U16
+  U16
+class hkPackfileSectionHeader
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+class hkPostFinishAttribute
+  U64
+class hkQTransform
+  PARENT hkQTransformf
+class hkQTransformf
+  V4
+  V4
+class hkRangeInt32Attribute
+  I32
+  I32
+  I32
+  I32
+class hkRangeRealAttribute
+  F32
+  F32
+  F32
+  F32
+class hkRefCountedProperties
+  ARRAY STRUCT hkRefCountedPropertiesEntry
+class hkRefCountedPropertiesEntry
+  POINTER hkReferencedObject
+  U16
+  U16
+  U32
+class hkReferencedObject
+  PARENT hkBaseObject
+  U32
+  IF8
+  U32
+  END
+class hkResourceBase
+  PARENT hkReferencedObject
+class hkResourceContainer
+  PARENT hkResourceBase
+class hkResourceHandle
+  PARENT hkResourceBase
+class hkRootLevelContainer
+  ARRAY STRUCT hkRootLevelContainerNamedVariant
+class hkRootLevelContainerNamedVariant
+  STRING
+  STRING
+  POINTER hkReferencedObject
+class hkScriptableAttribute
+  U8
+class hkSemanticsAttribute
+  I8
+class hkSetIntFloatPair
+  PARENT hkSethkIntRealPairhkContainerHeapAllocatorhkMapOperationshkIntRealPair
+class hkSetUint32
+  PARENT hkSetunsignedinthkContainerHeapAllocatorhkMapOperationsunsignedint
+class hkSetUint64
+  PARENT hkSetunsignedlonglonghkContainerHeapAllocatorhkMapOperationsunsignedlonglong
+class hkSethkIntRealPairhkContainerHeapAllocatorhkMapOperationshkIntRealPair
+  ARRAY STRUCT hkIntRealPair
+  I32
+  U32
+class hkSetunsignedinthkContainerHeapAllocatorhkMapOperationsunsignedint
+  ARRAY U32
+  I32
+  U32
+class hkSetunsignedlonglonghkContainerHeapAllocatorhkMapOperationsunsignedlonglong
+  ARRAY U64
+  I32
+  U32
+class hkSimpleLocalFrame
+  PARENT hkLocalFrame
+  M4
+  ARRAY POINTER hkLocalFrame
+  POINTER hkLocalFrame
+  POINTER hkLocalFrameGroup
+  STRING
+  U64
+class hkSimpleProperty
+  U32
+  U32
+  STRUCT hkSimplePropertyValue
+class hkSimplePropertyValue
+  U64
+class hkSkinBinding
+  PARENT hkMeshShape
+  POINTER hkMeshShape
+  ARRAY M4
+  ARRAY STR
+class hkSkinnedMeshShape
+  PARENT hkReferencedObject
+class hkSkinnedMeshShapeBoneSection
+  POINTER hkMeshShape
+  U16
+  I16
+  U32
+class hkSkinnedMeshShapeBoneSet
+  U16
+  U16
+class hkSkinnedMeshShapePart
+  I32
+  I32
+  I32
+  I32
+  U16
+  U16
+  U64
+  U32
+  V4
+class hkSkinnedRefMeshShape
+  PARENT hkMeshShape
+  POINTER hkSkinnedMeshShape
+  ARRAY I16
+  ARRAY V4
+  STRING
+class hkSphere
+  PAD 16
+  V4
+class hkStorageSkinnedMeshShape
+  PARENT hkSkinnedMeshShape
+  ARRAY I16
+  ARRAY STRUCT hkSkinnedMeshShapeBoneSet
+  ARRAY STRUCT hkSkinnedMeshShapeBoneSection
+  ARRAY STRUCT hkSkinnedMeshShapePart
+  STRING
+class hkStringObject
+  PARENT hkReferencedObject
+  STRING
+class hkSweptTransformf
+  V4
+  V4
+  V4
+  V4
+  V4
+class hkTraceStreamTitle
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+  I8
+class hkUFloat8
+  U8
+class hkUiAttribute
+  BOOL
+  BOOL
+  I8
+  U32
+  U8
+  STRING
+  STRING
+  STRING
+  BOOL
+  BOOL
+  BOOL
+  U32
+  U8
+class hkUuid
+  U32
+  U32
+  U32
+  U32
+class hkUuidObject
+  PARENT hkReferencedObject
+  STRUCT hkUuid
+  U32
+class hkVertexFormat
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  STRUCT hkVertexFormatElement
+  I32
+class hkVertexFormatElement
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+class hkWorldMemoryAvailableWatchDog
+  PARENT hkReferencedObject
+class hkaAngularReferenceFrame
+  PARENT hkaParameterizedReferenceFrame
+  F32
+  F32
+class hkaAnimatedReferenceFrame
+  PARENT hkReferencedObject
+class hkaAnimation
+  PARENT hkReferencedObject
+  IF8
+  SEEK -4
+  END
+  I32
+  F32
+  I32
+  I32
+  POINTER hkaAnimatedReferenceFrame
+  ARRAY STRUCT hkaAnnotationTrack
+class hkaAnimationBinding
+  PARENT hkReferencedObject
+  STRING
+  POINTER hkaAnimation
+  ARRAY I16
+  ARRAY I16
+  ARRAY I16
+  I8
+  U8
+  U16
+  IF8
+  U32
+  END
+class hkaAnimationContainer
+  PARENT hkReferencedObject
+  ARRAY POINTER hkaSkeleton
+  ARRAY POINTER hkaAnimation
+  ARRAY POINTER hkaAnimationBinding
+  ARRAY POINTER hkaBoneAttachment
+  ARRAY POINTER hkaMeshBinding
+class hkaAnimationPreviewColorContainer
+  PARENT hkReferencedObject
+  ARRAY U32
+class hkaAnnotationTrack
+  STRING
+  ARRAY STRUCT hkaAnnotationTrackAnnotation
+class hkaAnnotationTrackAnnotation
+  F32
+  STRING
+class hkaBone
+  STRING
+  BOOL
+  U8
+  U16
+  IF8
+  U32
+  END
+class hkaBoneAttachment
+  PARENT hkReferencedObject
+  STRING
+  PAD 16
+  M4
+  POINTER hkReferencedObject
+  STRING
+  I16
+  U16
+  IF8
+  U32
+  U64
+  END
+class hkaDefaultAnimatedReferenceFrame
+  PARENT hkaAnimatedReferenceFrame
+  V4
+  V4
+  F32
+  U32
+  ARRAY V4
+  U64
+class hkaDirectionalReferenceFrame
+  PARENT hkaParameterizedReferenceFrame
+  V4
+class hkaFootstepAnalysisInfo
+  PARENT hkReferencedObject
+  ARRAY I8
+  ARRAY I8
+  ARRAY I8
+  ARRAY I8
+  ARRAY I8
+  ARRAY F32
+  ARRAY F32
+  ARRAY F32
+  ARRAY F32
+  ARRAY F32
+  ARRAY F32
+  F32
+  F32
+  F32
+  U32
+class hkaFootstepAnalysisInfoContainer
+  PARENT hkReferencedObject
+  ARRAY POINTER hkaFootstepAnalysisInfo
+class hkaInterleavedUncompressedAnimation
+  PARENT hkaAnimation
+  ARRAY QS
+  ARRAY F32
+class hkaKeyFrameHierarchyUtility
+  U8
+class hkaKeyFrameHierarchyUtilityControlData
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hkaMeshBinding
+  PARENT hkReferencedObject
+  POINTER hkxMesh
+  STRING
+  STRING
+  POINTER hkaSkeleton
+  ARRAY STRUCT hkaMeshBindingMapping
+  ARRAY M4
+class hkaMeshBindingMapping
+  ARRAY I16
+class hkaParameterizedAnimationReferenceFrame
+  PARENT hkaDefaultAnimatedReferenceFrame
+  ARRAY F32
+  ARRAY I32
+  U64
+class hkaParameterizedReferenceFrame
+  PARENT hkaDefaultAnimatedReferenceFrame
+class hkaPredictiveCompressedAnimation
+  PARENT hkaAnimation
+  ARRAY U8
+  ARRAY U16
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  U32
+  ARRAY F32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  U64
+  U64
+  U32
+class hkaPredictiveCompressedAnimationTrackCompressionParams
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hkaQuantizedAnimation
+  PARENT hkaAnimation
+  ARRAY U8
+  U32
+  U64
+  U32
+class hkaQuantizedAnimationTrackCompressionParams
+  F32
+  F32
+  F32
+  F32
+class hkaRagdollInstance
+  PARENT hkReferencedObject
+  ARRAY POINTER hkpRigidBody
+  ARRAY POINTER hkpConstraintInstance
+  ARRAY I32
+  POINTER hkaSkeleton
+class hkaReferenceFrameTypeEnum
+  PARENT Enum
+class hkaReferencePoseAnimation
+  PARENT hkaAnimation
+  POINTER hkaSkeleton
+class hkaSkeleton
+  PARENT hkReferencedObject
+  STRING
+  ARRAY I16
+  ARRAY STRUCT hkaBone
+  ARRAY QS
+  ARRAY F32
+  ARRAY STR
+  ARRAY STRUCT hkaSkeletonLocalFrameOnBone
+  ARRAY STRUCT hkaSkeletonPartition
+class hkaSkeletonLocalFrameOnBone
+  POINTER hkLocalFrame
+  I16
+  U16
+  IF8
+  U32
+  END
+class hkaSkeletonMapper
+  PARENT hkReferencedObject
+  PAD 16
+  STRUCT hkaSkeletonMapperData
+class hkaSkeletonMapperData
+  POINTER hkaSkeleton
+  POINTER hkaSkeleton
+  ARRAY I16
+  ARRAY STRUCT hkaSkeletonMapperDataPartitionMappingRange
+  ARRAY STRUCT hkaSkeletonMapperDataPartitionMappingRange
+  ARRAY STRUCT hkaSkeletonMapperDataSimpleMapping
+  ARRAY STRUCT hkaSkeletonMapperDataChainMapping
+  ARRAY I16
+  QS
+  BOOL
+  U8
+  U16
+  I32
+  USIZE
+class hkaSkeletonMapperDataChainMapping
+  I16
+  I16
+  I16
+  I16
+  PAD 16
+  QS
+  QS
+class hkaSkeletonMapperDataPartitionMappingRange
+  I32
+  I32
+class hkaSkeletonMapperDataSimpleMapping
+  I16
+  I16
+  PAD 16
+  QS
+class hkaSkeletonPartition
+  STRING
+  I16
+  I16
+  IF8
+  U32
+  END
+class hkaSplineCompressedAnimation
+  PARENT hkaAnimation
+  I32
+  I32
+  I32
+  I32
+  F32
+  F32
+  F32
+  U32
+  ARRAY U32
+  ARRAY U32
+  ARRAY U32
+  ARRAY U32
+  ARRAY U8
+  I32
+  U32
+class hkaSplineCompressedAnimationAnimationCompressionParams
+  U16
+  BOOL
+  U8
+class hkaSplineCompressedAnimationTrackCompressionParams
+  F32
+  F32
+  F32
+  F32
+  U16
+  U16
+  U16
+  U16
+  U8
+  U8
+  U8
+  U8
+class hkaiAabbTreeNavVolumeMediator
+  PARENT hkaiNavVolumeMediator
+  POINTER hkaiNavVolume
+  POINTER hkcdStaticAabbTree
+class hkaiAdaptiveRanger
+  F32
+class hkaiAgentTraversalInfo
+  F32
+  U32
+class hkaiAstarCostModifier
+  PARENT hkReferencedObject
+  U8
+  U16
+  U8
+class hkaiAstarEdgeFilter
+  PARENT hkReferencedObject
+  U8
+  U16
+  U8
+class hkaiAstarOutputParameters
+  I32
+  I32
+  F32
+  U8
+  U8
+  U16
+class hkaiAvoidancePairProperties
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiAvoidancePairPropertiesPairData
+class hkaiAvoidancePairPropertiesPairData
+  U32
+  F32
+  F32
+class hkaiAvoidanceProperties
+  PARENT hkReferencedObject
+  STRUCT hkaiMovementProperties
+  U8
+  U64
+  U32
+  U16
+  U8
+  STRUCT hkAabb
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  I32
+  U32
+class hkaiAvoidanceSolverBoundaryObstacle
+  V4
+  V4
+class hkaiAvoidanceSolverSphereObstacle
+  STRUCT hkSphere
+  V4
+class hkaiCarver
+  PARENT hkReferencedObject
+  POINTER hkaiVolume
+  U32
+  U32
+class hkaiCharacter
+  PARENT hkReferencedObject
+  U64
+  U64
+  V4
+  V4
+  V4
+  V4
+  U32
+  U32
+  F32
+  F32
+  STRUCT hkaiAdaptiveRanger
+  U32
+  POINTER hkaiAstarCostModifier
+  POINTER hkaiAstarEdgeFilter
+  U64
+  U64
+  U32
+  U32
+  POINTER hkaiAvoidanceProperties
+  F32
+  U32
+  U16
+  U8
+  U32
+  U8
+  I32
+  U64
+  U64
+  U32
+  U32
+  U64
+  U32
+class hkaiCharacterUtil
+  U8
+class hkaiConvexHullSilhouetteMerger
+  PARENT hkaiSilhouetteMerger
+class hkaiConvexSilhouetteSet
+  PARENT hkReferencedObject
+  ARRAY V4
+  ARRAY I32
+  STRUCT hkQTransform
+  V4
+class hkaiCuttingGeometryInfo
+  PARENT hkReferencedObject
+  STRUCT hkGeometry
+  STRUCT hkBitField
+class hkaiDefaultAstarCostModifier
+  PARENT hkaiAstarCostModifier
+  F32
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  I16
+  U32
+class hkaiDefaultAstarEdgeFilter
+  PARENT hkaiAstarEdgeFilter
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U64
+  U32
+class hkaiDirectedGraphExplicitCost
+  PARENT hkReferencedObject
+  ARRAY V4
+  ARRAY STRUCT hkaiDirectedGraphExplicitCostNode
+  ARRAY STRUCT hkaiDirectedGraphExplicitCostEdge
+  ARRAY U32
+  ARRAY U32
+  I32
+  I32
+  ARRAY STRUCT hkaiStreamingSet
+class hkaiDirectedGraphExplicitCostEdge
+  I16
+  U16
+  U32
+class hkaiDirectedGraphExplicitCostNode
+  I32
+  I32
+class hkaiDirectedGraphInstance
+  PARENT hkReferencedObject
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U32
+  U32
+  I32
+  U32
+  POINTER hkaiDirectedGraphExplicitCost
+  ARRAY I32
+  ARRAY STRUCT hkaiDirectedGraphExplicitCostNode
+  ARRAY STRUCT hkaiDirectedGraphExplicitCostEdge
+  ARRAY U32
+  ARRAY I32
+  ARRAY STRUCT hkaiDirectedGraphInstanceFreeBlockList
+  U64
+  M4
+class hkaiDirectedGraphInstanceFreeBlockList
+  ARRAY I32
+class hkaiDynamicNavMeshQueryMediator
+  PARENT hkaiNavMeshQueryMediator
+  POINTER hkaiStreamingCollection
+  POINTER hkcdDynamicAabbTree
+  POINTER hkaiNavMeshCutter
+  F32
+  U32
+class hkaiDynamicNavVolumeMediator
+  PARENT hkaiNavVolumeMediator
+  POINTER hkaiStreamingCollection
+  POINTER hkcdDynamicAabbTree
+class hkaiEdgeFollowingBehaviorCornerPredictorInitInfo
+  V4
+  V4
+  V4
+  I32
+  I32
+  BOOL
+  BOOL
+  U32
+  U16
+class hkaiEdgeGeometry
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiEdgeGeometryEdge
+  ARRAY STRUCT hkaiEdgeGeometryFace
+  ARRAY V4
+  STRUCT hkaiEdgeGeometryFace
+  U32
+class hkaiEdgeGeometryEdge
+  U32
+  U32
+  U32
+  U32
+class hkaiEdgeGeometryFace
+  U32
+  U32
+  U8
+  U16
+  U8
+class hkaiEdgePath
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiEdgePathEdge
+  ARRAY I32
+  I32
+  F32
+  F32
+  F32
+class hkaiEdgePathEdge
+  V4
+  V4
+  V4
+  M4
+  STRUCT hkaiPersistentEdgeKey
+  STRUCT hkaiEdgePathFollowingCornerInfo
+  STRUCT hkaiEdgePathFollowingCornerInfo
+  U8
+  U64
+  U32
+  U16
+  U8
+class hkaiEdgePathFollowingCornerInfo
+  U16
+class hkaiEdgePathTraversalState
+  I32
+  I32
+  I32
+class hkaiGraphPathSearchParameters
+  F32
+  BOOL
+  U64
+  U64
+  U16
+  U8
+  STRUCT hkaiSearchParametersBufferSizes
+  STRUCT hkaiSearchParametersBufferSizes
+class hkaiHierarchyUtils
+  U8
+class hkaiHierarchyUtilsClusterSettings
+  I32
+  U64
+  U32
+  STRUCT hkaiNavMeshPathSearchParameters
+  STRUCT hkaiAgentTraversalInfo
+  U64
+class hkaiInvertedAabbVolume
+  PARENT hkaiVolume
+  STRUCT hkAabb
+  STRUCT hkGeometry
+class hkaiLineOfSightUtil
+  U8
+class hkaiLineOfSightUtilDirectPathInput
+  PARENT hkaiLineOfSightUtilInputBase
+  V4
+class hkaiLineOfSightUtilInputBase
+  V4
+  V4
+  U32
+  I32
+  STRUCT hkaiAgentTraversalInfo
+  F32
+  F32
+  POINTER hkaiAstarCostModifier
+  POINTER hkaiAstarEdgeFilter
+  BOOL
+  BOOL
+  BOOL
+  BOOL
+  U8
+  U8
+  BOOL
+  U8
+class hkaiLineOfSightUtilLineOfSightInput
+  PARENT hkaiLineOfSightUtilInputBase
+  V4
+  U32
+  U64
+  U32
+class hkaiLineOfSightUtilLineOfSightOutput
+  ARRAY U32
+  ARRAY F32
+  ARRAY V4
+  BOOL
+  U16
+  U8
+  I32
+  U32
+  F32
+  V4
+class hkaiLocalSteeringInput
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  F32
+  U64
+  U64
+  U64
+  U32
+  BOOL
+  BOOL
+  BOOL
+  U64
+  U32
+  U8
+class hkaiMaterialPainter
+  PARENT hkReferencedObject
+  I32
+  POINTER hkaiVolume
+class hkaiMovementProperties
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U8
+  U16
+  U8
+class hkaiNavMesh
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiNavMeshFace
+  ARRAY STRUCT hkaiNavMeshEdge
+  ARRAY V4
+  ARRAY STRUCT hkaiStreamingSet
+  ARRAY I32
+  ARRAY I32
+  I32
+  I32
+  U8
+  PAD 16
+  STRUCT hkAabb
+  F32
+  IF8
+  U32
+  END
+  USIZE
+class hkaiNavMeshClearanceCache
+  PARENT hkReferencedObject
+  F32
+  F32
+  F32
+  ARRAY U32
+  ARRAY U8
+  I32
+  U32
+  ARRAY STRUCT hkaiNavMeshClearanceCacheMcpDataInteger
+  ARRAY U8
+class hkaiNavMeshClearanceCacheManager
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiNavMeshClearanceCacheManagerRegistration
+  ARRAY STRUCT hkaiNavMeshClearanceCacheManagerCacheInfo
+  I32
+  U32
+class hkaiNavMeshClearanceCacheManagerCacheInfo
+  F32
+class hkaiNavMeshClearanceCacheManagerRegistration
+  U64
+  U32
+  U32
+  U8
+  U32
+  U16
+  U8
+  POINTER hkaiAstarEdgeFilter
+class hkaiNavMeshClearanceCacheMcpDataInteger
+  U8
+  U8
+class hkaiNavMeshCutter
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiNavMeshCutterMeshInfo
+  STRUCT hkaiNavMeshCutterSavedConnectivity
+  POINTER hkaiStreamingCollection
+  ARRAY U32
+  ARRAY U32
+  V4
+  STRUCT hkaiNavMeshEdgeMatchingParameters
+  U64
+  F32
+  F32
+  F32
+  BOOL
+  U8
+  BOOL
+  U8
+  F32
+  U64
+  U32
+class hkaiNavMeshCutterMeshInfo
+  I32
+  I32
+  I32
+  U32
+  ARRAY I32
+class hkaiNavMeshCutterSavedConnectivity
+  STRUCT hkSetUint32
+class hkaiNavMeshEdge
+  I32
+  I32
+  U32
+  U32
+  U8
+  U8
+  I16
+class hkaiNavMeshEdgeMatchingParameters
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  U16
+  U8
+class hkaiNavMeshFace
+  I32
+  I32
+  I16
+  I16
+  I16
+  U16
+class hkaiNavMeshGenerationSettings
+  PARENT hkReferencedObject
+  F32
+  V4
+  F32
+  F32
+  U8
+  U16
+  U8
+  F32
+  F32
+  F32
+  I32
+  STRUCT hkaiNavMeshEdgeMatchingParameters
+  U32
+  I32
+  U32
+  STRUCT hkaiNavMeshGenerationSettingsRegionPruningSettings
+  STRUCT hkaiNavMeshGenerationSettingsWallClimbingSettings
+  U64
+  U32
+  U16
+  STRUCT hkAabb
+  ARRAY POINTER hkaiCarver
+  ARRAY POINTER hkaiMaterialPainter
+  U64
+  U32
+  U32
+  ARRAY STRUCT hkaiNavMeshGenerationSettingsMaterialConstructionPair
+  BOOL
+  U16
+  U8
+  STRUCT hkaiOverlappingTrianglesSettings
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  U8
+  BOOL
+  U16
+  STRUCT hkaiNavMeshSimplificationUtilsSettings
+  I32
+  I32
+  BOOL
+  BOOL
+  U32
+  U16
+  STRING
+  ARRAY STRUCT hkaiNavMeshGenerationSettingsOverrideSettings
+  U64
+class hkaiNavMeshGenerationSettingsMaterialConstructionPair
+  I32
+  U32
+class hkaiNavMeshGenerationSettingsOverrideSettings
+  POINTER hkaiVolume
+  I32
+  U8
+  U16
+  U8
+  F32
+  STRUCT hkaiNavMeshEdgeMatchingParameters
+  U32
+  STRUCT hkaiNavMeshSimplificationUtilsSettings
+class hkaiNavMeshGenerationSettingsRegionPruningSettings
+  F32
+  F32
+  F32
+  BOOL
+  BOOL
+  U16
+  ARRAY V4
+  ARRAY STRUCT hkaiNavMeshGenerationSettingsRegionPruningSettingsRegionConnection
+class hkaiNavMeshGenerationSettingsRegionPruningSettingsRegionConnection
+  V4
+  V4
+class hkaiNavMeshGenerationSettingsWallClimbingSettings
+  BOOL
+  BOOL
+class hkaiNavMeshGenerationSnapshot
+  STRUCT hkGeometry
+  STRUCT hkaiNavMeshGenerationSettings
+class hkaiNavMeshInstance
+  PARENT hkReferencedObject
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  POINTER hkaiNavMesh
+  U64
+  STRUCT hkaiReferenceFrame
+  ARRAY I32
+  ARRAY I32
+  ARRAY STRUCT hkaiNavMeshFace
+  ARRAY STRUCT hkaiNavMeshEdge
+  ARRAY STRUCT hkaiNavMeshFace
+  ARRAY STRUCT hkaiNavMeshEdge
+  ARRAY V4
+  ARRAY U8
+  ARRAY U16
+  ARRAY I32
+  ARRAY I32
+  ARRAY I32
+  ARRAY I32
+  U32
+  I32
+  U32
+  U32
+  ARRAY POINTER hkaiNavMeshClearanceCache
+class hkaiNavMeshPathRequestInfo
+  PARENT hkReferencedObject
+  POINTER hkaiPathfindingUtilFindPathInput
+  POINTER hkaiPathfindingUtilFindPathOutput
+  I32
+  U64
+  U32
+  BOOL
+  U32
+  U16
+  U8
+class hkaiNavMeshPathSearchParameters
+  V4
+  U64
+  U64
+  BOOL
+  U8
+  U8
+  BOOL
+  BOOL
+  BOOL
+  U16
+  F32
+  F32
+  F32
+  F32
+  F32
+  STRUCT hkaiSearchParametersBufferSizes
+  STRUCT hkaiSearchParametersBufferSizes
+  U32
+class hkaiNavMeshQueryMediator
+  PARENT hkReferencedObject
+class hkaiNavMeshSimplificationSnapshot
+  POINTER hkGeometry
+  ARRAY POINTER hkaiCarver
+  STRUCT hkBitField
+  STRUCT hkaiNavMeshGenerationSettings
+  POINTER hkaiNavMesh
+  U64
+class hkaiNavMeshSimplificationUtilsExtraVertexSettings
+  U8
+  U16
+  U8
+  F32
+  F32
+  F32
+  I32
+  F32
+  BOOL
+  BOOL
+  U16
+  F32
+  F32
+  F32
+  ARRAY V4
+class hkaiNavMeshSimplificationUtilsSettings
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  I32
+  BOOL
+  U16
+  U8
+  F32
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  U16
+  U8
+  STRUCT hkaiNavMeshSimplificationUtilsExtraVertexSettings
+  BOOL
+  U32
+  U16
+  U8
+  STRING
+class hkaiNavVolume
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiNavVolumeCell
+  ARRAY STRUCT hkaiNavVolumeEdge
+  ARRAY STRUCT hkaiStreamingSet
+  STRUCT hkAabb
+  V4
+  V4
+  I32
+  I32
+  I32
+  U32
+  U64
+  U64
+class hkaiNavVolumeCell
+  U16
+  U16
+  U16
+  I16
+  U16
+  U16
+  U16
+  U16
+  I32
+  I32
+class hkaiNavVolumeEdge
+  U8
+  U16
+  U8
+  U32
+class hkaiNavVolumeGenerationSettings
+  PARENT hkReferencedObject
+  STRUCT hkAabb
+  F32
+  F32
+  U64
+  V4
+  F32
+  F32
+  F32
+  F32
+  U8
+  U8
+  STRUCT hkaiNavVolumeGenerationSettingsChunkSettings
+  U64
+  U32
+  U16
+  F32
+  BOOL
+  U16
+  U8
+  STRUCT hkaiNavVolumeGenerationSettingsMergingSettings
+  F32
+  F32
+  U32
+  ARRAY V4
+  STRUCT hkaiNavVolumeGenerationSettingsMaterialConstructionInfo
+  U32
+  ARRAY STRUCT hkaiNavVolumeGenerationSettingsMaterialConstructionInfo
+  ARRAY POINTER hkaiCarver
+  ARRAY POINTER hkaiMaterialPainter
+  BOOL
+  U32
+  U16
+  U8
+  STRING
+class hkaiNavVolumeGenerationSettingsChunkSettings
+  U16
+  U16
+  U16
+  BOOL
+  U8
+class hkaiNavVolumeGenerationSettingsMaterialConstructionInfo
+  I32
+  U32
+  I32
+class hkaiNavVolumeGenerationSettingsMergingSettings
+  F32
+  F32
+  BOOL
+  U16
+  U8
+  I32
+  F32
+  I32
+  I32
+  F32
+  BOOL
+  U16
+  U8
+class hkaiNavVolumeGenerationSnapshot
+  STRUCT hkGeometry
+  STRUCT hkaiNavVolumeGenerationSettings
+class hkaiNavVolumeInstance
+  PARENT hkReferencedObject
+  U64
+  U64
+  U64
+  U64
+  POINTER hkaiNavVolume
+  ARRAY I32
+  ARRAY STRUCT hkaiNavVolumeInstanceCellInstance
+  ARRAY STRUCT hkaiNavVolumeEdge
+  U32
+  I32
+  U32
+  U64
+  U32
+  V4
+class hkaiNavVolumeInstanceCellInstance
+  I32
+  I32
+class hkaiNavVolumeMediator
+  PARENT hkReferencedObject
+class hkaiNavVolumePathRequestInfo
+  PARENT hkReferencedObject
+  POINTER hkaiVolumePathfindingUtilFindPathInput
+  POINTER hkaiVolumePathfindingUtilFindPathOutput
+  I32
+  U64
+  U32
+  BOOL
+  U32
+  U16
+  U8
+class hkaiNavVolumePathSearchParameters
+  V4
+  U64
+  U64
+  U8
+  U16
+  U8
+  F32
+  F32
+  STRUCT hkaiSearchParametersBufferSizes
+  U64
+  U32
+class hkaiObstacleGenerator
+  PARENT hkReferencedObject
+  BOOL
+  BOOL
+  BOOL
+  U8
+  M4
+  ARRAY STRUCT hkaiAvoidanceSolverSphereObstacle
+  ARRAY STRUCT hkaiAvoidanceSolverBoundaryObstacle
+  U64
+  U64
+class hkaiOverlapManager
+  PARENT hkReferencedObject
+  U64
+  U64
+  STRUCT hkaiReferenceFrameAndExtrusion
+  POINTER hkaiStreamingCollection
+  ARRAY STRUCT hkaiOverlapManagerSection
+  I32
+  F32
+  I32
+  U64
+  U64
+  U64
+  U32
+class hkaiOverlapManagerSection
+  U64
+  I32
+  U32
+  ARRAY POINTER hkaiOverlapManagerSectionGeneratorData
+  U64
+  U64
+  STRUCT hkSetIntFloatPair
+class hkaiOverlapManagerSectionGeneratorData
+  PARENT hkReferencedObject
+  STRUCT hkaiSilhouetteGeneratorSectionContext
+  ARRAY I32
+class hkaiOverlappingTriangles
+  U8
+class hkaiOverlappingTrianglesSettings
+  F32
+  F32
+  U8
+  U16
+  U8
+class hkaiPath
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiPathPathPoint
+  U8
+  U32
+  U16
+  U8
+class hkaiPathFollowingProperties
+  PARENT hkReferencedObject
+  F32
+  I32
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  BOOL
+  BOOL
+  U8
+class hkaiPathPathPoint
+  V4
+  V4
+  U32
+  I32
+  U8
+  U32
+  U16
+  U8
+class hkaiPathfindingUtil
+  U8
+class hkaiPathfindingUtilFindGraphPathInput
+  ARRAY U32
+  ARRAY F32
+  ARRAY U32
+  ARRAY F32
+  I32
+  STRUCT hkaiAgentTraversalInfo
+  U32
+  STRUCT hkaiGraphPathSearchParameters
+  U64
+  U64
+  U64
+  U64
+class hkaiPathfindingUtilFindPathInput
+  PARENT hkReferencedObject
+  V4
+  ARRAY V4
+  U32
+  U32
+  ARRAY U32
+  I32
+  STRUCT hkaiAgentTraversalInfo
+  U64
+  U32
+  STRUCT hkaiNavMeshPathSearchParameters
+  U64
+  U64
+  U64
+  U64
+class hkaiPathfindingUtilFindPathOutput
+  PARENT hkReferencedObject
+  ARRAY U32
+  ARRAY STRUCT hkaiPathPathPoint
+  STRUCT hkaiAstarOutputParameters
+class hkaiPersistentEdgeKey
+  STRUCT hkaiPersistentFaceKey
+  I16
+  U16
+class hkaiPersistentFaceKey
+  U32
+  I16
+  U16
+class hkaiPhysics2012BodyObstacleGenerator
+  PARENT hkaiObstacleGenerator
+  F32
+  U32
+  POINTER hkpRigidBody
+  U64
+class hkaiPhysics2012BodySilhouetteGenerator
+  PARENT hkaiPhysicsBodySilhouetteGeneratorBase
+  POINTER hkpRigidBody
+  U64
+class hkaiPhysics2012ShapeVolume
+  PARENT hkaiVolume
+  U64
+  POINTER hkpShape
+  M4
+  STRUCT hkGeometry
+class hkaiPhysicsBodySilhouetteGeneratorBase
+  PARENT hkaiPointCloudSilhouetteGenerator
+  V4
+class hkaiPlaneVolume
+  PARENT hkaiVolume
+  ARRAY V4
+  STRUCT hkGeometry
+  BOOL
+  U64
+  U32
+  U16
+  U8
+  STRUCT hkAabb
+class hkaiPointCloudSilhouetteGenerator
+  PARENT hkaiSilhouetteGenerator
+  STRUCT hkAabb
+  ARRAY V4
+  ARRAY I32
+  F32
+  U8
+  U8
+  BOOL
+  BOOL
+  U64
+class hkaiReferenceFrame
+  M4
+  V4
+  V4
+class hkaiReferenceFrameAndExtrusion
+  V4
+  F32
+  F32
+  U8
+  U32
+  U16
+  U8
+class hkaiSearchParameters
+  U8
+class hkaiSearchParametersBufferSizes
+  I32
+  I32
+class hkaiSearchParametersSearchBuffers
+  U64
+  U64
+class hkaiSilhouetteGenerationParameters
+  F32
+  F32
+  F32
+  F32
+  STRUCT hkaiSilhouetteReferenceFrame
+class hkaiSilhouetteGenerator
+  PARENT hkReferencedObject
+  U64
+  F32
+  U8
+  U8
+  U16
+  I32
+  U32
+  POINTER hkaiConvexSilhouetteSet
+  STRUCT hkQTransform
+class hkaiSilhouetteGeneratorSectionContext
+  STRUCT hkQTransform
+  POINTER hkaiSilhouetteGenerator
+  U32
+  BOOL
+  BOOL
+  U16
+class hkaiSilhouetteMerger
+  PARENT hkReferencedObject
+  U8
+  U16
+  U8
+  STRUCT hkaiSilhouetteGenerationParameters
+class hkaiSilhouetteReferenceFrame
+  V4
+  V4
+  V4
+class hkaiSimpleObstacleGenerator
+  PARENT hkaiObstacleGenerator
+  STRUCT hkAabb
+class hkaiSimpleSilhouetteMerger
+  PARENT hkaiSilhouetteMerger
+class hkaiSingleCharacterBehaviorRequestedGoalPoint
+  V4
+  I32
+  U64
+  U32
+class hkaiSplitGenerationSnapshot
+  STRUCT hkaiNavMeshGenerationSnapshot
+  STRUCT hkaiSplitGenerationUtilsSettings
+class hkaiSplitGenerationUtils
+  U8
+class hkaiSplitGenerationUtilsSettings
+  U8
+  U8
+  BOOL
+  U8
+  I32
+  U64
+  U64
+  F32
+  F32
+  I32
+  I32
+  I32
+  I32
+  U64
+  U64
+class hkaiStaticTreeNavMeshQueryMediator
+  PARENT hkaiNavMeshQueryMediator
+  POINTER hkcdStaticAabbTree
+  POINTER hkaiNavMesh
+class hkaiStreamingCollection
+  PARENT hkReferencedObject
+  BOOL
+  U16
+  U8
+  POINTER hkcdDynamicAabbTree
+  ARRAY STRUCT hkaiStreamingCollectionInstanceInfo
+  POINTER hkaiNavMeshClearanceCacheManager
+class hkaiStreamingCollectionInstanceInfo
+  POINTER hkaiNavMeshInstance
+  POINTER hkaiNavVolumeInstance
+  POINTER hkaiDirectedGraphInstance
+  POINTER hkaiNavMeshQueryMediator
+  POINTER hkaiNavVolumeMediator
+  U32
+  U32
+class hkaiStreamingSet
+  U32
+  U32
+  ARRAY STRUCT hkaiStreamingSetNavMeshConnection
+  ARRAY STRUCT hkaiStreamingSetGraphConnection
+  ARRAY STRUCT hkaiStreamingSetVolumeConnection
+class hkaiStreamingSetGraphConnection
+  I32
+  I32
+  U32
+  I16
+  U16
+class hkaiStreamingSetNavMeshConnection
+  I32
+  I32
+  I32
+  I32
+class hkaiStreamingSetVolumeConnection
+  I32
+  I32
+class hkaiUserEdgePairArray
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiUserEdgeUtilsUserEdgePair
+class hkaiUserEdgeSetupArray
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkaiUserEdgeUtilsUserEdgeSetup
+class hkaiUserEdgeUtils
+  U8
+class hkaiUserEdgeUtilsObb
+  M4
+  V4
+class hkaiUserEdgeUtilsUserEdgePair
+  V4
+  V4
+  V4
+  U32
+  U32
+  I32
+  I32
+  I32
+  I32
+  I16
+  I16
+  U8
+  U16
+  U8
+class hkaiUserEdgeUtilsUserEdgeSetup
+  STRUCT hkaiUserEdgeUtilsObb
+  STRUCT hkaiUserEdgeUtilsObb
+  U32
+  U32
+  F32
+  F32
+  V4
+  V4
+  U8
+  U8
+  BOOL
+  U64
+  U32
+  U8
+class hkaiVolume
+  PARENT hkReferencedObject
+class hkaiVolumePathfindingUtil
+  U8
+class hkaiVolumePathfindingUtilFindPathInput
+  PARENT hkReferencedObject
+  V4
+  ARRAY V4
+  U32
+  U32
+  ARRAY U32
+  I32
+  STRUCT hkaiAgentTraversalInfo
+  U64
+  U32
+  STRUCT hkaiNavVolumePathSearchParameters
+  U64
+  U64
+class hkaiVolumePathfindingUtilFindPathOutput
+  PARENT hkReferencedObject
+  ARRAY U32
+  ARRAY STRUCT hkaiPathPathPoint
+  STRUCT hkaiAstarOutputParameters
+class hkcdAdf
+  F32
+  U64
+  U32
+  STRUCT hkAabb
+  V4
+  V4
+  F32
+  F32
+  ARRAY U32
+  ARRAY U16
+  U64
+class hkcdDynamicAabbTree
+  PARENT hkReferencedObject
+  POINTER hkcdDynamicTreeDefaultTree48Storage
+class hkcdDynamicTreeAnisotropicMetric
+  U8
+class hkcdDynamicTreeBalanceMetric
+  U8
+class hkcdDynamicTreeCentroidMetric
+  U8
+class hkcdDynamicTreeCodec18
+  STRUCT hkAabbHalf
+  U16
+class hkcdDynamicTreeCodec32
+  STRUCT hkAabb
+class hkcdDynamicTreeCodecInt16
+  STRUCT hkcdDynamicTreeCodecInt16IntAabb
+  U32
+  U32
+  U32
+  U32
+class hkcdDynamicTreeCodecInt16IntAabb
+  PARENT hkAabb16
+class hkcdDynamicTreeCodecRawUint
+  PARENT hkcdDynamicTreeCodecRawunsignedint
+class hkcdDynamicTreeCodecRawUlong
+  PARENT hkcdDynamicTreeCodecRawunsignedlong
+class hkcdDynamicTreeCodecRawunsignedint
+  STRUCT hkAabb
+  U32
+  U32
+  U32
+  U32
+class hkcdDynamicTreeCodecRawunsignedlong
+  STRUCT hkAabb
+  U64
+  U64
+  U64
+  U64
+class hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodec32
+  PARENT hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodec32
+class hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecInt16
+  PARENT hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodecInt16
+class hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecRawUint
+  PARENT hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodecRawUint
+class hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecRawUlong
+  PARENT hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodecRawUlong
+class hkcdDynamicTreeDefaultTree32Storage
+  PARENT hkcdDynamicTreeTreehkcdDynamicTreeDynamicStorage16
+class hkcdDynamicTreeDefaultTree48Storage
+  PARENT hkcdDynamicTreeTreehkcdDynamicTreeDynamicStorage32
+class hkcdDynamicTreeDefaultTreeInt16Storage
+  PARENT hkcdDynamicTreeTreehkcdDynamicTreeDynamicStorageInt16
+class hkcdDynamicTreeDefaultTreePtrStorage
+  PARENT hkcdDynamicTreeTreehkcdDynamicTreeDynamicStoragePtr
+class hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodec32
+  PARENT hkcdDynamicTreeAnisotropicMetric
+  ARRAY STRUCT hkcdDynamicTreeCodec32
+  U16
+  U32
+  U16
+class hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodecInt16
+  PARENT hkcdDynamicTreeAnisotropicMetric
+  ARRAY STRUCT hkcdDynamicTreeCodecInt16
+  U32
+  U32
+class hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodecRawUint
+  PARENT hkcdDynamicTreeAnisotropicMetric
+  ARRAY STRUCT hkcdDynamicTreeCodecRawUint
+  U32
+  U32
+class hkcdDynamicTreeDynamicStorage0hkcdDynamicTreeAnisotropicMetrichkcdDynamicTreeCodecRawUlong
+  PARENT hkcdDynamicTreeAnisotropicMetric
+  ARRAY STRUCT hkcdDynamicTreeCodecRawUlong
+  U64
+class hkcdDynamicTreeDynamicStorage16
+  PARENT hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodec32
+class hkcdDynamicTreeDynamicStorage32
+  PARENT hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecRawUint
+class hkcdDynamicTreeDynamicStorageInt16
+  PARENT hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecInt16
+class hkcdDynamicTreeDynamicStoragePtr
+  PARENT hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecRawUlong
+class hkcdDynamicTreeTreehkcdDynamicTreeDynamicStorage16
+  PARENT hkcdDynamicTreeDynamicStorage16
+  U32
+  U32
+  U16
+  U16
+class hkcdDynamicTreeTreehkcdDynamicTreeDynamicStorage32
+  PARENT hkcdDynamicTreeDynamicStorage32
+  U32
+  U32
+  U32
+class hkcdDynamicTreeTreehkcdDynamicTreeDynamicStorageInt16
+  PARENT hkcdDynamicTreeDynamicStorageInt16
+  U32
+  U32
+  U32
+class hkcdDynamicTreeTreehkcdDynamicTreeDynamicStoragePtr
+  PARENT hkcdDynamicTreeDynamicStoragePtr
+  U32
+  U32
+  U64
+class hkcdFourAabb
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hkcdFractureEngine
+  PARENT hkReferencedObject
+class hkcdPlanarCsgOperand
+  PARENT hkReferencedObject
+  POINTER hkcdPlanarSolid
+  POINTER hkcdPlanarGeometry
+  U64
+class hkcdPlanarEntity
+  PARENT hkReferencedObject
+  U64
+class hkcdPlanarGeometry
+  PARENT hkcdPlanarEntity
+  POINTER hkcdPlanarGeometryPlanesCollection
+  POINTER hkcdPlanarGeometryPolygonCollection
+  U64
+class hkcdPlanarGeometryPlanesCollection
+  PARENT hkReferencedObject
+  V4
+  ARRAY STRUCT hkcdPlanarGeometryPrimitivesPlane
+  U64
+  U64
+class hkcdPlanarGeometryPolygonCollection
+  PARENT hkcdPlanarGeometryPrimitivesCollection28
+class hkcdPlanarGeometryPrimitivesCollection28
+  PARENT hkReferencedObject
+  ARRAY I32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+class hkcdPlanarGeometryPrimitivesPlane
+  I64
+  I64
+  I64
+  I64
+  U64
+  U64
+  U64
+  U64
+class hkcdPlanarSolid
+  PARENT hkcdPlanarEntity
+  POINTER hkcdPlanarSolidNodeStorage
+  POINTER hkcdPlanarGeometryPlanesCollection
+  U32
+  U32
+class hkcdPlanarSolidNode
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U64
+  U32
+  U16
+  U16
+class hkcdPlanarSolidNodeStorage
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkcdPlanarSolidNode
+  ARRAY STRUCT hkAabb
+  U32
+  U32
+class hkcdShape
+  PARENT hkReferencedObject
+  IF8
+  SEEK -4
+  END
+  U8
+  U8
+  U8
+  U8
+class hkcdShapeDispatchType
+  U8
+class hkcdShapeInfoCodecType
+  U8
+class hkcdShapeType
+  U8
+class hkcdSimdTree
+  PARENT hkBaseObject
+  ARRAY STRUCT hkcdSimdTreeNode
+class hkcdSimdTreeNode
+  PARENT hkcdFourAabb
+  U32
+  U32
+  U32
+  U32
+class hkcdStaticAabbTree
+  PARENT hkReferencedObject
+  IF8
+  SEEK -4
+  END
+  BOOL
+  U8
+  U16
+  POINTER hkcdStaticTreeDefaultTreeStorage6
+class hkcdStaticMeshTreeBase
+  PARENT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage5
+  I32
+  I32
+  U32
+  ARRAY STRUCT hkcdStaticMeshTreeBaseSection
+  ARRAY STRUCT hkcdStaticMeshTreeBasePrimitive
+  ARRAY U16
+class hkcdStaticMeshTreeBaseConnectivity
+  ARRAY STRUCT hkcdStaticMeshTreeBaseConnectivitySectionHeader
+  ARRAY U8
+  ARRAY U32
+class hkcdStaticMeshTreeBaseConnectivitySectionHeader
+  U32
+  U32
+class hkcdStaticMeshTreeBaseEdge
+  U32
+class hkcdStaticMeshTreeBaseLinks
+  STRUCT hkcdStaticMeshTreeBaseEdge
+  STRUCT hkcdStaticMeshTreeBaseEdge
+  STRUCT hkcdStaticMeshTreeBaseEdge
+class hkcdStaticMeshTreeBasePrimitive
+  U8
+  U8
+  U8
+  U8
+class hkcdStaticMeshTreeBasePrimitiveDataRunBaseunsignedint
+  U32
+  U8
+  U8
+  U16
+class hkcdStaticMeshTreeBasePrimitiveDataRunBaseunsignedshort
+  U16
+  U8
+  U8
+class hkcdStaticMeshTreeBaseSection
+  PARENT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage4
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+  STRUCT hkcdStaticMeshTreeBaseSectionSharedVertices
+  STRUCT hkcdStaticMeshTreeBaseSectionPrimitives
+  STRUCT hkcdStaticMeshTreeBaseSectionDataRuns
+  U8
+  U8
+  U16
+  U8
+  U8
+  U8
+  U8
+class hkcdStaticMeshTreeBaseSectionDataRuns
+  U32
+class hkcdStaticMeshTreeBaseSectionPrimitives
+  U32
+class hkcdStaticMeshTreeBaseSectionSharedVertices
+  U32
+class hkcdStaticMeshTreeDefaultDataRun
+  PARENT hkcdStaticMeshTreeBasePrimitiveDataRunBaseunsignedshort
+class hkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hkpBvCompressedMeshShapeTreeDataRun
+  PARENT hkcdStaticMeshTreeBase
+  ARRAY U32
+  ARRAY U64
+  ARRAY STRUCT hkpBvCompressedMeshShapeTreeDataRun
+class hkcdStaticPvs
+  STRUCT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage6
+  I32
+  I32
+  ARRAY U8
+  ARRAY U16
+  ARRAY STRUCT hkcdStaticPvsBlockHeader
+  U64
+class hkcdStaticPvsBlockHeader
+  U32
+  U32
+class hkcdStaticTreeCodec3Axis
+  U8
+  U8
+  U8
+class hkcdStaticTreeCodec3Axis4
+  PARENT hkcdStaticTreeCodec3Axis
+  U8
+class hkcdStaticTreeCodec3Axis5
+  PARENT hkcdStaticTreeCodec3Axis
+  U8
+  U8
+class hkcdStaticTreeCodec3Axis6
+  PARENT hkcdStaticTreeCodec3Axis
+  U8
+  U16
+class hkcdStaticTreeCodecRaw
+  STRUCT hkAabb
+class hkcdStaticTreeDefaultTreeStorage32
+  PARENT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage32
+class hkcdStaticTreeDefaultTreeStorage4
+  PARENT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage4
+class hkcdStaticTreeDefaultTreeStorage5
+  PARENT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage5
+class hkcdStaticTreeDefaultTreeStorage6
+  PARENT hkcdStaticTreeTreehkcdStaticTreeDynamicStorage6
+class hkcdStaticTreeDynamicStorage32
+  PARENT hkcdStaticTreeDynamicStoragehkcdStaticTreeCodecRaw
+class hkcdStaticTreeDynamicStorage4
+  PARENT hkcdStaticTreeDynamicStoragehkcdStaticTreeCodec3Axis4
+class hkcdStaticTreeDynamicStorage5
+  PARENT hkcdStaticTreeDynamicStoragehkcdStaticTreeCodec3Axis5
+class hkcdStaticTreeDynamicStorage6
+  PARENT hkcdStaticTreeDynamicStoragehkcdStaticTreeCodec3Axis6
+class hkcdStaticTreeDynamicStoragehkcdStaticTreeCodec3Axis4
+  ARRAY STRUCT hkcdStaticTreeCodec3Axis4
+  PAD 16
+class hkcdStaticTreeDynamicStoragehkcdStaticTreeCodec3Axis5
+  ARRAY STRUCT hkcdStaticTreeCodec3Axis5
+  PAD 16
+class hkcdStaticTreeDynamicStoragehkcdStaticTreeCodec3Axis6
+  ARRAY STRUCT hkcdStaticTreeCodec3Axis6
+  PAD 16
+class hkcdStaticTreeDynamicStoragehkcdStaticTreeCodecRaw
+  ARRAY STRUCT hkcdStaticTreeCodecRaw
+class hkcdStaticTreeTreehkcdStaticTreeDynamicStorage32
+  PARENT hkcdStaticTreeDynamicStorage32
+  STRUCT hkAabb
+class hkcdStaticTreeTreehkcdStaticTreeDynamicStorage4
+  PARENT hkcdStaticTreeDynamicStorage4
+  STRUCT hkAabb
+class hkcdStaticTreeTreehkcdStaticTreeDynamicStorage5
+  PARENT hkcdStaticTreeDynamicStorage5
+  STRUCT hkAabb
+class hkcdStaticTreeTreehkcdStaticTreeDynamicStorage6
+  PARENT hkcdStaticTreeDynamicStorage6
+  STRUCT hkAabb
+class hkp2dAngConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  BYTES 12
+class hkp3dAngConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+class hkp6DofConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkp6DofConstraintDataBlueprints
+  BOOL
+  U16
+  U8
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  I32
+  U64
+  U64
+class hkp6DofConstraintDataBlueprints
+  BOOL
+  BOOL
+  BOOL
+  U64
+  U32
+  U8
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkpRagdollMotorConstraintAtom
+  STRUCT hkpAngFrictionConstraintAtom
+  STRUCT hkpTwistLimitConstraintAtom
+  STRUCT hkpEllipticalLimitConstraintAtom
+  STRUCT hkpStiffSpringConstraintAtom
+  STRUCT hkpLinMotorConstraintAtom
+  STRUCT hkpLinMotorConstraintAtom
+  STRUCT hkpLinMotorConstraintAtom
+  STRUCT hkpBallSocketConstraintAtom
+class hkpAabbPhantom
+  PARENT hkpPhantom
+  U64
+  STRUCT hkAabb
+  U64
+  U64
+  U64
+  U64
+class hkpAction
+  PARENT hkReferencedObject
+  U64
+  U64
+  U64
+  STRING
+class hkpAgent1nSector
+  U32
+  U32
+  U32
+  U32
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+class hkpAngConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  U8
+  U8
+  U64
+  U16
+class hkpAngFrictionConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  U8
+  U8
+  U16
+  F32
+  BYTES 4
+class hkpAngLimitConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  U8
+  BYTES 3
+  F32
+  F32
+  F32
+  F32
+  BYTES 8
+class hkpAngMotorConstraintAtom
+  PARENT hkpConstraintAtom
+  BOOL
+  U8
+  I16
+  I16
+  POINTER hkpConstraintMotor
+  PAD 16
+  F32
+  I16
+  BYTES 10
+class hkpAngularDashpotAction
+  PARENT hkpBinaryAction
+  V4
+  F32
+  F32
+  U64
+class hkpArrayAction
+  PARENT hkpAction
+  ARRAY POINTER hkpEntity
+class hkpBallAndSocketConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpBallAndSocketConstraintDataAtoms
+class hkpBallAndSocketConstraintDataAtoms
+  STRUCT hkpSetLocalTranslationsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkpBallSocketConstraintAtom
+class hkpBallGun
+  PARENT hkpFirstPersonGun
+  F32
+  F32
+  F32
+  F32
+  I32
+  U64
+  U32
+  V4
+  U64
+  U64
+class hkpBallSocketChainData
+  PARENT hkpConstraintChainData
+  U64
+  STRUCT hkpBridgeAtoms
+  ARRAY STRUCT hkpBallSocketChainDataConstraintInfo
+  V4
+  F32
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  U64
+  U16
+  U8
+class hkpBallSocketChainDataConstraintInfo
+  V4
+  V4
+  U32
+  U64
+  U32
+class hkpBallSocketConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  STRUCT hkUFloat8
+  BOOL
+  U16
+  F32
+  F32
+class hkpBinaryAction
+  PARENT hkpAction
+  POINTER hkpEntity
+  POINTER hkpEntity
+class hkpBoxMotion
+  PARENT hkpMotion
+class hkpBoxShape
+  PARENT hkpConvexShape
+  PAD 16
+  V4
+class hkpBreakableBody
+  PARENT hkReferencedObject
+  POINTER hkpBreakableBodyController
+  POINTER hkpBreakableShape
+  U8
+  U8
+  I16
+  U32
+class hkpBreakableBodyController
+  PARENT hkReferencedObject
+  F32
+class hkpBreakableConstraintData
+  PARENT hkpWrappedConstraintData
+  STRUCT hkpBridgeAtoms
+  U32
+  F32
+  BOOL
+  BOOL
+  U32
+  U16
+class hkpBreakableMaterial
+  PARENT hkReferencedObject
+  F32
+  I32
+  U32
+  POINTER hkRefCountedProperties
+class hkpBreakableMultiMaterial
+  PARENT hkpBreakableMaterial
+  ARRAY POINTER hkpBreakableMaterial
+  POINTER hkpBreakableMultiMaterialInverseMapping
+class hkpBreakableMultiMaterialInverseMapping
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkpBreakableMultiMaterialInverseMappingDescriptor
+  ARRAY U32
+class hkpBreakableMultiMaterialInverseMappingDescriptor
+  U16
+  U16
+class hkpBreakableShape
+  PARENT hkReferencedObject
+  POINTER hkcdShape
+  POINTER hkpBreakableMaterial
+class hkpBridgeAtoms
+  STRUCT hkpBridgeConstraintAtom
+class hkpBridgeConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  POINTER hkpConstraintData
+  U64
+class hkpBroadPhaseHandle
+  U32
+class hkpBvCompressedMeshShape
+  PARENT hkpBvTreeShape
+  USIZE
+  F32
+  U8
+  BOOL
+  BOOL
+  U8
+  ARRAY U32
+  ARRAY U32
+  ARRAY STR
+  PAD 16
+  STRUCT hkpBvCompressedMeshShapeTree
+  PAD 16
+class hkpBvCompressedMeshShapeTree
+  PARENT hkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hkpBvCompressedMeshShapeTreeDataRun
+class hkpBvCompressedMeshShapeTreeDataRun
+  PARENT hkcdStaticMeshTreeBasePrimitiveDataRunBaseunsignedint
+class hkpBvShape
+  PARENT hkpShape
+  POINTER hkpShape
+  STRUCT hkpSingleShapeContainer
+class hkpBvTreeShape
+  PARENT hkpShape
+  U8
+  U8
+  U16
+  IF8
+  U32
+  END
+class hkpCachingShapePhantom
+  PARENT hkpShapePhantom
+  U64
+  U64
+  U64
+  U64
+class hkpCapsuleShape
+  PARENT hkpConvexShape
+  PAD 16
+  V4
+  V4
+class hkpCdBody
+  POINTER hkpShape
+  U32
+  EMPTYPTR
+  EMPTYPTR
+class hkpCenterOfMassChangerModifierConstraintAtom
+  PARENT hkpModifierConstraintAtom
+  V4
+  V4
+class hkpCharacterControllerCinfo
+  PARENT hkReferencedObject
+class hkpCharacterMotion
+  PARENT hkpMotion
+class hkpCharacterProxyCinfo
+  PARENT hkpCharacterControllerCinfo
+  V4
+  V4
+  F32
+  F32
+  F32
+  U32
+  V4
+  F32
+  F32
+  POINTER hkpShapePhantom
+  F32
+  F32
+  U32
+  F32
+  F32
+  F32
+  F32
+  F32
+  I32
+  BOOL
+  U64
+  U16
+  U8
+class hkpCharacterRigidBodyCinfo
+  PARENT hkpCharacterControllerCinfo
+  U32
+  POINTER hkpShape
+  U64
+  V4
+  V4
+  F32
+  F32
+  F32
+  F32
+  V4
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  I32
+  U32
+class hkpCogWheelConstraintAtom
+  PARENT hkpConstraintAtom
+  U16
+  F32
+  F32
+  BOOL
+  I8
+  I8
+  I8
+class hkpCogWheelConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpCogWheelConstraintDataAtoms
+class hkpCogWheelConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpCogWheelConstraintAtom
+class hkpCollidable
+  PARENT hkpCdBody
+  U8
+  U8
+  U16
+  STRUCT hkpTypedBroadPhaseHandle
+  STRUCT hkpCollidableBoundingVolumeData
+  F32
+  IF8
+  U32
+  END
+class hkpCollidableBoundingVolumeData
+  U32
+  U32
+  U32
+  U8
+  U8
+  U8
+  U8
+  U32
+  U32
+  U32
+  U8
+  U8
+  U8
+  U8
+  U16
+  U16
+  EMPTYPTR
+  EMPTYPTR
+class hkpCollidableCollidableFilter
+  U64
+class hkpCollisionFilter
+  PARENT hkReferencedObject
+  U64
+  U64
+  U64
+  U64
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+class hkpCollisionFilterList
+  PARENT hkpCollisionFilter
+  ARRAY POINTER hkpCollisionFilter
+class hkpCompressedMeshShape
+  PARENT hkpShapeCollection
+  I32
+  I32
+  I32
+  I32
+  F32
+  U8
+  U8
+  U32
+  U16
+  ARRAY U32
+  ARRAY U16
+  ARRAY U8
+  ARRAY QS
+  ARRAY V4
+  ARRAY STRUCT hkpCompressedMeshShapeBigTriangle
+  ARRAY STRUCT hkpCompressedMeshShapeChunk
+  ARRAY STRUCT hkpCompressedMeshShapeConvexPiece
+  F32
+  U64
+  U32
+  STRUCT hkAabb
+  U32
+  U64
+  U32
+  U16
+  U16
+  U32
+  ARRAY STRUCT hkpNamedMeshMaterial
+  U64
+class hkpCompressedMeshShapeBigTriangle
+  U16
+  U16
+  U16
+  U16
+  U32
+  U16
+  U16
+class hkpCompressedMeshShapeChunk
+  V4
+  ARRAY U16
+  ARRAY U16
+  ARRAY U16
+  ARRAY U16
+  U32
+  U16
+  U16
+  U64
+class hkpCompressedMeshShapeConvexPiece
+  V4
+  ARRAY U16
+  U16
+  U16
+  U64
+  U32
+class hkpCompressedSampledHeightFieldShape
+  PARENT hkpSampledHeightFieldShape
+  ARRAY U16
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  U32
+class hkpConeLimitConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  F32
+  F32
+  F32
+  F32
+  U64
+class hkpConstrainedSystemFilter
+  PARENT hkpCollisionFilter
+  U64
+  POINTER hkpCollisionFilter
+class hkpConstraintAtom
+  U16
+class hkpConstraintChainData
+  PARENT hkpConstraintData
+class hkpConstraintChainInstance
+  PARENT hkpConstraintInstance
+  ARRAY POINTER hkpEntity
+  POINTER hkpConstraintChainInstanceAction
+  U64
+class hkpConstraintChainInstanceAction
+  PARENT hkpAction
+  POINTER hkpConstraintChainInstance
+class hkpConstraintCollisionFilter
+  PARENT hkpPairCollisionFilter
+  U64
+class hkpConstraintData
+  PARENT hkReferencedObject
+  USIZE
+class hkpConstraintInstance
+  PARENT hkReferencedObject
+  USIZE
+  POINTER hkpConstraintData
+  POINTER hkpModifierConstraintAtom
+  POINTER hkpEntity
+  POINTER hkpEntity
+  U8
+  BOOL
+  U8
+  U8
+  STRUCT hkpConstraintInstanceSmallArraySerializeOverrideType
+  STRING
+  USIZE
+  EMPTYPTR
+  U32
+  IF8
+  U32
+  END
+class hkpConstraintInstanceSmallArraySerializeOverrideType
+  EMPTYPTR
+  U16
+  U16
+  IF8
+  U32
+  END
+class hkpConstraintMotor
+  PARENT hkReferencedObject
+  IF8
+  SEEK -4
+  END
+  I8
+  U8
+  U16
+class hkpConvexListFilter
+  PARENT hkReferencedObject
+class hkpConvexListShape
+  PARENT hkpConvexShape
+  U64
+  F32
+  U32
+  V4
+  V4
+  BOOL
+  U32
+  U16
+  U8
+  ARRAY POINTER hkpConvexShape
+  U64
+class hkpConvexPieceMeshShape
+  PARENT hkpShapeCollection
+  POINTER hkpConvexPieceStreamData
+  POINTER hkpShapeCollection
+  F32
+  U32
+class hkpConvexPieceStreamData
+  PARENT hkReferencedObject
+  ARRAY U32
+  ARRAY U32
+  ARRAY U32
+class hkpConvexShape
+  PARENT hkpSphereRepShape
+  F32
+  IF8
+  U32
+  END
+class hkpConvexTransformShape
+  PARENT hkpConvexTransformShapeBase
+  PAD 16
+  QS
+  V4
+class hkpConvexTransformShapeBase
+  PARENT hkpConvexShape
+  STRUCT hkpSingleShapeContainer
+  I32
+  IF8
+  U32
+  END
+class hkpConvexTranslateShape
+  PARENT hkpConvexTransformShapeBase
+  PAD 16
+  V4
+class hkpConvexVerticesConnectivity
+  PARENT hkReferencedObject
+  ARRAY U16
+  ARRAY U8
+class hkpConvexVerticesShape
+  PARENT hkpConvexShape
+  PAD 16
+  V4
+  V4
+  ARRAY M3
+  I32
+  BOOL
+  U8
+  U8
+  U8
+  ARRAY V4
+  POINTER hkpConvexVerticesConnectivity
+class hkpCylinderShape
+  PARENT hkpConvexShape
+  IF8
+  SEEK -4
+  END
+  F32
+  F32
+  PAD 16
+  V4
+  V4
+  V4
+  V4
+class hkpDashpotAction
+  PARENT hkpBinaryAction
+  V4
+  V4
+  F32
+  F32
+  U64
+  V4
+class hkpDefaultConvexListFilter
+  PARENT hkpConvexListFilter
+class hkpDefaultWorldMemoryWatchDog
+  PARENT hkWorldMemoryAvailableWatchDog
+  I32
+class hkpDeformableAngConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  V4
+  V4
+  V4
+  V4
+  V4
+class hkpDeformableFixedConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpDeformableFixedConstraintDataAtoms
+class hkpDeformableFixedConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpDeformableLinConstraintAtom
+  STRUCT hkpDeformableAngConstraintAtom
+class hkpDeformableLinConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  V4
+  V4
+  V4
+  V4
+  V4
+class hkpDisableEntityCollisionFilter
+  PARENT hkpCollisionFilter
+  U64
+  ARRAY POINTER hkpEntity
+class hkpDisplayBindingData
+  PARENT hkReferencedObject
+  ARRAY POINTER hkpDisplayBindingDataRigidBody
+  ARRAY POINTER hkpDisplayBindingDataPhysicsSystem
+class hkpDisplayBindingDataPhysicsSystem
+  PARENT hkReferencedObject
+  ARRAY POINTER hkpDisplayBindingDataRigidBody
+  POINTER hkpPhysicsSystem
+class hkpDisplayBindingDataRigidBody
+  PARENT hkReferencedObject
+  POINTER hkpRigidBody
+  POINTER hkReferencedObject
+  M4
+class hkpEllipticalLimitConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  BOOL
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hkpEntity
+  PARENT hkpWorldObject
+  STRUCT hkpMaterial
+  EMPTYPTR
+  F32
+  EMPTYPTR
+  U32
+  U16
+  U16
+  STRUCT hkpEntitySmallArraySerializeOverrideType
+  ARRAY EMPTY
+  ARRAY EMPTY
+  EMPTYPTR
+  I8
+  U8
+  U8
+  U8
+  U32
+  STRUCT hkpEntitySpuCollisionCallback
+  PAD 16
+  STRUCT hkpMaxSizeMotion
+  STRUCT hkpEntitySmallArraySerializeOverrideType
+  STRUCT hkpEntitySmallArraySerializeOverrideType
+  POINTER hkLocalFrame
+  EMPTYPTR
+  U32
+  PAD 16
+class hkpEntityExtendedListeners
+  U64
+  U64
+  U64
+  U64
+class hkpEntitySmallArraySerializeOverrideType
+  EMPTYPTR
+  U16
+  U16
+  IF8
+  U32
+  END
+class hkpEntitySpuCollisionCallback
+  EMPTYPTR
+  U16
+  U8
+  U8
+  IF8
+  U32
+  END
+class hkpExtendedMeshShape
+  PARENT hkpShapeCollection
+  U64
+  STRUCT hkpExtendedMeshShapeTrianglesSubpart
+  V4
+  V4
+  U64
+  I32
+  U32
+  ARRAY STRUCT hkpExtendedMeshShapeTrianglesSubpart
+  ARRAY STRUCT hkpExtendedMeshShapeShapesSubpart
+  ARRAY U16
+  U8
+  U16
+  U8
+  U32
+  I32
+  F32
+  U64
+  U64
+class hkpExtendedMeshShapeBreakableMaterial
+  PARENT hkpBreakableMultiMaterial
+class hkpExtendedMeshShapeShapesSubpart
+  PARENT hkpExtendedMeshShapeSubpart
+  ARRAY POINTER hkpConvexShape
+  V4
+  V4
+class hkpExtendedMeshShapeSubpart
+  U16
+  U16
+  U16
+  U16
+  U64
+  U64
+  U64
+class hkpExtendedMeshShapeTrianglesSubpart
+  PARENT hkpExtendedMeshShapeSubpart
+  I32
+  U64
+  U32
+  I32
+  U64
+  U32
+  U16
+  U16
+  I32
+  U16
+  I8
+  I8
+  U32
+  V4
+  QS
+class hkpFastMeshShape
+  PARENT hkpMeshShape
+class hkpFilterType
+  PARENT Enum
+class hkpFirstPersonGun
+  PARENT hkReferencedObject
+  STRING
+  U8
+  U64
+  U64
+  U32
+  U16
+  U8
+class hkpFixedConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpFixedConstraintDataAtoms
+class hkpFixedConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkpBallSocketConstraintAtom
+  STRUCT hkp3dAngConstraintAtom
+class hkpFixedRigidMotion
+  PARENT hkpKeyframedRigidMotion
+class hkpGenericConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpBridgeAtoms
+  STRUCT hkpGenericConstraintDataScheme
+class hkpGenericConstraintDataScheme
+  U64
+  U64
+  ARRAY V4
+  ARRAY I32
+  U64
+  U64
+  ARRAY POINTER hkpConstraintMotor
+class hkpGenericConstraintDataSchemeConstraintInfo
+  I32
+  I32
+  I32
+  I32
+class hkpGravityGun
+  PARENT hkpFirstPersonGun
+  U64
+  U64
+  I32
+  F32
+  F32
+  F32
+  F32
+  U64
+  U32
+  V4
+  V4
+class hkpGroupCollisionFilter
+  PARENT hkpCollisionFilter
+  BOOL
+  U16
+  U8
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+class hkpGroupFilter
+  PARENT hkpCollisionFilter
+  I32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  V4
+  V4
+  V4
+  V4
+class hkpHeightFieldShape
+  PARENT hkpShape
+class hkpHingeConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpHingeConstraintDataAtoms
+class hkpHingeConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkp2dAngConstraintAtom
+  STRUCT hkpBallSocketConstraintAtom
+class hkpHingeLimitsData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpHingeLimitsDataAtoms
+class hkpHingeLimitsDataAtoms
+  STRUCT hkpSetLocalRotationsConstraintAtom
+  STRUCT hkpAngLimitConstraintAtom
+  STRUCT hkp2dAngConstraintAtom
+class hkpIgnoreModifierConstraintAtom
+  PARENT hkpModifierConstraintAtom
+class hkpKeyframedRigidMotion
+  PARENT hkpMotion
+class hkpLimitedForceConstraintMotor
+  PARENT hkpConstraintMotor
+  F32
+  F32
+class hkpLimitedHingeConstraintData
+  PARENT hkpConstraintData
+  USIZE
+  STRUCT hkpLimitedHingeConstraintDataAtoms
+class hkpLimitedHingeConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkpAngMotorConstraintAtom
+  STRUCT hkpAngFrictionConstraintAtom
+  STRUCT hkpAngLimitConstraintAtom
+  STRUCT hkp2dAngConstraintAtom
+  STRUCT hkpBallSocketConstraintAtom
+class hkpLinConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U64
+  U32
+  U8
+class hkpLinFrictionConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  F32
+  U64
+class hkpLinLimitConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  F32
+  F32
+  U32
+class hkpLinMotorConstraintAtom
+  PARENT hkpConstraintAtom
+  BOOL
+  U8
+  U32
+  POINTER hkpConstraintMotor
+  F32
+  U64
+  U32
+class hkpLinSoftConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  F32
+  F32
+  U32
+class hkpLinearClearanceConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpLinearClearanceConstraintDataAtoms
+class hkpLinearClearanceConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpLinMotorConstraintAtom
+  STRUCT hkpLinFrictionConstraintAtom
+  STRUCT hkpLinFrictionConstraintAtom
+  STRUCT hkpLinFrictionConstraintAtom
+  STRUCT hkpAngConstraintAtom
+  STRUCT hkpLinLimitConstraintAtom
+  STRUCT hkpLinLimitConstraintAtom
+  STRUCT hkpLinLimitConstraintAtom
+class hkpLinearParametricCurve
+  PARENT hkpParametricCurve
+  F32
+  BOOL
+  U64
+  U32
+  U16
+  U8
+  V4
+  ARRAY V4
+  ARRAY F32
+class hkpLinkedCollidable
+  PARENT hkpCollidable
+  ARRAY EMPTY
+class hkpListShape
+  PARENT hkpShapeCollection
+  ARRAY STRUCT hkpListShapeChildInfo
+  U16
+  U16
+  PAD 16
+  V4
+  V4
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+class hkpListShapeBreakableMaterial
+  PARENT hkpBreakableMultiMaterial
+class hkpListShapeChildInfo
+  POINTER hkpShape
+  U32
+  U16
+  I16
+  I32
+  PAD 16
+class hkpMalleableConstraintData
+  PARENT hkpWrappedConstraintData
+  STRUCT hkpBridgeAtoms
+  F32
+  U64
+  U32
+class hkpMassChangerModifierConstraintAtom
+  PARENT hkpModifierConstraintAtom
+  V4
+  V4
+class hkpMaterial
+  I8
+  U8
+  I16
+  F32
+  F32
+class hkpMaxSizeMotion
+  PARENT hkpKeyframedRigidMotion
+class hkpMeshMaterial
+  U32
+class hkpMeshShape
+  PARENT hkpShapeCollection
+  U64
+  V4
+  I32
+  U32
+  ARRAY STRUCT hkpMeshShapeSubpart
+  ARRAY U16
+  U8
+  U16
+  U8
+  F32
+  I32
+  I32
+  I32
+  U32
+class hkpMeshShapeSubpart
+  U64
+  I32
+  I32
+  U64
+  I8
+  I8
+  U16
+  I32
+  I32
+  I32
+  U64
+  I32
+  U64
+  U32
+  I32
+  I32
+  I32
+  U32
+class hkpModifierConstraintAtom
+  PARENT hkpConstraintAtom
+  PAD 16
+  U16
+  U16
+  POINTER hkpConstraintAtom
+  U64
+class hkpMoppBvTreeShape
+  PARENT hkMoppBvTreeShapeBase
+  STRUCT hkpSingleShapeContainer
+  U64
+  U64
+class hkpMoppCode
+  PARENT hkReferencedObject
+  STRUCT hkpMoppCodeCodeInfo
+  ARRAY U8
+  I8
+  U64
+  U32
+  U16
+  U8
+class hkpMoppCodeCodeInfo
+  V4
+class hkpMoppCodeReindexedTerminal
+  U32
+  U32
+class hkpMotion
+  PARENT hkReferencedObject
+  IF8
+  SEEK -4
+  END
+  U8
+  U8
+  U16
+  U16
+  PAD 16
+  STRUCT hkMotionState
+  V4
+  V4
+  V4
+  V4
+  V4
+  U32
+  U32
+  POINTER hkpMaxSizeMotion
+  U16
+  I16
+  IF8
+  U32
+  U64
+  END
+class hkpMotorAction
+  PARENT hkpUnaryAction
+  U64
+  V4
+  F32
+  F32
+  BOOL
+  U32
+  U16
+  U8
+class hkpMountedBallGun
+  PARENT hkpBallGun
+  V4
+class hkpMouseSpringAction
+  PARENT hkpUnaryAction
+  U64
+  V4
+  V4
+  F32
+  F32
+  F32
+  F32
+  U32
+  U64
+  U64
+  U64
+  U32
+class hkpMovingSurfaceModifierConstraintAtom
+  PARENT hkpModifierConstraintAtom
+  V4
+class hkpMultiRayShape
+  PARENT hkpShape
+  ARRAY STRUCT hkpMultiRayShapeRay
+  F32
+  U32
+class hkpMultiRayShapeRay
+  V4
+  V4
+class hkpMultiSphereShape
+  PARENT hkpSphereRepShape
+  I32
+  U32
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+  V4
+class hkpMultithreadedVehicleManager
+  PARENT hkpVehicleManager
+class hkpNamedMeshMaterial
+  PARENT hkpMeshMaterial
+  U32
+  STRING
+class hkpNullCollisionFilter
+  PARENT hkpCollisionFilter
+class hkpOverwritePivotConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U64
+  U32
+  U8
+class hkpPairCollisionFilter
+  PARENT hkpCollisionFilter
+  U64
+  U64
+  POINTER hkpCollisionFilter
+class hkpPairCollisionFilterMapPairFilterKeyOverrideType
+  U64
+  I32
+  I32
+class hkpParametricCurve
+  PARENT hkReferencedObject
+class hkpPhantom
+  PARENT hkpWorldObject
+  U64
+  U64
+  U64
+  U64
+class hkpPhantomCallbackShape
+  PARENT hkpShape
+class hkpPhysicsData
+  PARENT hkReferencedObject
+  POINTER hkpWorldCinfo
+  ARRAY POINTER hkpPhysicsSystem
+class hkpPhysicsSystem
+  PARENT hkReferencedObject
+  ARRAY POINTER hkpRigidBody
+  ARRAY POINTER hkpConstraintInstance
+  ARRAY POINTER hkpAction
+  ARRAY POINTER hkpPhantom
+  STRING
+  USIZE
+  BOOL
+  PAD 16
+class hkpPhysicsSystemWithContacts
+  PARENT hkpPhysicsSystem
+  ARRAY POINTER hkpSerializedAgentNnEntry
+class hkpPlaneShape
+  PARENT hkpHeightFieldShape
+  U64
+  V4
+  V4
+  V4
+class hkpPointToPathConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpBridgeAtoms
+  POINTER hkpParametricCurve
+  F32
+  I8
+  U16
+  U8
+  M4
+  M4
+class hkpPointToPlaneConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpPointToPlaneConstraintDataAtoms
+class hkpPointToPlaneConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpLinConstraintAtom
+class hkpPositionConstraintMotor
+  PARENT hkpLimitedForceConstraintMotor
+  F32
+  F32
+  F32
+  F32
+class hkpPoweredChainData
+  PARENT hkpConstraintChainData
+  U64
+  STRUCT hkpBridgeAtoms
+  ARRAY STRUCT hkpPoweredChainDataConstraintInfo
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+class hkpPoweredChainDataConstraintInfo
+  V4
+  V4
+  V4
+  V4
+  POINTER hkpConstraintMotor
+  POINTER hkpConstraintMotor
+  POINTER hkpConstraintMotor
+  BOOL
+  U32
+  U16
+  U8
+class hkpPoweredChainMapper
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkpPoweredChainMapperLinkInfo
+  ARRAY STRUCT hkpPoweredChainMapperTarget
+  ARRAY POINTER hkpConstraintChainInstance
+class hkpPoweredChainMapperLinkInfo
+  I32
+  I32
+  POINTER hkpConstraintInstance
+class hkpPoweredChainMapperTarget
+  POINTER hkpPoweredChainData
+  I32
+  U32
+class hkpPrismaticConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpPrismaticConstraintDataAtoms
+class hkpPrismaticConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpLinMotorConstraintAtom
+  STRUCT hkpLinFrictionConstraintAtom
+  STRUCT hkpAngConstraintAtom
+  STRUCT hkpLinConstraintAtom
+  STRUCT hkpLinConstraintAtom
+  STRUCT hkpLinLimitConstraintAtom
+class hkpProjectileGun
+  PARENT hkpFirstPersonGun
+  I32
+  F32
+  U64
+  U64
+  U64
+  U64
+  U64
+class hkpPulleyConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  V4
+  V4
+  F32
+  F32
+  U64
+class hkpPulleyConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpPulleyConstraintDataAtoms
+class hkpPulleyConstraintDataAtoms
+  STRUCT hkpSetLocalTranslationsConstraintAtom
+  STRUCT hkpPulleyConstraintAtom
+class hkpRackAndPinionConstraintAtom
+  PARENT hkpConstraintAtom
+  U16
+  F32
+  BOOL
+  I8
+  I8
+  I8
+  U32
+class hkpRackAndPinionConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpRackAndPinionConstraintDataAtoms
+class hkpRackAndPinionConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpRackAndPinionConstraintAtom
+class hkpRagdollConstraintData
+  PARENT hkpConstraintData
+  PAD 16
+  STRUCT hkpRagdollConstraintDataAtoms
+class hkpRagdollConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkpRagdollMotorConstraintAtom
+  STRUCT hkpAngFrictionConstraintAtom
+  STRUCT hkpTwistLimitConstraintAtom
+  STRUCT hkpConeLimitConstraintAtom
+  STRUCT hkpConeLimitConstraintAtom
+  STRUCT hkpBallSocketConstraintAtom
+class hkpRagdollLimitsData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpRagdollLimitsDataAtoms
+class hkpRagdollLimitsDataAtoms
+  STRUCT hkpSetLocalRotationsConstraintAtom
+  STRUCT hkpTwistLimitConstraintAtom
+  STRUCT hkpConeLimitConstraintAtom
+  STRUCT hkpConeLimitConstraintAtom
+class hkpRagdollMotorConstraintAtom
+  PARENT hkpConstraintAtom
+  BOOL
+  U8
+  I16
+  I16
+  PAD 16
+  M3
+  POINTER hkpConstraintMotor
+  POINTER hkpConstraintMotor
+  POINTER hkpConstraintMotor
+  USIZE
+class hkpRayCollidableFilter
+  U64
+class hkpRayShapeCollectionFilter
+  U64
+class hkpRejectChassisListener
+  PARENT hkReferencedObject
+  U64
+  U64
+class hkpRemoveTerminalsMoppModifier
+  PARENT hkReferencedObject
+  U64
+  ARRAY U32
+  U64
+class hkpReorientAction
+  PARENT hkpUnaryAction
+  U64
+  V4
+  V4
+  F32
+  F32
+  U64
+class hkpRigidBody
+  PARENT hkpEntity
+class hkpRotationalConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpRotationalConstraintDataAtoms
+class hkpRotationalConstraintDataAtoms
+  STRUCT hkpSetLocalRotationsConstraintAtom
+  STRUCT hkpAngConstraintAtom
+class hkpSampledHeightFieldShape
+  PARENT hkpHeightFieldShape
+  ARRAY STRUCT hkpSampledHeightFieldShapeCoarseMinMaxLevel
+  I32
+  F32
+  F32
+  I32
+  I32
+  F32
+  BOOL
+  U8
+  U64
+  U32
+  U16
+  V4
+  V4
+  V4
+  V4
+class hkpSampledHeightFieldShapeCoarseMinMaxLevel
+  ARRAY V4
+  I32
+  I32
+class hkpSerializedAgentNnEntry
+  PARENT hkReferencedObject
+  POINTER hkpEntity
+  POINTER hkpEntity
+  U64
+  U64
+  BOOL
+  I8
+  U64
+  U32
+  U16
+  STRUCT hkpSimpleContactConstraintAtom
+  ARRAY U8
+  ARRAY STRUCT hkContactPoint
+  ARRAY U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  U8
+  STRUCT hkpSerializedTrack1nInfo
+  U8
+  U8
+  U8
+  U8
+  U32
+  U64
+class hkpSerializedDisplayMarker
+  PARENT hkReferencedObject
+  M4
+class hkpSerializedDisplayMarkerList
+  PARENT hkReferencedObject
+  ARRAY POINTER hkpSerializedDisplayMarker
+class hkpSerializedDisplayRbTransforms
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkpSerializedDisplayRbTransformsDisplayTransformPair
+class hkpSerializedDisplayRbTransformsDisplayTransformPair
+  POINTER hkpRigidBody
+  U64
+  M4
+class hkpSerializedSubTrack1nInfo
+  PARENT hkpSerializedTrack1nInfo
+  I32
+  I32
+class hkpSerializedTrack1nInfo
+  ARRAY POINTER hkpAgent1nSector
+  ARRAY POINTER hkpSerializedSubTrack1nInfo
+class hkpSetLocalRotationsConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  M3
+  M3
+class hkpSetLocalTransformsConstraintAtom
+  PARENT hkpConstraintAtom
+  PAD 16
+  M4
+  M4
+class hkpSetLocalTranslationsConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  V4
+  V4
+class hkpSetupStabilizationAtom
+  PARENT hkpConstraintAtom
+  BOOL
+  U8
+  F32
+  F32
+  F32
+class hkpShape
+  PARENT hkpShapeBase
+  USIZE
+class hkpShapeBase
+  PARENT hkcdShape
+class hkpShapeCollection
+  PARENT hkpShape
+  UNKNOWN newarr
+  USIZE
+  BOOL
+  U8
+  U16
+  IF8
+  U32
+  END
+class hkpShapeCollectionFilter
+  U64
+class hkpShapeContainer
+  USIZE
+class hkpShapeInfo
+  PARENT hkReferencedObject
+  POINTER hkpShape
+  BOOL
+  BOOL
+  U32
+  U16
+  ARRAY STR
+  ARRAY M4
+  M4
+class hkpShapeKeyTable
+  POINTER hkpShapeKeyTableBlock
+  U32
+  IF8
+  U32
+  END
+class hkpShapeKeyTableBlock
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  POINTER hkpShapeKeyTableBlock
+  U64
+class hkpShapePhantom
+  PARENT hkpPhantom
+  U64
+  STRUCT hkMotionState
+class hkpSimpleBreakableMaterial
+  PARENT hkpBreakableMaterial
+class hkpSimpleContactConstraintAtom
+  PARENT hkpConstraintAtom
+  U16
+  U16
+  U16
+  U8
+  U8
+  U8
+  U8
+  U16
+  U16
+  STRUCT hkpSimpleContactConstraintDataInfo
+class hkpSimpleContactConstraintDataInfo
+  U16
+  U16
+  I16
+  I16
+  I16
+  I16
+  F32
+  F32
+  F32
+  F32
+  F32
+class hkpSimpleMeshShape
+  PARENT hkpShapeCollection
+  ARRAY V4
+  ARRAY STRUCT hkpSimpleMeshShapeTriangle
+  ARRAY U8
+  F32
+  U8
+  U16
+  U8
+class hkpSimpleMeshShapeTriangle
+  I32
+  I32
+  I32
+  U16
+  U16
+class hkpSimpleShapePhantom
+  PARENT hkpShapePhantom
+  U64
+  U64
+  U64
+  U64
+class hkpSimpleShapePhantomCollisionDetail
+  POINTER hkpCollidable
+class hkpSimulation
+  PARENT hkReferencedObject
+  U32
+  POINTER hkpWorld
+  U8
+  U16
+  U8
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+  U32
+class hkpSingleShapeContainer
+  PARENT hkpShapeContainer
+  POINTER hkpShape
+class hkpSoftContactModifierConstraintAtom
+  PARENT hkpModifierConstraintAtom
+  F32
+  F32
+class hkpSphereMotion
+  PARENT hkpMotion
+class hkpSphereRepShape
+  PARENT hkpShape
+class hkpSphereShape
+  PARENT hkpConvexShape
+  U64
+class hkpSpringAction
+  PARENT hkpBinaryAction
+  V4
+  V4
+  V4
+  F32
+  F32
+  F32
+  BOOL
+  BOOL
+  U16
+class hkpSpringDamperConstraintMotor
+  PARENT hkpLimitedForceConstraintMotor
+  F32
+  F32
+class hkpStaticCompoundShape
+  PARENT hkpBvTreeShape
+  USIZE
+  I8
+  U8
+  U16
+  U32
+  ARRAY STRUCT hkpStaticCompoundShapeInstance
+  ARRAY U16
+  STRUCT hkpShapeKeyTable
+  STRUCT hkcdStaticTreeDefaultTreeStorage6
+class hkpStaticCompoundShapeBreakableMaterial
+  PARENT hkpBreakableMultiMaterial
+class hkpStaticCompoundShapeInstance
+  QS
+  POINTER hkpShape
+  U32
+  U32
+  USIZE
+  IF8
+  U64
+  END
+class hkpStiffSpringChainData
+  PARENT hkpConstraintChainData
+  U64
+  STRUCT hkpBridgeAtoms
+  ARRAY STRUCT hkpStiffSpringChainDataConstraintInfo
+  F32
+  F32
+  F32
+  U32
+class hkpStiffSpringChainDataConstraintInfo
+  V4
+  V4
+  F32
+  U64
+  U32
+class hkpStiffSpringConstraintAtom
+  PARENT hkpConstraintAtom
+  U64
+  U32
+  U16
+  F32
+  F32
+  F32
+  F32
+class hkpStiffSpringConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpStiffSpringConstraintDataAtoms
+class hkpStiffSpringConstraintDataAtoms
+  STRUCT hkpSetLocalTranslationsConstraintAtom
+  STRUCT hkpSetupStabilizationAtom
+  STRUCT hkpStiffSpringConstraintAtom
+class hkpStorageExtendedMeshShape
+  PARENT hkpExtendedMeshShape
+  ARRAY POINTER hkpStorageExtendedMeshShapeMeshSubpartStorage
+  ARRAY POINTER hkpStorageExtendedMeshShapeShapeSubpartStorage
+  U64
+class hkpStorageExtendedMeshShapeMaterial
+  PARENT hkpMeshMaterial
+  I16
+  I16
+  U64
+class hkpStorageExtendedMeshShapeMeshSubpartStorage
+  PARENT hkReferencedObject
+  ARRAY V4
+  ARRAY U8
+  ARRAY U16
+  ARRAY U32
+  ARRAY U8
+  ARRAY STRUCT hkpStorageExtendedMeshShapeMaterial
+  ARRAY STRUCT hkpNamedMeshMaterial
+  ARRAY U16
+class hkpStorageExtendedMeshShapeShapeSubpartStorage
+  PARENT hkReferencedObject
+  ARRAY U8
+  ARRAY STRUCT hkpStorageExtendedMeshShapeMaterial
+  ARRAY U16
+class hkpStorageMeshShape
+  PARENT hkpMeshShape
+  ARRAY POINTER hkpStorageMeshShapeSubpartStorage
+class hkpStorageMeshShapeSubpartStorage
+  PARENT hkReferencedObject
+  ARRAY F32
+  ARRAY U16
+  ARRAY U32
+  ARRAY U8
+  ARRAY U32
+  ARRAY U16
+class hkpStorageSampledHeightFieldShape
+  PARENT hkpSampledHeightFieldShape
+  ARRAY F32
+  BOOL
+  U64
+  U32
+  U16
+  U8
+class hkpThinBoxMotion
+  PARENT hkpBoxMotion
+class hkpTransformShape
+  PARENT hkpShape
+  STRUCT hkpSingleShapeContainer
+  U64
+  V4
+  M4
+class hkpTriSampledHeightFieldBvTreeShape
+  PARENT hkpBvTreeShape
+  STRUCT hkpSingleShapeContainer
+  U32
+  BOOL
+  U64
+  U64
+  U16
+  U8
+class hkpTriSampledHeightFieldCollection
+  PARENT hkpShapeCollection
+  POINTER hkpSampledHeightFieldShape
+  U32
+  F32
+  ARRAY U16
+  U64
+  V4
+class hkpTriangleShape
+  PARENT hkpConvexShape
+  U16
+  U8
+  U8
+  V4
+  V4
+  V4
+  V4
+class hkpTriggerVolume
+  PARENT hkReferencedObject
+  U64
+  U64
+  U64
+  ARRAY POINTER hkpRigidBody
+  ARRAY STRUCT hkpTriggerVolumeEventInfo
+  POINTER hkpRigidBody
+  U32
+  U64
+  U64
+  U32
+class hkpTriggerVolumeEventInfo
+  U64
+  POINTER hkpRigidBody
+  I32
+  U32
+class hkpTwistLimitConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  U8
+  U8
+  U16
+  F32
+  F32
+  F32
+  F32
+  U64
+class hkpTypedBroadPhaseHandle
+  PARENT hkpBroadPhaseHandle
+  I8
+  U8
+  I8
+  U8
+  U32
+class hkpTyremarkPoint
+  V4
+  V4
+class hkpTyremarksInfo
+  PARENT hkReferencedObject
+  F32
+  F32
+  U32
+  ARRAY POINTER hkpTyremarksWheel
+class hkpTyremarksWheel
+  PARENT hkReferencedObject
+  I32
+  I32
+  U32
+  ARRAY STRUCT hkpTyremarkPoint
+class hkpUnaryAction
+  PARENT hkpAction
+  POINTER hkpEntity
+class hkpVehicleAerodynamics
+  PARENT hkReferencedObject
+class hkpVehicleBrake
+  PARENT hkReferencedObject
+class hkpVehicleCastBatchingManager
+  PARENT hkpVehicleManager
+  U16
+  U32
+  U16
+class hkpVehicleData
+  PARENT hkReferencedObject
+  V4
+  I8
+  U64
+  U32
+  U16
+  U8
+  M3
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+  ARRAY STRUCT hkpVehicleDataWheelComponentParams
+  ARRAY I8
+  V4
+  BOOL
+  U64
+  U32
+  U16
+  U8
+class hkpVehicleDataWheelComponentParams
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  I8
+  U16
+  U8
+class hkpVehicleDefaultAerodynamics
+  PARENT hkpVehicleAerodynamics
+  F32
+  F32
+  F32
+  F32
+  U32
+  V4
+class hkpVehicleDefaultAnalogDriverInput
+  PARENT hkpVehicleDriverInput
+  F32
+  F32
+  F32
+  BOOL
+  U32
+  U16
+  U8
+class hkpVehicleDefaultBrake
+  PARENT hkpVehicleBrake
+  ARRAY STRUCT hkpVehicleDefaultBrakeWheelBrakingProperties
+  F32
+  U32
+class hkpVehicleDefaultBrakeWheelBrakingProperties
+  F32
+  F32
+  BOOL
+  U16
+  U8
+class hkpVehicleDefaultEngine
+  PARENT hkpVehicleEngine
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+class hkpVehicleDefaultSimulation
+  PARENT hkpVehicleSimulation
+  STRUCT hkpVehicleFrictionStatus
+  U32
+  POINTER hkpVehicleFrictionDescription
+class hkpVehicleDefaultSteering
+  PARENT hkpVehicleSteering
+  F32
+  F32
+  U32
+  ARRAY BOOL
+class hkpVehicleDefaultSuspension
+  PARENT hkpVehicleSuspension
+  ARRAY STRUCT hkpVehicleDefaultSuspensionWheelSpringSuspensionParameters
+class hkpVehicleDefaultSuspensionWheelSpringSuspensionParameters
+  F32
+  F32
+  F32
+class hkpVehicleDefaultTransmission
+  PARENT hkpVehicleTransmission
+  F32
+  F32
+  F32
+  F32
+  F32
+  ARRAY F32
+  ARRAY F32
+class hkpVehicleDefaultVelocityDamper
+  PARENT hkpVehicleVelocityDamper
+  F32
+  F32
+  F32
+class hkpVehicleDriverInput
+  PARENT hkReferencedObject
+class hkpVehicleDriverInputAnalogStatus
+  PARENT hkpVehicleDriverInputStatus
+  F32
+  F32
+  BOOL
+  BOOL
+  U16
+class hkpVehicleDriverInputStatus
+  PARENT hkReferencedObject
+class hkpVehicleEngine
+  PARENT hkReferencedObject
+class hkpVehicleFrictionDescription
+  PARENT hkReferencedObject
+  F32
+  F32
+  STRUCT hkpVehicleFrictionDescriptionAxisDescription
+  STRUCT hkpVehicleFrictionDescriptionAxisDescription
+  U32
+class hkpVehicleFrictionDescriptionAxisDescription
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hkpVehicleFrictionStatus
+  STRUCT hkpVehicleFrictionStatusAxisStatus
+  STRUCT hkpVehicleFrictionStatusAxisStatus
+class hkpVehicleFrictionStatusAxisStatus
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+class hkpVehicleInstance
+  PARENT hkpUnaryAction
+  POINTER hkpVehicleData
+  POINTER hkpVehicleDriverInput
+  POINTER hkpVehicleSteering
+  POINTER hkpVehicleEngine
+  POINTER hkpVehicleTransmission
+  POINTER hkpVehicleBrake
+  POINTER hkpVehicleSuspension
+  POINTER hkpVehicleAerodynamics
+  POINTER hkpVehicleWheelCollide
+  POINTER hkpTyremarksInfo
+  POINTER hkpVehicleVelocityDamper
+  POINTER hkpVehicleSimulation
+  ARRAY STRUCT hkpVehicleInstanceWheelInfo
+  POINTER hkpVehicleDriverInputStatus
+  ARRAY BOOL
+  F32
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  F32
+  F32
+  ARRAY F32
+  BOOL
+  I8
+  BOOL
+  U8
+  F32
+class hkpVehicleInstanceWheelInfo
+  STRUCT hkContactPoint
+  F32
+  U64
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+  V4
+  V4
+  F32
+  U64
+  U32
+  V4
+  V4
+  V4
+  V4
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+class hkpVehicleLinearCastBatchingManager
+  PARENT hkpVehicleCastBatchingManager
+class hkpVehicleLinearCastWheelCollide
+  PARENT hkpVehicleWheelCollide
+  U32
+  U32
+  ARRAY STRUCT hkpVehicleLinearCastWheelCollideWheelState
+  STRUCT hkpRejectChassisListener
+  F32
+  F32
+  BOOL
+  U32
+  U16
+  U8
+class hkpVehicleLinearCastWheelCollideWheelState
+  POINTER hkpAabbPhantom
+  POINTER hkpShape
+  M4
+  V4
+class hkpVehicleManager
+  PARENT hkReferencedObject
+  ARRAY POINTER hkpVehicleInstance
+class hkpVehiclePerWheelSimulation
+  PARENT hkpVehicleSimulation
+  U64
+  POINTER hkpVehicleInstance
+  U64
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+  ARRAY STRUCT hkpVehiclePerWheelSimulationWheelData
+class hkpVehiclePerWheelSimulationWheelData
+  STRUCT hkpWheelFrictionConstraintAtomAxle
+  U32
+  STRUCT hkpWheelFrictionConstraintData
+  U64
+  U64
+  V4
+  V4
+  V4
+class hkpVehicleRayCastBatchingManager
+  PARENT hkpVehicleCastBatchingManager
+class hkpVehicleRayCastWheelCollide
+  PARENT hkpVehicleWheelCollide
+  U32
+  U32
+  POINTER hkpAabbPhantom
+  STRUCT hkpRejectChassisListener
+class hkpVehicleSimulation
+  PARENT hkReferencedObject
+class hkpVehicleSteering
+  PARENT hkReferencedObject
+class hkpVehicleSteeringAckerman
+  PARENT hkpVehicleSteering
+  F32
+  F32
+  U32
+  ARRAY BOOL
+  F32
+  F32
+class hkpVehicleSuspension
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkpVehicleSuspensionSuspensionWheelParameters
+class hkpVehicleSuspensionSuspensionWheelParameters
+  V4
+  V4
+  F32
+  U64
+  U32
+class hkpVehicleTransmission
+  PARENT hkReferencedObject
+class hkpVehicleVelocityDamper
+  PARENT hkReferencedObject
+class hkpVehicleWheelCollide
+  PARENT hkReferencedObject
+  BOOL
+  U16
+  U8
+class hkpVelocityConstraintMotor
+  PARENT hkpLimitedForceConstraintMotor
+  F32
+  F32
+  BOOL
+  U32
+  U16
+  U8
+class hkpViscousSurfaceModifierConstraintAtom
+  PARENT hkpModifierConstraintAtom
+class hkpWeldingUtility
+  U8
+class hkpWheelConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpWheelConstraintDataAtoms
+  V4
+  V4
+class hkpWheelConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpLinLimitConstraintAtom
+  STRUCT hkpLinSoftConstraintAtom
+  STRUCT hkpLinConstraintAtom
+  STRUCT hkpLinConstraintAtom
+  STRUCT hkpSetLocalRotationsConstraintAtom
+  STRUCT hkp2dAngConstraintAtom
+class hkpWheelFrictionConstraintAtom
+  PARENT hkpConstraintAtom
+  U8
+  U8
+  U8
+  U16
+  U8
+  F32
+  U32
+  POINTER hkpWheelFrictionConstraintAtomAxle
+  U64
+  F32
+  F32
+  F32
+  F32
+  F32
+  F32
+  U64
+class hkpWheelFrictionConstraintAtomAxle
+  F32
+  F32
+  I32
+  I32
+  I32
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  U16
+  U8
+  I32
+class hkpWheelFrictionConstraintData
+  PARENT hkpConstraintData
+  U64
+  STRUCT hkpWheelFrictionConstraintDataAtoms
+class hkpWheelFrictionConstraintDataAtoms
+  STRUCT hkpSetLocalTransformsConstraintAtom
+  STRUCT hkpWheelFrictionConstraintAtom
+class hkpWheelFrictionConstraintDataRuntime
+  U8
+class hkpWorld
+  PARENT hkReferencedObject
+  POINTER hkpSimulation
+  U64
+  V4
+  U64
+  POINTER hkpRigidBody
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  I32
+  U32
+  I32
+  I32
+  BOOL
+  BOOL
+  U64
+  U32
+  U16
+  I32
+  U64
+  U32
+  BOOL
+  BOOL
+  U16
+  U32
+  U64
+  I32
+  U64
+  U64
+  U32
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  BOOL
+  BOOL
+  BOOL
+  U8
+  F32
+  F32
+  I32
+  I32
+  BOOL
+  U16
+  U8
+  I32
+  I32
+  I32
+  U32
+  F32
+  F32
+  F32
+  F32
+  U32
+  U32
+  U32
+  ARRAY POINTER hkpPhantom
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  U64
+  V4
+  V4
+  I32
+  I32
+  I32
+  I32
+  U8
+  BOOL
+  U64
+  U32
+  U16
+class hkpWorldCinfo
+  PARENT hkReferencedObject
+  V4
+  I32
+  F32
+  I8
+  I8
+  BOOL
+  U32
+  U8
+  STRUCT hkAabb
+  F32
+  U32
+  POINTER hkpCollisionFilter
+  POINTER hkpConvexListFilter
+  F32
+  I32
+  F32
+  U32
+  POINTER hkWorldMemoryAvailableWatchDog
+  I32
+  I8
+  BOOL
+  U16
+  F32
+  F32
+  I32
+  I32
+  F32
+  BOOL
+  U16
+  U8
+  F32
+  F32
+  BOOL
+  BOOL
+  U16
+  F32
+  I32
+  U8
+  U8
+  U8
+  BOOL
+  F32
+  F32
+  BOOL
+  U16
+  U8
+  I32
+  I32
+  BOOL
+  U16
+  U8
+  I32
+  I32
+  I32
+  F32
+  F32
+  F32
+  F32
+  BOOL
+  I8
+  BOOL
+  U8
+  U32
+  BOOL
+  BOOL
+  U16
+  F32
+  BOOL
+  U16
+  U8
+class hkpWorldObject
+  PARENT hkReferencedObject
+  EMPTYPTR
+  USIZE
+  STRUCT hkpLinkedCollidable
+  STRUCT hkMultiThreadCheck
+  STRING
+  ARRAY STRUCT hkSimpleProperty
+class hkpWrappedConstraintData
+  PARENT hkpConstraintData
+  POINTER hkpConstraintData
+class hkxAnimatedFloat
+  PARENT hkReferencedObject
+  ARRAY F32
+  U8
+  U32
+  U16
+  U8
+class hkxAnimatedMatrix
+  PARENT hkReferencedObject
+  ARRAY F32
+  U8
+  U32
+  U16
+  U8
+class hkxAnimatedQuaternion
+  PARENT hkReferencedObject
+  ARRAY F32
+class hkxAnimatedVector
+  PARENT hkReferencedObject
+  ARRAY F32
+  U8
+  U32
+  U16
+  U8
+class hkxAttribute
+  STRING
+  POINTER hkReferencedObject
+class hkxAttributeGroup
+  STRING
+  ARRAY STRUCT hkxAttribute
+class hkxAttributeHolder
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkxAttributeGroup
+class hkxBlob
+  PARENT hkReferencedObject
+  ARRAY U8
+class hkxBlobMeshShape
+  PARENT hkMeshShape
+  STRUCT hkxBlob
+  STRING
+class hkxCamera
+  PARENT hkReferencedObject
+  V4
+  V4
+  V4
+  F32
+  F32
+  F32
+  BOOL
+  U16
+  U8
+class hkxEdgeSelectionChannel
+  PARENT hkReferencedObject
+  ARRAY I32
+class hkxEnum
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkxEnumItem
+class hkxEnumItem
+  I32
+  U32
+  STRING
+class hkxEnvironment
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkxEnvironmentVariable
+class hkxEnvironmentVariable
+  STRING
+  STRING
+class hkxIndexBuffer
+  PARENT hkReferencedObject
+  I8
+  U16
+  U8
+  ARRAY U16
+  ARRAY U32
+  U32
+  U32
+class hkxLight
+  PARENT hkReferencedObject
+  I8
+  U16
+  U8
+  V4
+  V4
+  U32
+  F32
+  F32
+  F32
+  F32
+  I16
+  U16
+  F32
+  BOOL
+  U16
+  U8
+class hkxMaterial
+  PARENT hkxAttributeHolder
+  STRING
+  ARRAY STRUCT hkxMaterialTextureStage
+  U64
+  V4
+  V4
+  V4
+  V4
+  ARRAY POINTER hkxMaterial
+  POINTER hkReferencedObject
+  F32
+  F32
+  F32
+  F32
+  F32
+  U32
+  F32
+  F32
+  U8
+  U32
+  U16
+  U8
+  U64
+  ARRAY STRUCT hkxMaterialProperty
+  U64
+class hkxMaterialEffect
+  PARENT hkReferencedObject
+  STRING
+  U8
+  U32
+  U16
+  U8
+  ARRAY U8
+class hkxMaterialProperty
+  U32
+  U32
+class hkxMaterialShader
+  PARENT hkReferencedObject
+  STRING
+  U8
+  U32
+  U16
+  U8
+  STRING
+  STRING
+  STRING
+  ARRAY U8
+class hkxMaterialShaderSet
+  PARENT hkReferencedObject
+  ARRAY POINTER hkxMaterialShader
+class hkxMaterialTextureStage
+  POINTER hkReferencedObject
+  I32
+  I32
+class hkxMesh
+  PARENT hkReferencedObject
+  ARRAY POINTER hkxMeshSection
+  ARRAY POINTER hkxMeshUserChannelInfo
+class hkxMeshSection
+  PARENT hkReferencedObject
+  POINTER hkxVertexBuffer
+  ARRAY POINTER hkxIndexBuffer
+  POINTER hkxMaterial
+  ARRAY POINTER hkReferencedObject
+  ARRAY POINTER hkxVertexAnimation
+  ARRAY F32
+  ARRAY STRUCT hkMeshBoneIndexMapping
+class hkxMeshUserChannelInfo
+  PARENT hkxAttributeHolder
+  STRING
+  STRING
+class hkxNode
+  PARENT hkxAttributeHolder
+  STRING
+  STRUCT hkUuid
+  POINTER hkReferencedObject
+  ARRAY M4
+  ARRAY POINTER hkxNode
+  ARRAY STRUCT hkxNodeAnnotationData
+  ARRAY F32
+  STRING
+  BOOL
+  BOOL
+  U32
+  U16
+class hkxNodeAnnotationData
+  F32
+  U32
+  STRING
+class hkxNodeSelectionSet
+  PARENT hkxAttributeHolder
+  ARRAY POINTER hkxNode
+  STRING
+class hkxScene
+  PARENT hkReferencedObject
+  STRING
+  STRING
+  F32
+  U32
+  POINTER hkxNode
+  ARRAY POINTER hkxNodeSelectionSet
+  ARRAY POINTER hkxCamera
+  ARRAY POINTER hkxLight
+  U64
+  U64
+  ARRAY POINTER hkxMaterial
+  ARRAY POINTER hkxTextureInplace
+  ARRAY POINTER hkxTextureFile
+  ARRAY POINTER hkxSkinBinding
+  ARRAY POINTER hkxSpline
+  M3
+class hkxSkinBinding
+  PARENT hkReferencedObject
+  U64
+  ARRAY STR
+  ARRAY M4
+  U64
+  M4
+class hkxSparselyAnimatedBool
+  PARENT hkReferencedObject
+  ARRAY BOOL
+  ARRAY F32
+class hkxSparselyAnimatedEnum
+  PARENT hkxSparselyAnimatedInt
+  POINTER hkxEnum
+class hkxSparselyAnimatedInt
+  PARENT hkReferencedObject
+  ARRAY I32
+  ARRAY F32
+class hkxSparselyAnimatedString
+  PARENT hkReferencedObject
+  ARRAY STR
+  ARRAY F32
+class hkxSpline
+  PARENT hkReferencedObject
+  ARRAY STRUCT hkxSplineControlPoint
+  BOOL
+  U32
+  U16
+  U8
+class hkxSplineControlPoint
+  V4
+  V4
+  V4
+  U8
+  U8
+  U64
+  U32
+  U16
+class hkxTextureFile
+  PARENT hkReferencedObject
+  STRING
+  STRING
+  STRING
+class hkxTextureInplace
+  PARENT hkReferencedObject
+  I8
+  I8
+  I8
+  I8
+  ARRAY U8
+  STRING
+  STRING
+class hkxTriangleSelectionChannel
+  PARENT hkReferencedObject
+  ARRAY I32
+class hkxVertexAnimation
+  PARENT hkReferencedObject
+  F32
+  STRUCT hkxVertexBuffer
+  ARRAY I32
+  ARRAY STRUCT hkxVertexAnimationUsageMap
+class hkxVertexAnimationUsageMap
+  U16
+  U8
+  U8
+class hkxVertexBuffer
+  PARENT hkReferencedObject
+  STRUCT hkxVertexBufferVertexData
+  STRUCT hkxVertexDescription
+class hkxVertexBufferVertexData
+  ARRAY U32
+  ARRAY U32
+  ARRAY U32
+  ARRAY U16
+  ARRAY U8
+  U32
+  U32
+  U32
+  U32
+  U32
+  U32
+class hkxVertexDescription
+  ARRAY STRUCT hkxVertexDescriptionElementDecl
+class hkxVertexDescriptionElementDecl
+  U32
+  U16
+  U16
+  U32
+  U8
+  U16
+  U8
+  STRING
+class hkxVertexFloatDataChannel
+  PARENT hkReferencedObject
+  ARRAY F32
+  U8
+  U32
+  U16
+  U8
+class hkxVertexIntDataChannel
+  PARENT hkReferencedObject
+  ARRAY I32
+class hkxVertexSelectionChannel
+  PARENT hkReferencedObject
+  ARRAY I32
+class hkxVertexVectorDataChannel
+  PARENT hkReferencedObject
+  ARRAY F32

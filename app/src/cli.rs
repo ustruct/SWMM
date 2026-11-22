@@ -7,7 +7,7 @@ use std::{
 use anyhow_ext::{Context, Result};
 use smartstring::alias::String;
 use swmm_core::{core, mods::LookupMod};
-use uk_mod::{unpack::ModReader, Manifest, Meta};
+use uk_mod::{unpack::ModReader, Manifest, Meta, ModOption, OptionGroup};
 
 use crate::ui::jobs;
 
@@ -33,6 +33,7 @@ xflags::xflags! {
         }
         cmd remerge {}
         cmd deploy {}
+        cmd status {}
     }
 }
 #[derive(Debug)]
@@ -51,6 +52,7 @@ pub enum SwmmCmd {
     Package(Package),
     Remerge(Remerge),
     Deploy(Deploy),
+    Status(Status),
 }
 
 #[derive(Debug)]
@@ -78,6 +80,9 @@ pub struct Remerge;
 #[derive(Debug)]
 pub struct Deploy;
 
+#[derive(Debug)]
+pub struct Status;
+
 impl Swmm {
     #[allow(dead_code)]
     pub fn from_env_or_exit() -> Self {
@@ -99,7 +104,7 @@ macro_rules! input {
     () => {{
         stdout().flush()?;
         let mut _input = std::string::String::new();
-        stdin().read_line(&mut _input).unwrap();
+        stdin().read_line(&mut _input).unwrap_or_default();
         _input
     }};
 }
@@ -111,44 +116,58 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(cli: Swmm) -> Self {
-        Self {
-            core: core::Manager::init().unwrap(),
+    pub fn new(cli: Swmm) -> Result<Self> {
+        Ok(Self {
+            core: core::Manager::init().context("SWMM couldn't load its settings and profiles")?,
             cli,
-        }
+        })
     }
 
     fn check_mod(&self, path: &Path) -> Result<Option<PathBuf>> {
-        let (mod_, path) = match ModReader::open(path, vec![]) {
-            Ok(mod_) => (mod_, path.to_path_buf()),
-            Err(e) => {
-                match swmm_core::mods::convert_gfx(&self.core, path, None) {
-                    Ok(path) => {
-                        log::info!("Opening mod at {}", path.display());
-                        (
-                            ModReader::open(&path, vec![])
-                                .context("Failed to open converted mod")?,
-                            path,
-                        )
-                    }
-                    Err(e2) => {
-                        anyhow_ext::bail!(
-                            "Could not open mod. Error when attempting to open as a mod package: {}. \
-                             Error when attempting to open as legacy mod: {}.",
-                            e,
-                            e2
-                        )
-                    }
-                }
-            }
-        };
-        if !mod_.meta.options.is_empty() {
-            anyhow_ext::bail!(
-                "This mod contains configuration options and should be installed via the GUI."
-            );
+        let (mod_, converted) = jobs::read_for_install(&self.core, path)?;
+        if converted.wiiu {
+            println!("{}: converted from Wii U. Some parts may not work.", mod_.meta.name);
+        }
+        if converted.rebased {
+            println!("{} was made for another version of the game. Its lists of actors, flags and texts were moved to this version.", mod_.meta.name);
         }
         println!("Installing {}...", mod_.meta.name);
-        Ok(Some(path))
+        let _ = ModReader::open_peek(&mod_.path, vec![]).context("Failed to open the converted mod")?;
+        Ok(Some(mod_.path))
+    }
+
+    fn status(&self) -> Result<()> {
+        let settings = self.core.settings();
+        let game = swmm_core::savage_wind::current_game_files(&settings).ok();
+        let mods = self
+            .core
+            .mod_manager()
+            .all_mods()
+            .enumerate()
+            .map(|(index, m)| {
+                serde_json::json!({
+                    "index": index,
+                    "name": m.meta.name.as_str(),
+                    "version": m.meta.version.as_str(),
+                    "author": m.meta.author.as_str(),
+                    "enabled": m.enabled,
+                    "came_as": swmm_core::origin::describe(&m),
+                    "options": m.enabled_options.iter().map(|o| o.name.as_str()).collect::<Vec<_>>(),
+                })
+            })
+            .collect::<Vec<_>>();
+        let status = serde_json::json!({
+            "version": env!("CARGO_PKG_VERSION"),
+            "profile": self.core.mod_manager().current_profile(),
+            "executable": settings.savage_wind.executable,
+            "game_version": game.as_ref().and_then(|g| g.version.clone()),
+            "dlc_version": game.as_ref().and_then(|g| g.aoc_version.clone()),
+            "overlay": swmm_core::savage_wind::overlay_dir(&settings),
+            "pending_deploy": self.core.deploy_manager().pending(),
+            "mods": mods,
+        });
+        println!("{}", serde_json::to_string_pretty(&status)?);
+        Ok(())
     }
 
     fn deploy(&self) -> Result<()> {
@@ -174,10 +193,21 @@ impl Runner {
                     let mods = self.core.mod_manager();
                     let mod_ = mods.add(&path, profile.as_ref())?;
                     mods.set_enabled(mod_.as_map_id(), true, profile.as_ref())?;
+                    let options = default_options(&mod_.meta);
+                    let manifest = if options.is_empty() {
+                        mod_.manifest()?
+                    } else if profile.is_none() {
+                        let names: Vec<&str> = options.iter().map(|o| o.name.as_str()).collect();
+                        println!("Options picked: {}", names.join(", "));
+                        mods.set_enabled_options(mod_.as_map_id(), options)?
+                    } else {
+                        println!("The mod's options can only be picked for the current profile; none were picked");
+                        mod_.manifest()?
+                    };
                     mods.save()?;
                     println!("Applying mod to load order...");
                     let deployer = self.core.deploy_manager();
-                    deployer.apply(Some(mod_.manifest()?.as_ref().clone()))?;
+                    deployer.apply(Some(manifest.as_ref().clone()))?;
                     if self.cli.deploy {
                         self.deploy()?;
                     }
@@ -208,7 +238,7 @@ impl Runner {
                     let mod_ = mods
                         .get(*index_value)
                         .with_context(|| format!("Mod {} does not exist", index_value))?;
-                    println!("Removing mod {}...", &mod_.meta.name);
+                    println!("Removing mod {}...", mod_.meta.name);
                     mod_manager.del(mod_, profile.as_ref())?;
                     mod_manager.save()?;
                     manifests.extend(mod_.manifest()?.as_ref());
@@ -218,9 +248,9 @@ impl Runner {
                         println!(
                             "{}. {} (v{}) by {}",
                             i + 1,
-                            &mod_.meta.name,
-                            &mod_.meta.version,
-                            &mod_.meta.author
+                            mod_.meta.name,
+                            mod_.meta.version,
+                            mod_.meta.author
                         );
                     }
                     print!("Enter mod(s) to uninstall, separated by commas: ");
@@ -229,7 +259,7 @@ impl Runner {
                         let mod_ = mods
                             .get(id.trim().parse::<usize>().context("Invalid mod number")? - 1)
                             .with_context(|| format!("Mod {} does not exist", id))?;
-                        println!("Removing mod {}...", &mod_.meta.name);
+                        println!("Removing mod {}...", mod_.meta.name);
                         mod_manager.del(mod_, profile.as_ref())?;
                         mod_manager.save()?;
                         manifests.extend(mod_.manifest()?.as_ref());
@@ -244,7 +274,32 @@ impl Runner {
                 println!("Done!");
             }
             SwmmCmd::Deploy(_) => self.deploy()?,
+            SwmmCmd::Status(_) => self.status()?,
         };
         Ok(())
     }
+}
+
+fn default_options(meta: &Meta) -> Vec<ModOption> {
+    let mut picked = Vec::new();
+    for group in &meta.options {
+        match group {
+            OptionGroup::Exclusive(group) => {
+                let chosen = group
+                    .default
+                    .as_ref()
+                    .and_then(|path| group.options.iter().find(|o| &o.path == path))
+                    .or_else(|| group.required.then(|| group.options.first()).flatten());
+                picked.extend(chosen.cloned());
+            }
+            OptionGroup::Multiple(group) => {
+                let before = picked.len();
+                picked.extend(group.options.iter().filter(|o| group.defaults.contains(&o.path)).cloned());
+                if picked.len() == before && group.required {
+                    picked.extend(group.options.first().cloned());
+                }
+            }
+        }
+    }
+    picked
 }

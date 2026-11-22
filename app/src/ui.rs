@@ -1,7 +1,11 @@
 mod actions;
 mod chrome;
+mod compat;
+mod conflicts;
+mod crash;
 mod dialogs;
 mod frame;
+mod gamepad;
 mod intro;
 mod browser;
 pub(crate) mod jobs;
@@ -161,7 +165,23 @@ pub enum Message {
     SetPage(Page),
     Launch,
     Launched,
+    OpenGameConfig,
+    GameConfigOpened,
     SwAutoDetect,
+    GameCrashed(Box<swmm_core::crash::CrashReport>),
+    CloseCrash,
+    BackupSaves,
+    RestoreSaves(PathBuf),
+    SavesChanged(Option<String>),
+    ExportModpack(String),
+    ImportModpack(PathBuf),
+    SelectModpack,
+    ModpackImported(String),
+    Finished,
+    SelectCompatFile,
+    TestCompat { path: PathBuf, id: u64, name: String, file: String, downloaded: bool },
+    CompatTested(Box<swmm_core::compat::Entry>),
+    ShowCompat(String),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -203,6 +223,7 @@ pub struct App {
     meta_input: dialogs::MetaInputModal,
     page: Page,
     browser: RefCell<browser::BrowserState>,
+    compat: RefCell<compat::CompatState>,
     game_status: frame::GameStatus,
     focused: FocusedPane,
     error: Option<anyhow_ext::Error>,
@@ -219,10 +240,25 @@ pub struct App {
     intro: intro::Intro,
     theme_fade: Option<intro::ThemeFade>,
     changelog: Option<String>,
+    crash: Option<Box<swmm_core::crash::CrashReport>>,
+    conflicts: RefCell<conflicts::ConflictCache>,
+    saves: RefCell<Option<(f64, Vec<swmm_core::saves::Backup>)>>,
+    gamepad: gamepad::Gamepad,
+    last_panic: Option<String>,
+}
+
+static NO_CHANGES: std::sync::LazyLock<uk_mod::Manifest> = std::sync::LazyLock::new(Default::default);
+
+fn panic_text(payload: &(dyn std::any::Any + Send)) -> String {
+    payload
+        .downcast_ref::<String>()
+        .cloned()
+        .or_else(|| payload.downcast_ref::<&'static str>().map(|s| s.to_string()))
+        .unwrap_or_else(|| "an unknown problem".to_string())
 }
 
 impl App {
-    fn new(cc: &eframe::CreationContext) -> Self {
+    fn new(cc: &eframe::CreationContext) -> Result<Self> {
         #[cfg(not(windows))]
         if std::env::var("XDG_SESSION_TYPE").unwrap_or_default() == "wayland" {
             cc.egui_ctx.set_pixels_per_point(
@@ -233,7 +269,7 @@ impl App {
             );
         }
         swmm_widgets::load_fonts(&cc.egui_ctx);
-        let core = Arc::new(Manager::init().unwrap());
+        let core = Arc::new(Manager::init().context("SWMM couldn't load its settings and profiles")?);
         frame::auto_configure_on_start(&core);
         let ui_state: UiState = fs::read_to_string(core.settings().state_file())
             .context("")
@@ -258,7 +294,7 @@ impl App {
         jobs::UI_SENDER.set(send.clone()).unwrap_or(());
         let temp_settings = core.settings().clone();
         LOCALIZATION.write().update_language(&temp_settings.lang);
-        Self {
+        Ok(Self {
             selected: mods.first().cloned().into_iter().collect(),
             drag_index: None,
             hover_index: None,
@@ -268,7 +304,7 @@ impl App {
             intro: intro::Intro::new(),
             theme_fade: None,
             displayed_mods,
-            mod_list_filter: "".parse().unwrap(),
+            mod_list_filter: Default::default(),
             mods,
             temp_settings,
             changelog: {
@@ -280,6 +316,7 @@ impl App {
             channel: (send, recv),
             page: Page::Home,
             browser: RefCell::new(browser::BrowserState::default()),
+            compat: Default::default(),
             game_status: frame::GameStatus::check(&core),
             focused: FocusedPane::None,
             error: None,
@@ -298,13 +335,18 @@ impl App {
                 )
             },
             options_mod: None,
+            crash: None,
+            conflicts: Default::default(),
+            saves: Default::default(),
+            gamepad: gamepad::Gamepad::new(),
             toasts: egui_notify::Toasts::new().with_anchor(egui_notify::Anchor::BottomRight),
             theme: ui_state.theme,
             install_queue: Default::default(),
             update_mod: Default::default(),
             error_queue: Default::default(),
+            last_panic: None,
             core,
-        }
+        })
     }
 
     #[inline(always)]
@@ -314,24 +356,21 @@ impl App {
 
     #[inline(always)]
     fn dirty(&self) -> MappedRwLockReadGuard<'_, uk_mod::Manifest> {
+        let key = self.core.mod_manager().profile().key().to_string();
         let dirty = self.dirty.read();
         RwLockReadGuard::map(dirty, |dirty| {
             dirty
-                .get(self.core.mod_manager().profile().key().as_str())
+                .get(key.as_str())
                 .or_else(|| dirty.values().next())
-                .unwrap()
+                .unwrap_or(&NO_CHANGES)
         })
     }
 
     #[inline(always)]
     fn dirty_mut(&self) -> MappedRwLockWriteGuard<'_, uk_mod::Manifest> {
+        let key = self.core.mod_manager().profile().key().to_string();
         let dirty = self.dirty.write();
-        RwLockWriteGuard::map(dirty, |dirty| {
-            dirty.get_mut(self.core.mod_manager().profile().key().as_str())
-            .map(|m| unsafe { &mut *(m as *mut _) })
-            .or_else(|| dirty.values_mut().next())
-            .unwrap()
-        })
+        RwLockWriteGuard::map(dirty, |dirty| dirty.entry(key.as_str().into()).or_default())
     }
 
     #[inline(always)]
@@ -345,10 +384,13 @@ impl App {
             || self.new_profile.is_some()
             || self.meta_input.is_open()
             || self.changelog.is_some()
+            || self.crash.is_some()
     }
 
     fn do_update(&self, message: Message) {
-        self.channel.0.send(message).unwrap();
+        if self.channel.0.send(message).is_err() {
+            log::warn!("The message channel is closed");
+        }
     }
 
     fn do_task(
@@ -382,14 +424,16 @@ impl App {
             if let Some(d) = core.settings().dump() {
                 d.clear_cache()
             }
-            sender.send(response).unwrap();
+            sender.send(response).unwrap_or(());
         });
     }
 
     fn handle_drops(&mut self, ctx: &eframe::egui::Context) {
         let files = ctx.input(|i| i.raw.dropped_files.clone());
         if !(self.modal_open() || files.is_empty()) {
-            let first = files.first().and_then(|f| f.path.clone()).unwrap();
+            let Some(first) = files.first().and_then(|f| f.path.clone()) else {
+                return;
+            };
             self.install_queue
                 .extend(files.iter().skip(1).filter_map(|f| f.path.clone()));
             self.error_queue.clear();
@@ -423,7 +467,41 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.draw(ctx, frame)));
+        if let Err(payload) = result {
+            let text = panic_text(payload.as_ref());
+            log::error!("The window hit a problem and kept running: {text}");
+            crate::logger::LOGGER.save_log();
+            self.busy.set(false);
+            if self.last_panic.as_deref() != Some(text.as_str()) {
+                self.last_panic = Some(text.clone());
+                self.do_update(Message::Error(anyhow::anyhow!(
+                    "SWMM ran into a problem but kept running: {text}. Details are in the log."
+                )));
+            }
+            ctx.request_repaint();
+        }
+    }
+
+    fn raw_input_hook(&mut self, _ctx: &egui::Context, raw_input: &mut egui::RawInput) {
+        self.gamepad.inject(raw_input);
+    }
+
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        [0.0, 0.0, 0.0, 0.0]
+    }
+
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.save_ui_state();
+        shutdown(&self.core);
+    }
+}
+
+impl App {
+    fn draw(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         self.handle_update(ctx, frame);
+        self.poll_gamepad(ctx);
+        fit_small_screen(ctx);
         let minimized = ctx.input(|i| i.viewport().minimized.unwrap_or(false));
         let size = ctx.screen_rect().size();
         if minimized || size.x < 200.0 || size.y < 200.0 {
@@ -441,6 +519,7 @@ impl eframe::App for App {
         self.render_licenses(ctx);
         self.render_option_picker(ctx);
         self.render_changelog(ctx);
+        self.render_crash(ctx);
         self.meta_input.ui(ctx);
         self.render_busy(ctx, frame);
         self.toasts.show(ctx);
@@ -467,15 +546,6 @@ impl eframe::App for App {
         }
         chrome::handle_resize(ctx);
     }
-
-    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
-        [0.0, 0.0, 0.0, 0.0]
-    }
-
-    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-        self.save_ui_state();
-        shutdown(&self.core);
-    }
 }
 
 fn shutdown(core: &Manager) {
@@ -483,6 +553,32 @@ fn shutdown(core: &Manager) {
     core.settings_mut().last_version = Some(env!("CARGO_PKG_VERSION").into());
     core.settings().save().unwrap_or(());
     swmm_core::util::clear_temp();
+}
+
+const MIN_WINDOW: egui::Vec2 = egui::Vec2::new(900.0, 560.0);
+
+fn fit_small_screen(ctx: &egui::Context) {
+    let (monitor, inner) = ctx.input(|i| (i.viewport().monitor_size, i.viewport().inner_rect));
+    let Some(monitor) = monitor.filter(|m| m.x > 0.0 && m.y > 0.0) else { return };
+    let zoom = ctx.zoom_factor();
+    let fit = (monitor.x / MIN_WINDOW.x).min(monitor.y / MIN_WINDOW.y);
+    if fit < 0.99 || (zoom < 1.0 && fit > 1.01) {
+        let target = (zoom * fit).clamp(0.5, 1.0);
+        if (target - zoom).abs() > 0.005 {
+            ctx.set_zoom_factor(target);
+            ctx.request_repaint();
+            return;
+        }
+    }
+    let Some(inner) = inner else { return };
+    let id = egui::Id::new("swmm_fitted_monitor");
+    let fitted = ctx.data(|d| d.get_temp::<egui::Vec2>(id));
+    if fitted != Some(monitor) && (inner.width() > monitor.x + 1.0 || inner.height() > monitor.y + 1.0) {
+        ctx.send_viewport_cmd(egui::ViewportCommand::MinInnerSize(MIN_WINDOW.min(monitor)));
+        ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(inner.size().min(monitor)));
+        ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(egui::pos2(0.0, 0.0)));
+        ctx.data_mut(|d| d.insert_temp(id, monitor));
+    }
 }
 
 pub fn main() -> Result<(), eframe::Error> {
@@ -498,9 +594,8 @@ pub fn main() -> Result<(), eframe::Error> {
                         height: 512,
                         width:  512,
                         rgba:   image::load_from_memory(include_bytes!("../../assets/icon.png"))
-                            .unwrap()
-                            .to_rgba8()
-                            .into_vec(),
+                            .map(|i| i.to_rgba8().into_vec())
+                            .unwrap_or_else(|_| vec![0; 512 * 512 * 4]),
                     }
                     .into(),
                 ),
@@ -509,12 +604,16 @@ pub fn main() -> Result<(), eframe::Error> {
                 decorations: Some(false),
                 transparent: Some(!cfg!(windows)),
                 resizable: Some(true),
-                min_inner_size: Some(egui::Vec2::new(900.0, 560.0)),
+                min_inner_size: Some(MIN_WINDOW),
                 inner_size: Some(egui::Vec2::new(1180.0, 740.0)),
                 ..Default::default()
             },
             ..Default::default()
         },
-        Box::new(|cc| Ok(Box::new(App::new(cc)))),
+        Box::new(|cc| {
+            App::new(cc)
+                .map(|app| Box::new(app) as Box<dyn eframe::App>)
+                .map_err(|e| format!("{e:?}").into())
+        }),
     )
 }

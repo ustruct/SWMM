@@ -13,7 +13,7 @@ impl BnpConverter {
         let path = self.current_root.join("logs/actorinfo.yml");
         if path.exists() {
             log::debug!("Processing actor info log");
-            let diff =
+            let mut diff =
                 super::parse_yaml(fs::read_to_string(path).context("Failed to read actorinfo log")?)
                     .context("Failed to parse actorinfo log")?
                     .into_map()
@@ -27,6 +27,14 @@ impl BnpConverter {
                     .map(ActorInfo)?;
             let actorinfo = self.get_master_data("Actor/ActorInfo.product.sbyml")?;
             if let Some(MergeableResource::ActorInfo(info)) = actorinfo.as_mergeable() {
+                if self.from_wiiu {
+                    let master = info.clone().into_binary(self.platform.into());
+                    if let Some(sizes) = crate::actor_size::Sizes::new(&master) {
+                        for (hash, entry) in diff.0.iter_mut() {
+                            sizes.convert_entry(*hash, entry);
+                        }
+                    }
+                }
                 fs::create_dir_all(self.current_root.join(self.content).join("Actor"))?;
                 fs::write(
                     self.current_root

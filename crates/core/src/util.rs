@@ -35,6 +35,9 @@ pub fn hardlink_dir<T: AsRef<Path>, U: AsRef<Path>>(src: T, dst: U) -> anyhow_ex
 
 pub fn remove_dir_all(dir: impl AsRef<std::path::Path>) -> anyhow_ext::Result<()> {
     fn inner(dir: &Path) -> anyhow_ext::Result<()> {
+        if std::fs::symlink_metadata(dir).is_err() {
+            return Ok(());
+        }
         #[cfg(windows)]
         remove_dir_all::remove_dir_all(dir).with_context(|| dir.to_string_lossy().to_string())?;
         #[cfg(not(windows))]
@@ -100,32 +103,128 @@ pub fn remove_symlink(link: impl AsRef<std::path::Path>) -> anyhow_ext::Result<(
 static TEMP_FS: LazyLock<RwLock<HashSet<PathBuf>>> =
     LazyLock::new(|| RwLock::new(HashSet::default()));
 
-#[allow(clippy::unwrap_used)]
-pub fn get_temp_folder() -> MappedRwLockReadGuard<'static, PathBuf> {
-    let temp = tempfile::tempdir().unwrap().keep();
+static TEMP_ROOT: RwLock<Option<PathBuf>> = RwLock::new(None);
+
+thread_local! {
+    static TEMP_SCOPE: std::cell::RefCell<Option<Vec<PathBuf>>> = const { std::cell::RefCell::new(None) };
+}
+
+const TEMP_PREFIX: &str = ".swmm-";
+const STALE_TEMP: std::time::Duration = std::time::Duration::from_secs(6 * 60 * 60);
+
+pub fn set_temp_root(dir: &Path) {
+    let dir = dir.join("tmp");
+    if std::fs::create_dir_all(&dir).is_err() {
+        log::warn!("Can't use {} for temporary files, using the system's", dir.display());
+        *TEMP_ROOT.write() = None;
+        return;
+    }
+    if let Ok(entries) = std::fs::read_dir(&dir) {
+        for entry in entries.flatten() {
+            let stale = entry
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|t| t.elapsed().ok())
+                .is_some_and(|age| age > STALE_TEMP);
+            if stale && entry.file_name().to_string_lossy().starts_with(TEMP_PREFIX) {
+                let path = entry.path();
+                if path.is_dir() {
+                    remove_dir_all(&path).unwrap_or(());
+                } else {
+                    std::fs::remove_file(&path).unwrap_or(());
+                }
+            }
+        }
+    }
+    *TEMP_ROOT.write() = Some(dir);
+}
+
+pub fn temp_root() -> PathBuf {
+    TEMP_ROOT.read().clone().unwrap_or_else(std::env::temp_dir)
+}
+
+pub fn new_temp_dir() -> std::io::Result<PathBuf> {
+    let builder = {
+        let mut b = tempfile::Builder::new();
+        b.prefix(TEMP_PREFIX);
+        b
+    };
+    builder
+        .tempdir_in(temp_root())
+        .or_else(|_| builder.tempdir())
+        .map(tempfile::TempDir::keep)
+}
+
+fn track(temp: PathBuf) -> MappedRwLockReadGuard<'static, PathBuf> {
     TEMP_FS.write().insert(temp.clone());
+    TEMP_SCOPE.with(|s| {
+        if let Some(scope) = s.borrow_mut().as_mut() {
+            scope.push(temp.clone());
+        }
+    });
     RwLockReadGuard::map(TEMP_FS.read(), |tmps| unsafe {
         tmps.get(&temp).unwrap_unchecked()
     })
+}
+
+#[allow(clippy::unwrap_used)]
+pub fn get_temp_folder() -> MappedRwLockReadGuard<'static, PathBuf> {
+    track(new_temp_dir().unwrap())
 }
 
 #[allow(clippy::unwrap_used)]
 pub fn get_temp_file() -> MappedRwLockReadGuard<'static, PathBuf> {
-    let temp = tempfile::NamedTempFile::new().unwrap().keep().unwrap().1;
-    TEMP_FS.write().insert(temp.clone());
-    RwLockReadGuard::map(TEMP_FS.read(), |tmps| unsafe {
-        tmps.get(&temp).unwrap_unchecked()
-    })
+    let builder = {
+        let mut b = tempfile::Builder::new();
+        b.prefix(TEMP_PREFIX);
+        b
+    };
+    let file = builder
+        .tempfile_in(temp_root())
+        .or_else(|_| builder.tempfile())
+        .unwrap()
+        .keep()
+        .unwrap()
+        .1;
+    track(file)
+}
+
+fn remove_temp(tmp: &Path) {
+    if tmp.is_file() {
+        fs_err::remove_file(tmp).unwrap_or(());
+    } else {
+        remove_dir_all(tmp).unwrap_or(());
+    }
+}
+
+pub fn begin_temp_scope() {
+    TEMP_SCOPE.with(|s| *s.borrow_mut() = Some(Vec::new()));
+}
+
+pub fn end_temp_scope(keep: Option<&Path>) {
+    let Some(scoped) = TEMP_SCOPE.with(|s| s.borrow_mut().take()) else { return };
+    let mut all = TEMP_FS.write();
+    for tmp in scoped {
+        if keep.is_some_and(|k| k.starts_with(&tmp)) {
+            continue;
+        }
+        all.remove(&tmp);
+        remove_temp(&tmp);
+    }
+}
+
+pub fn release_temp(path: &Path) {
+    let mut all = TEMP_FS.write();
+    let owners: Vec<PathBuf> = all.iter().filter(|t| path.starts_with(t)).cloned().collect();
+    for tmp in owners {
+        all.remove(&tmp);
+        remove_temp(&tmp);
+    }
 }
 
 pub fn clear_temp() {
-    TEMP_FS.write().drain().for_each(|tmp| {
-        if tmp.is_file() {
-            fs_err::remove_file(tmp).unwrap_or(());
-        } else {
-            remove_dir_all(tmp).unwrap_or(());
-        }
-    });
+    TEMP_FS.write().drain().for_each(|tmp| remove_temp(&tmp));
 }
 
 pub static USE_SZ: AtomicBool = AtomicBool::new(true);

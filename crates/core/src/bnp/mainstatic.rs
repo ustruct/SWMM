@@ -77,7 +77,7 @@ impl BnpConverter {
             for (cat, entries) in diff {
                 base.get_mut(&cat)
                     .context("Base mainfield static missing category")?
-                    .extend(entries.into_iter());
+                    .extend(entries);
             }
             let output: Byml = base
                 .into_iter()

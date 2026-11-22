@@ -65,7 +65,7 @@ impl Manager {
                     Ok(log) => {
                         if log.has_some() {
                             log::info!("Pending deployment data found");
-                            log::debug!("{:#?}", &log);
+                            log::debug!("{:#?}", log);
                         } else {
                             log::info!("No files pending deployment");
                         }
@@ -77,20 +77,20 @@ impl Manager {
                             Ok(old_log) => {
                                 if !old_log.files.is_empty() || !old_log.delete.is_empty() {
                                     log::info!("Pending deployment data found");
-                                    log::debug!("{:#?}", &old_log);
+                                    log::debug!("{:#?}", old_log);
                                 } else {
                                     log::info!("No files pending deployment");
                                 }
                                 old_log
                             }
                             Err(e) => {
-                                log::warn!("Could not load pending deployment data:\n{}", &e);
+                                log::warn!("Could not load pending deployment data:\n{}", e);
                                 log::info!("No files pending deployment");
                                 Default::default()
                             }
                         };
                         old_pending.try_into().unwrap_or_else(|e| {
-                            log::warn!("Could not load pending deployment data:\n{}", &e);
+                            log::warn!("Could not load pending deployment data:\n{}", e);
                             log::info!("No files pending deployment");
                             Default::default()
                         })
@@ -98,7 +98,7 @@ impl Manager {
                 }
             }
             Err(e) => {
-                log::warn!("Could not load pending deployment data:\n{}", &e);
+                log::warn!("Could not load pending deployment data:\n{}", e);
                 log::info!("No files pending deployment");
                 Default::default()
             }
@@ -171,7 +171,7 @@ impl Manager {
                 c.deploy_config.as_ref()
             })
             .context("No deployment config for current platform")?;
-        log::debug!("Deployment config:\n{:#?}", &config);
+        log::debug!("Deployment config:\n{:#?}", config);
         let method = config.effective_method();
         if method != config.method {
             log::info!(
@@ -183,6 +183,10 @@ impl Manager {
         let src_content  = settings.merged_dir().join(content);
         let src_aoc = settings.merged_dir().join(aoc);
         let (dest_content, dest_aoc) = config.final_output_paths(settings.current_mode.into());
+        if let Some(mod_manager) = self.mod_manager.upgrade() {
+            let mods: Vec<mods::Mod> = mod_manager.read().mods().collect();
+            crate::origin::write_list(&src_content, &profile, &mods);
+        }
 
         if util::is_symlink(&config.output) {
             log::info!("Removing old symlink deployment behavior");
@@ -259,7 +263,7 @@ impl Manager {
             }
 
             let log = self.pending_log.read();
-            log::debug!("Pending log:\n{:#?}", &log);
+            log::debug!("Pending log:\n{:#?}", log);
             log::info!("Deploying by {}", match method {
                 DeployMethod::Copy => "copy",
                 DeployMethod::HardLink => "hard links",
@@ -280,6 +284,18 @@ impl Manager {
                     log.aoc_copies.hard_link(&src_aoc, &dest_aoc)?;
                 },
                 DeployMethod::Symlink => unsafe { std::hint::unreachable_unchecked() },
+            }
+            let list = src_content.join(crate::origin::LIST_NAME);
+            let target = dest_content.join(crate::origin::LIST_NAME);
+            let copied = if list.is_file() {
+                fs::copy(&list, &target).map(|_| ())
+            } else if target.is_file() {
+                fs::remove_file(&target)
+            } else {
+                Ok(())
+            };
+            if let Err(e) = copied {
+                log::warn!("Could not update the list of mods in the deploy folder: {e}");
             }
 
             log::info!("Deployment complete");
@@ -314,8 +330,8 @@ impl Manager {
         }
         log::debug!(
             "Orphans to delete:\n{:#?}\n{:#?}",
-            &orphans_content,
-            &orphans_aoc
+            orphans_content,
+            orphans_aoc
         );
         manifest
             .content_files
@@ -323,8 +339,8 @@ impl Manager {
         manifest.aoc_files.retain(|f| !orphans_aoc.contains(f));
         let mut log = self.pending_log.write();
         log.extend_deletes(&Manifest {
-            content_files: orphans_content.iter().map(|s| s.clone()).collect(),
-            aoc_files: orphans_aoc.iter().map(|s| s.clone()).collect(),
+            content_files: orphans_content.iter().cloned().collect(),
+            aoc_files: orphans_aoc.iter().cloned().collect(),
         })?;
         let (content, dlc) = platform_prefixes(platform.into());
         for (dir, orphans) in [(content, orphans_content), (dlc, orphans_aoc)] {
@@ -358,7 +374,7 @@ impl Manager {
         game_romfs: Option<&Path>,
     ) -> Result<()> {
         static RSTB_PATH: &str = "System/Resource/ResourceSizeTable.product.srsizetable";
-        log::debug!("RSTB updates:\n{:#?}", &updates);
+        log::debug!("RSTB updates:\n{:#?}", updates);
         let content = uk_content::platform_content(platform.into());
         let table_path = merged.join(content).join(RSTB_PATH);
 
@@ -367,12 +383,21 @@ impl Manager {
         {
             let state_path = merged.join("savagewind-rstb-state");
             let state = crate::savage_wind::RawRstb::read(&state_path);
+            let (content_dir, dlc_dir) = platform_prefixes(platform.into());
+            let wanted: std::collections::HashSet<std::string::String> =
+                updates.iter().map(|e| e.key().to_string()).collect();
+            let estimates = crate::savage_wind::deployed_rstb_estimates(
+                &[(merged.join(content_dir), ""), (merged.join(dlc_dir), "Aoc/0010/")],
+                &wanted,
+            );
+            log::info!("ResourceSizeTable: {} of {} files sized from their deployed data", estimates.len(), wanted.len());
             let (state, deployed) = crate::savage_wind::overlay_rstb(
                 state,
                 &vanilla,
                 romfs,
                 updates.into_iter().map(|(name, size)| {
                     let sizes = uk_mod::unpack::RSTB_SIZE_HINTS.get(&name).map(|s| *s);
+                    let size = estimates.get(name.as_str()).copied().or(size);
                     (name.to_string(), size, sizes)
                 }),
             );
@@ -473,7 +498,7 @@ impl Manager {
                 &out_dir,
                 settings.current_mode,
             )?;
-            log::debug!("Change manifest: {:#?}", &manifest);
+            log::debug!("Change manifest: {:#?}", manifest);
             self.pending_log.write().extend_copies(&manifest)?;
             ModUnpacker::new(
                 dump.clone(),
@@ -485,6 +510,19 @@ impl Manager {
             .with_manifest(manifest)
         } else {
             log::info!("Manifest not provided, remerging all mods");
+            for m in mod_manager.read().mods().filter(|m| m.path.is_file() && !crate::slim::is_slim(&m.path)) {
+                match crate::slim::slim_mod(&m.path, &dump) {
+                    Ok(s) if s.total() > 0 => log::info!(
+                        "Removed what {} copies unchanged from the game: {} files, {} layout files, {} textures",
+                        m.meta.name,
+                        s.files,
+                        s.layout_files,
+                        s.textures
+                    ),
+                    Ok(_) => {}
+                    Err(e) => log::warn!("Could not remove unchanged game files from {}: {e:?}", m.meta.name),
+                }
+            }
             let mut total_manifest = Manifest::default();
             let mods = mod_manager
                 .read()
@@ -510,6 +548,14 @@ impl Manager {
             .without_version_files();
         log::info!("Applying changes");
         let rstb_updates = unpacker.unpack()?;
+        let (content_dir, dlc_dir) = platform_prefixes(settings.current_mode.into());
+        let repaired: usize = [content_dir, dlc_dir]
+            .iter()
+            .map(|d| crate::bfres::repair_switch_models(&out_dir.join(d).join("Model")))
+            .sum();
+        if repaired > 0 {
+            log::info!("{repaired} models had material textures that don't exist; repaired so the game doesn't crash");
+        }
         let game_romfs = crate::savage_wind::current_game_files(&settings)
             .ok()
             .map(|game| game.romfs);

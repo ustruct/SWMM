@@ -69,20 +69,21 @@ fn convert_inner(
     }
     let ext = extension(path);
     let file_name = name_of(path).to_lowercase();
-    if path.is_file() && (file_name == "rules.txt" || file_name == "info.json") {
-        if let Some(parent) = path.parent() {
+    if path.is_file() && (file_name == "rules.txt" || file_name == "info.json")
+        && let Some(parent) = path.parent() {
             return convert_inner(core, parent, meta, depth);
         }
-    }
     if path.is_file() {
         if ext == "bnp" {
             return crate::bnp::convert_bnp(core, path);
         }
         if ext == "zip" && ModReader::open_peek(path, vec![]).is_ok() {
-            return Ok(path.to_path_buf());
+            crate::origin::note_own_info();
+            crate::origin::note_kind(crate::origin::Kind::Packaged);
+            return switch_package(core, &extract_archive(path, &ext)?).map(|p| p.unwrap_or_else(|| path.to_path_buf()));
         }
     } else if is_ukmm_dir(path) {
-        return zip_folder(path);
+        return package(core, path);
     }
 
     let dir = if path.is_dir() {
@@ -101,7 +102,7 @@ fn convert_inner(
     let dirs = dirs_breadth_first(&dir);
     if let Some(found) = dirs.iter().find(|d| is_ukmm_dir(d)) {
         log::info!("Found a packaged mod at {}", found.display());
-        return zip_folder(found);
+        return package(core, found);
     }
     if let Some(found) = dirs.iter().find(|d| is_bnp_dir(d)) {
         log::info!("Found a BNP folder at {}", found.display());
@@ -116,13 +117,53 @@ fn convert_inner(
     let mut nested_error = None;
     for archive in files.iter().filter(|f| ARCHIVES.contains(&extension(f).as_str())) {
         log::info!("Trying archive {}", archive.display());
+        let before = crate::origin::snapshot();
         match convert_inner(core, archive, meta.clone(), depth + 1) {
             Ok(result) => return Ok(result),
             Err(e) => {
+                crate::origin::restore(before);
                 log::warn!("No mod in {}: {e:?}", archive.display());
                 nested_error = Some(e);
             }
         }
+    }
+
+    let has_switch_romfs = dirs.iter().any(|d| name_of(d).eq_ignore_ascii_case("romfs"));
+    if !has_switch_romfs && crate::wiiu::find(&dir).is_some() {
+        crate::origin::note_wiiu();
+        let out = util::get_temp_folder().to_path_buf();
+        let (content, aoc) = platform_prefixes(core.settings().current_mode.into());
+        let game = crate::savage_wind::current_game_files(&core.settings()).ok();
+        let report = crate::wiiu::convert_mod_with_game(
+            &dir,
+            &out.join(content),
+            &out.join(aoc),
+            game.as_ref().map(|g| g.romfs.as_path()),
+        )
+        .with_context(|| format!("Couldn't convert the Wii U mod in {}", path.display()))?;
+        crate::wiiu::record(&report);
+        log::info!("Converted {} Wii U files for Switch ({} textures)", report.converted, report.textures);
+        if report.stock > 0 {
+            log::info!("  {} unchanged copies of the game's files (physics, effects, shaders): the Switch game's used", report.stock);
+        }
+        for n in &report.notes {
+            log::info!("  {n}");
+        }
+        if !report.skipped.is_empty() {
+            let list: Vec<String> =
+                report.skipped.iter().take(40).map(|(f, why)| format!("  {f} ({why})")).collect();
+            log::warn!(
+                "{} files of this Wii U mod were left out, SWMM can't convert them yet:
+{}{}",
+                report.skipped.len(),
+                list.join("
+"),
+                if report.skipped.len() > 40 { "
+  ..." } else { "" }
+            );
+        }
+        let meta = meta.unwrap_or_else(|| named(find_meta(&dirs).unwrap_or_else(|| auto_meta(path, &dir)), path));
+        return convert_inner(core, &out, Some(meta), depth + 1);
     }
 
     let staged = util::get_temp_folder().to_path_buf();
@@ -145,10 +186,39 @@ fn convert_inner(
         );
     }
     log::info!("Staged {placed} game files from {}", dir.display());
+    if crate::wiiu::has_wiiu_files(&staged) {
+        log::info!("These game files are from the Wii U version, converting them for Switch");
+        let (content, aoc) = platform_prefixes(core.settings().current_mode.into());
+        let wiiu_dir = util::get_temp_folder().to_path_buf();
+        for (from, to) in [(staged.join(content), wiiu_dir.join("content")), (staged.join(aoc), wiiu_dir.join("aoc").join("0010"))] {
+            if from.is_dir() {
+                if let Some(parent) = to.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::rename(&from, &to)?;
+            }
+        }
+        let meta = meta.unwrap_or_else(|| named(find_meta(&dirs).unwrap_or_else(|| auto_meta(path, &dir)), path));
+        return convert_inner(core, &wiiu_dir, Some(meta), depth + 1);
+    }
+    crate::origin::note_kind(crate::origin::Kind::GameFiles);
+    if let Ok(game) = crate::savage_wind::current_game_files(&core.settings()) {
+        crate::rebase::rebase_tree(&staged, &[game.romfs.clone()])
+            .context("Failed to bring the mod's files to this version of the game")?;
+    }
 
     let meta = match meta {
-        Some(meta) => meta,
-        None => find_meta(&dirs).unwrap_or_else(|| auto_meta(path, &dir)),
+        Some(meta) => {
+            crate::origin::note_own_info();
+            meta
+        }
+        None => match find_meta(&dirs) {
+            Some(found) => {
+                crate::origin::note_own_info();
+                found
+            }
+            None => named(auto_meta(path, &dir), path),
+        },
     };
     let options = if meta.options.is_empty() { result.groups } else { meta.options.clone() };
     let meta = Meta {
@@ -162,9 +232,18 @@ fn convert_inner(
         .context("No game dump available. Choose savagewind.exe in Settings first.")?;
     let out = util::get_temp_folder().to_path_buf();
     let name = meta.name.clone();
-    ModPacker::new(&staged, &out, Some(meta), vec![dump])
+    let packed = ModPacker::new(&staged, &out, Some(meta), vec![dump])
         .with_context(|| format!("Failed to package {name}"))?
-        .pack()
+        .pack()?;
+    Ok(packed)
+}
+
+fn named(meta: Meta, path: &Path) -> Meta {
+    let stem = if path.is_dir() { path.file_name() } else { path.file_stem() };
+    match stem.and_then(|s| s.to_str()).map(str::trim) {
+        Some(n) if !n.is_empty() && !n.starts_with(".tmp") => Meta { name: n.into(), ..meta },
+        _ => meta,
+    }
 }
 
 fn find_meta(dirs: &[PathBuf]) -> Option<Meta> {
@@ -239,7 +318,7 @@ fn dirs_breadth_first(root: &Path) -> Vec<PathBuf> {
     out
 }
 
-fn files_in(root: &Path) -> Vec<PathBuf> {
+pub(crate) fn files_in(root: &Path) -> Vec<PathBuf> {
     let mut files: Vec<PathBuf> = jwalk::WalkDir::new(root)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -536,7 +615,7 @@ fn stage_variants(
     let mut base_count = 0;
     let mut options: Vec<ModOption> = Vec::new();
     let mut used = std::collections::HashSet::new();
-    for (_, (parts, sources)) in &variants {
+    for (parts, sources) in variants.values() {
         let name = label(parts);
         let lower = name.to_lowercase();
         let is_base = parts.len() <= common
@@ -661,12 +740,8 @@ fn unsupported_reason(dirs: &[PathBuf], files: &[PathBuf]) -> Option<&'static st
     let has_ext = |exts: &[&str]| files.iter().any(|f| exts.contains(&extension(f).as_str()));
     if has_ext(&["nsp", "xci", "nca", "nsz", "xcz"]) {
         Some("It contains a game or update dump (NSP/XCI/NCA), not a mod. Mods are made of game files such as Actor/Pack/... .")
-    } else if has_dir("exefs") || has_ext(&["ips", "pchtxt"]) {
-        Some("It only patches the game's code (exefs, IPS or pchtxt). Savage Wind runs its own recompiled code, so these patches can't apply. Look for a Savage Wind version of this mod or a setting in Savage Wind itself.")
-    } else if has_dir("cheats") {
-        Some("It only contains cheat codes, which Savage Wind can't use.")
-    } else if has_dir("content") || has_dir("aoc") {
-        Some("It's a Wii U mod (content/aoc folders). Wii U files don't work on Switch; look for the Switch version.")
+    } else if has_dir("exefs") || has_ext(&["ips", "pchtxt"]) || has_dir("cheats") {
+        Some("It only has code patches or cheats (ExeFS, IPS, pchtxt), which SWMM doesn't install. Only mods made of game files are supported.")
     } else if has_ext(&["tkcl"]) {
         Some("It's a Tears of the Kingdom mod (.tkcl), which doesn't work with Breath of the Wild.")
     } else {
@@ -762,14 +837,55 @@ fn external_extract(path: &Path, dest: &Path) -> bool {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x0800_0000);
         }
-        if let Ok(status) = command.status() {
-            if status.success() && fs::read_dir(dest).map(|mut d| d.next().is_some()).unwrap_or(false) {
+        if let Ok(status) = command.status()
+            && status.success() && fs::read_dir(dest).map(|mut d| d.next().is_some()).unwrap_or(false) {
                 log::info!("Extracted with {}", exe.display());
                 return true;
             }
-        }
     }
     false
+}
+
+fn package(core: &crate::core::Manager, dir: &Path) -> Result<PathBuf> {
+    crate::origin::note_own_info();
+    crate::origin::note_kind(crate::origin::Kind::Packaged);
+    match switch_package(core, dir)? {
+        Some(p) => Ok(p),
+        None => zip_folder(dir),
+    }
+}
+
+fn switch_package(core: &crate::core::Manager, dir: &Path) -> Result<Option<PathBuf>> {
+    let mode: Endian = core.settings().current_mode.into();
+    if mode != Endian::Little || !crate::wiiu_package::is_wiiu(dir) {
+        return Ok(None);
+    }
+    crate::origin::note_wiiu();
+    log::info!("Converting a UKMM package made for Wii U");
+    let game = crate::savage_wind::current_game_files(&core.settings()).ok();
+    let report = crate::wiiu_package::convert_dir(dir, game.as_ref().map(|g| g.romfs.as_path()))
+        .context("Couldn't convert the Wii U package")?;
+    crate::wiiu::record(&report);
+    log::info!("Converted {} Wii U files for Switch ({} textures)", report.converted, report.textures);
+    if report.stock > 0 {
+        log::info!("  {} unchanged copies of the game's files (physics, effects, shaders): the Switch game's used", report.stock);
+    }
+    for n in &report.notes {
+        log::info!("  {n}");
+    }
+    if !report.skipped.is_empty() {
+        let list: Vec<String> = report.skipped.iter().take(40).map(|(f, why)| format!("  {f} ({why})")).collect();
+        log::warn!(
+            "{} files of this Wii U mod were left out (the Switch game's own are used):
+{}{}",
+            report.skipped.len(),
+            list.join("
+"),
+            if report.skipped.len() > 40 { "
+  ..." } else { "" }
+        );
+    }
+    zip_folder(dir).map(Some)
 }
 
 fn zip_folder(dir: &Path) -> Result<PathBuf> {
@@ -791,4 +907,15 @@ fn zip_folder(dir: &Path) -> Result<PathBuf> {
     }
     writer.finish()?;
     Ok(out)
+}
+
+pub fn unpack(path: &Path) -> Result<PathBuf> {
+    if path.is_dir() {
+        return Ok(path.to_path_buf());
+    }
+    let ext = extension(path);
+    if ARCHIVES.contains(&ext.as_str()) {
+        return extract_archive(path, &ext);
+    }
+    Ok(path.to_path_buf())
 }

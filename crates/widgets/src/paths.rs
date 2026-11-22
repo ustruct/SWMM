@@ -76,8 +76,8 @@ impl PathNode {
                     ui.style()
                         .text_styles
                         .get(&egui::TextStyle::Body)
-                        .unwrap()
-                        .size,
+                        .map(|f| f.size)
+                        .unwrap_or(14.0),
                 ),
                 ..Default::default()
             });
@@ -112,8 +112,8 @@ impl PathNode {
                     ui.style()
                         .text_styles
                         .get(&egui::TextStyle::Body)
-                        .unwrap()
-                        .size,
+                        .map(|f| f.size)
+                        .unwrap_or(14.0),
                 ),
                 ..Default::default()
             });

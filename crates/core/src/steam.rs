@@ -123,11 +123,10 @@ fn steam_roots() -> Vec<PathBuf> {
         home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam"),
         home.join(".var/app/com.valvesoftware.Steam/data/Steam"),
     ] {
-        if let Ok(real) = candidate.canonicalize() {
-            if real.is_dir() && !roots.contains(&real) {
+        if let Ok(real) = candidate.canonicalize()
+            && real.is_dir() && !roots.contains(&real) {
                 roots.push(real);
             }
-        }
     }
     roots
 }

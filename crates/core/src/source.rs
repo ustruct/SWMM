@@ -82,23 +82,35 @@ fn set<T: for<'a> From<&'a str>>(field: &mut T, value: &str) {
     }
 }
 
-fn merge(mut meta: Meta, info: &SourceInfo) -> Meta {
+fn merge(mut meta: Meta, info: &SourceInfo, own: bool) -> Meta {
+    let url = info.url.trim();
+    if !url.is_empty() && (!own || meta.url.as_deref().is_none_or(|u| u.trim().is_empty())) {
+        meta.url = Some(url.into());
+    }
+    if own {
+        return meta;
+    }
     set(&mut meta.name, &info.name);
     set(&mut meta.author, &info.author);
     set(&mut meta.version, &info.version);
     set(&mut meta.description, &info.description);
-    if !info.url.trim().is_empty() {
-        meta.url = Some(info.url.trim().into());
-    }
     if let Some(category) = category(&info.category) {
         meta.category = category;
     }
     meta
 }
 
-pub fn apply(mod_path: &Path, info: &SourceInfo) -> Result<PathBuf> {
-    let meta = merge(Meta::from_mod(mod_path).context("Could not read the mod's details")?, info);
+pub fn apply(mod_path: &Path, info: &SourceInfo, own: bool) -> Result<PathBuf> {
+    let original = Meta::from_mod(mod_path).context("Could not read the mod's details")?;
+    let before = serde_yaml::to_string(&original)?;
+    let meta = merge(original, info, own);
+    let after = serde_yaml::to_string(&meta)?;
     let mut zip = zip::ZipArchive::new(BufReader::new(fs::File::open(mod_path)?))?;
+    let has_thumb = zip.file_names().any(|n| n.starts_with("thumb."));
+    let thumbnail = info.thumbnail.as_ref().filter(|_| !(own && has_thumb));
+    if before == after && thumbnail.is_none() {
+        return Ok(mod_path.to_path_buf());
+    }
     let out = util::get_temp_folder().join("mod.zip");
     let mut writer = zip::ZipWriter::new(fs::File::create(&out)?);
     let options =
@@ -106,18 +118,71 @@ pub fn apply(mod_path: &Path, info: &SourceInfo) -> Result<PathBuf> {
     for i in 0..zip.len() {
         let file = zip.by_index_raw(i)?;
         let name = file.name().to_string();
-        if name == "meta.yml" || (info.thumbnail.is_some() && name.starts_with("thumb.")) {
+        if name == "meta.yml" || (thumbnail.is_some() && name.starts_with("thumb.")) {
             continue;
         }
         writer.raw_copy_file(file)?;
     }
-    if let Some(thumbnail) = &info.thumbnail {
+    if let Some(thumbnail) = thumbnail {
         writer.start_file("thumb.jpg", options)?;
         writer.write_all(thumbnail)?;
     }
     writer.start_file("meta.yml", options)?;
-    writer.write_all(serde_yaml::to_string(&meta)?.as_bytes())?;
+    writer.write_all(after.as_bytes())?;
     writer.finish()?;
-    log::info!("Using the GameBanana details for {}", meta.name);
+    if own {
+        log::info!("Keeping {}'s own details", meta.name);
+    } else {
+        log::info!("Using the GameBanana details for {}", meta.name);
+    }
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn meta() -> Meta {
+        Meta {
+            api: "0.17.1".into(),
+            name: "Own name".into(),
+            version: "2.5".into(),
+            author: "me".into(),
+            category: ModCategory::Other,
+            description: "own text".into(),
+            platform: uk_mod::ModPlatform::Specific(uk_content::prelude::Endian::Little),
+            url: None,
+            options: vec![],
+            masters: Default::default(),
+        }
+    }
+
+    fn info() -> SourceInfo {
+        SourceInfo {
+            name: "Site name".into(),
+            author: "site".into(),
+            version: "9".into(),
+            category: "Animation".into(),
+            description: "site text".into(),
+            url: "https://gamebanana.com/mods/1".into(),
+            thumbnail: None,
+        }
+    }
+
+    #[test]
+    fn own_details_stay() {
+        let kept = merge(meta(), &info(), true);
+        assert_eq!(kept.name.as_str(), "Own name");
+        assert_eq!(kept.description.as_str(), "own text");
+        assert_eq!(kept.version.as_str(), "2.5");
+        assert_eq!(kept.url.as_deref(), Some("https://gamebanana.com/mods/1"));
+    }
+
+    #[test]
+    fn site_details_fill_generated_mods() {
+        let filled = merge(meta(), &info(), false);
+        assert_eq!(filled.name.as_str(), "Site name");
+        assert_eq!(filled.description.as_str(), "site text");
+        assert_eq!(filled.category, ModCategory::Animations);
+    }
 }

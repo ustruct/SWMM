@@ -187,19 +187,17 @@ pub struct PlatformSettings {
 }
 
 fn replace_in_file(path: &Path, from: &str, to: &str) {
-    if let Ok(text) = std::fs::read_to_string(path) {
-        if text.contains(from) {
+    if let Ok(text) = std::fs::read_to_string(path)
+        && text.contains(from) {
             let _ = std::fs::write(path, text.replace(from, to));
         }
-    }
 }
 
 fn move_into(src: &Path, dst: &Path) {
-    if !dst.exists() {
-        if std::fs::rename(src, dst).is_ok() {
+    if !dst.exists()
+        && std::fs::rename(src, dst).is_ok() {
             return;
         }
-    }
     if src.is_dir() && dst.is_dir() {
         if let Ok(entries) = std::fs::read_dir(src) {
             for entry in entries.flatten() {
@@ -277,10 +275,7 @@ fn default_storage() -> PathBuf {
 pub struct SavageWindSettings {
     pub executable: Option<PathBuf>,
     pub browse_gamebanana: bool,
-    pub cemuhook: bool,
-    pub cemuhook_server: std::string::String,
-    pub cemuhook_prefer: bool,
-    pub camera_sensitivity: u32,
+    pub backup_saves: bool,
 }
 
 impl Default for SavageWindSettings {
@@ -288,10 +283,7 @@ impl Default for SavageWindSettings {
         Self {
             executable: None,
             browse_gamebanana: true,
-            cemuhook: true,
-            cemuhook_server: "127.0.0.1:26760".into(),
-            cemuhook_prefer: false,
-            camera_sensitivity: 100,
+            backup_saves: true,
         }
     }
 }
