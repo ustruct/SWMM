@@ -561,14 +561,21 @@ fn fit_small_screen(ctx: &egui::Context) {
     let (monitor, inner) = ctx.input(|i| (i.viewport().monitor_size, i.viewport().inner_rect));
     let Some(monitor) = monitor.filter(|m| m.x > 0.0 && m.y > 0.0) else { return };
     let zoom = ctx.zoom_factor();
-    let fit = (monitor.x / MIN_WINDOW.x).min(monitor.y / MIN_WINDOW.y);
-    if fit < 0.99 || (zoom < 1.0 && fit > 1.01) {
-        let target = (zoom * fit).clamp(0.5, 1.0);
-        if (target - zoom).abs() > 0.005 {
-            ctx.set_zoom_factor(target);
-            ctx.request_repaint();
-            return;
-        }
+    let base_id = egui::Id::new("swmm_base_zoom");
+    let pending_id = egui::Id::new("swmm_zoom_pending");
+    let base = ctx.data_mut(|d| *d.get_temp_mut_or_insert_with(base_id, || zoom.max(0.5)));
+    if ctx.data(|d| d.get_temp::<egui::Vec2>(pending_id)) == Some(monitor) {
+        return;
+    }
+    ctx.data_mut(|d| d.remove::<egui::Vec2>(pending_id));
+    let unzoomed = monitor * zoom;
+    let fit = (unzoomed.x / MIN_WINDOW.x).min(unzoomed.y / MIN_WINDOW.y);
+    let target = fit.clamp(0.5, base);
+    if (target - zoom).abs() > 0.01 {
+        ctx.set_zoom_factor(target);
+        ctx.data_mut(|d| d.insert_temp(pending_id, monitor));
+        ctx.request_repaint();
+        return;
     }
     let Some(inner) = inner else { return };
     let id = egui::Id::new("swmm_fitted_monitor");

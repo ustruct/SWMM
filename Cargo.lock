@@ -5626,7 +5626,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-app"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "anyhow_ext",
@@ -5670,7 +5670,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "anyhow_ext",
@@ -5712,7 +5712,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-i18n"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "parking_lot",
  "serde",
@@ -5721,11 +5721,11 @@ dependencies = [
 
 [[package]]
 name = "swmm-loader"
-version = "0.1.4"
+version = "0.1.5"
 
 [[package]]
 name = "swmm-widgets"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "ab_glyph",
  "eframe",
