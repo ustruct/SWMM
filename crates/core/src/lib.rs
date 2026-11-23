@@ -3,8 +3,10 @@
 pub mod actor_size;
 pub mod bfres;
 pub mod bnp;
+pub mod cheats;
 pub mod compat;
 pub mod conflicts;
+pub mod control;
 pub mod crash;
 pub mod effect;
 pub mod core;
@@ -13,6 +15,7 @@ pub mod font;
 pub mod havok;
 pub mod import;
 pub mod layout;
+pub mod map;
 pub mod modpack;
 pub mod mods;
 pub mod origin;

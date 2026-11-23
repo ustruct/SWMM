@@ -4,7 +4,7 @@ description = "SWMM: mod manager for Savage Wind"
 authors = ["SWMM contributors"]
 edition = "2024"
 license = "GPL-3.0-or-later"
-version = "0.1.6"
+version = "0.1.7"
 rust-version = "1.85"
 default-run = "swmm"
 
@@ -48,7 +48,6 @@ swmm-core = { path = "../crates/core" }
 uk-mod = { workspace = true }
 swmm-widgets = { path = "../crates/widgets" }
 xflags = "0.3.1"
-gilrs = { version = "0.11", default-features = false, features = ["xinput"] }
 
 [build-dependencies]
 astrolabe = "0.5.2"

@@ -21,11 +21,12 @@ pub enum Page {
     Browse,
     Profiles,
     Compat,
+    Cheats,
     Settings,
 }
 
 impl Page {
-    pub const MAIN: [Page; 4] = [Page::Home, Page::Browse, Page::Profiles, Page::Compat];
+    pub const MAIN: [Page; 5] = [Page::Home, Page::Browse, Page::Profiles, Page::Compat, Page::Cheats];
 
     pub fn icon(self) -> Icon {
         match self {
@@ -33,6 +34,7 @@ impl Page {
             Page::Browse => Icon::Globe,
             Page::Profiles => Icon::People,
             Page::Compat => Icon::ListCheck,
+            Page::Cheats => Icon::Bolt,
             Page::Settings => Icon::Gear,
         }
     }
@@ -43,6 +45,7 @@ impl Page {
             Page::Browse => "SW_Page_Browse",
             Page::Profiles => "SW_Page_Profiles",
             Page::Compat => "SW_Page_Compat",
+            Page::Cheats => "SW_Page_Cheats",
             Page::Settings => "SW_Page_Settings",
         }
         .localize()
@@ -300,16 +303,6 @@ impl App {
                         ui.label(RichText::new("·").color(palette.muted));
                         ui.label(RichText::new(self.current_profile()).size(12.0).color(palette.muted));
                         ui.label(Icon::User.rich(10.0).color(palette.muted));
-                        if self.gamepad.connected() {
-                            ui.label(RichText::new("·").color(palette.muted));
-                            ui.add(
-                                egui::Label::new(
-                                    RichText::new("SW_Gamepad_Hint".localize()).size(12.0).color(palette.muted),
-                                )
-                                .truncate(),
-                            );
-                            ui.label(Icon::Gamepad.rich(11.0).color(palette.accent_text));
-                        }
                     });
                 });
             });
@@ -435,6 +428,10 @@ impl App {
                     Page::Compat => {
                         page_header(ui, page);
                         self.render_compat(ui);
+                    }
+                    Page::Cheats => {
+                        page_header(ui, page);
+                        self.render_cheats(ui);
                     }
                     Page::Settings => {
                         page_header(ui, page);

@@ -18,6 +18,10 @@ pub const OVERLAY_ENV: &str = "SAVAGEWIND_ROMFS_OVERLAY";
 
 pub const DATA_ROOT_ENV: &str = "SAVAGEWIND_DATA_ROOT";
 
+pub const CONTROL_ENV: &str = "SAVAGEWIND_CONTROL";
+
+pub const CONTROL_PORT: u16 = 47123;
+
 pub const SUPPORTED_VERSIONS: &[&str] = &["1.9.0", "1.8.2"];
 
 pub const AOC_MAX: usize = 8;
@@ -167,7 +171,7 @@ impl Search {
     }
 }
 
-fn running_executable() -> Option<PathBuf> {
+pub fn running_executable() -> Option<PathBuf> {
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
@@ -610,11 +614,69 @@ pub const LAUNCH_FLAGS: &str = "launch-flags.txt";
 const LAUNCH_FLAG_VALUE_MAX: usize = 127;
 const LAUNCH_FLAGS_HEADER: &str = "# Savage Wind launch options: environment flags set at every start. One NAME=value per line.\n";
 
-fn is_overlay_flag(line: &str) -> bool {
-    line.trim()
-        .split('=')
-        .next()
-        .is_some_and(|name| name.trim().eq_ignore_ascii_case(OVERLAY_ENV))
+fn flag_name(line: &str) -> Option<&str> {
+    let line = line.trim();
+    if line.starts_with('#') {
+        return None;
+    }
+    line.split('=').next().map(str::trim)
+}
+
+fn is_flag(line: &str, name: &str) -> bool {
+    flag_name(line).is_some_and(|n| n.eq_ignore_ascii_case(name))
+}
+
+fn flag_value<'a>(text: &'a str, name: &str) -> Option<&'a str> {
+    text.lines()
+        .filter(|l| is_flag(l, name))
+        .find_map(|l| l.split_once('=').map(|(_, v)| v.trim().trim_matches('"')))
+}
+
+fn port_value(value: &str) -> Option<u16> {
+    value.trim().parse::<u16>().ok().filter(|p| *p >= 1024)
+}
+
+pub fn control_port(settings: &Settings) -> u16 {
+    if let Some(port) = std::env::var(CONTROL_ENV).ok().as_deref().and_then(port_value) {
+        return port;
+    }
+    data_root(&settings.savage_wind)
+        .and_then(|root| std::fs::read_to_string(root.join(LAUNCH_FLAGS)).ok())
+        .and_then(|text| flag_value(&text, CONTROL_ENV).and_then(port_value))
+        .unwrap_or(CONTROL_PORT)
+}
+
+fn control_line(old: &str) -> std::string::String {
+    let port = flag_value(old, CONTROL_ENV).and_then(port_value).unwrap_or(CONTROL_PORT);
+    format!("{CONTROL_ENV}={port}")
+}
+
+fn write_launch_flags(
+    settings: &Settings,
+    names: &[&str],
+    lines: impl FnOnce(&str) -> Result<Vec<std::string::String>>,
+) -> Result<()> {
+    let root = data_root(&settings.savage_wind).context("Savage Wind's data folder isn't known")?;
+    let path = root.join(LAUNCH_FLAGS);
+    let old = std::fs::read_to_string(&path).unwrap_or_default();
+    let ours = lines(&old)?;
+    match launch_flags_text(&old, &ours, names) {
+        None => {
+            if path.exists() {
+                fs::remove_file(&path)?;
+            }
+        }
+        Some(text) if text != old => {
+            fs::create_dir_all(&root)?;
+            fs::write(&path, text)?;
+        }
+        Some(_) => {}
+    }
+    Ok(())
+}
+
+pub fn sync_control_flag(settings: &Settings) -> Result<()> {
+    write_launch_flags(settings, &[CONTROL_ENV], |old| Ok(vec![control_line(old)]))
 }
 
 fn flag_line(name: &str, dir: &Path) -> Result<std::string::String> {
@@ -629,30 +691,19 @@ fn flag_line(name: &str, dir: &Path) -> Result<std::string::String> {
 }
 
 pub fn sync_launch_flags(settings: &Settings, overlay: Option<&Path>) -> Result<bool> {
-    let root = data_root(&settings.savage_wind).context("Savage Wind's data folder isn't known")?;
-    let path = root.join(LAUNCH_FLAGS);
-    let old = std::fs::read_to_string(&path).unwrap_or_default();
-    let mut lines = Vec::new();
-    if let Some(dir) = overlay {
-        lines.push(flag_line(OVERLAY_ENV, dir)?);
-    }
-    match launch_flags_text(&old, &lines) {
-        None => {
-            if path.exists() {
-                fs::remove_file(&path)?;
-            }
+    write_launch_flags(settings, &[OVERLAY_ENV, CONTROL_ENV], |old| {
+        let mut lines = Vec::new();
+        if let Some(dir) = overlay {
+            lines.push(flag_line(OVERLAY_ENV, dir)?);
         }
-        Some(text) if text != old => {
-            fs::create_dir_all(&root)?;
-            fs::write(&path, text)?;
-        }
-        Some(_) => {}
-    }
-    Ok(!lines.is_empty())
+        lines.push(control_line(old));
+        Ok(lines)
+    })?;
+    Ok(overlay.is_some())
 }
 
-fn launch_flags_text(old: &str, ours: &[std::string::String]) -> Option<std::string::String> {
-    let mut lines: Vec<&str> = old.lines().filter(|l| !is_overlay_flag(l)).collect();
+fn launch_flags_text(old: &str, ours: &[std::string::String], names: &[&str]) -> Option<std::string::String> {
+    let mut lines: Vec<&str> = old.lines().filter(|l| !names.iter().any(|n| is_flag(l, n))).collect();
     lines.extend(ours.iter().map(std::string::String::as_str));
     if !lines.iter().any(|l| !l.trim().is_empty() && !l.trim_start().starts_with('#')) {
         return None;
@@ -673,6 +724,9 @@ pub fn sync_loader(settings: &Settings) -> Result<std::string::String> {
             true => "Savage Wind loads the mods however it's started".into(),
             false => "Mods are off when Savage Wind is started on its own".into(),
         });
+    }
+    if let Err(e) = sync_control_flag(settings) {
+        log::warn!("Couldn't update Savage Wind's launch options: {e:?}");
     }
     let dir = game_dir(settings).context("Savage Wind's executable isn't set")?;
     for name in LEGACY_LOADER_FILES {
@@ -859,6 +913,12 @@ pub fn launch_command(settings: &Settings) -> Result<Command> {
         }
     }
 
+    if std::env::var_os(CONTROL_ENV).is_none() {
+        if let Err(e) = sync_control_flag(settings) {
+            log::warn!("Couldn't update Savage Wind's launch options: {e:?}");
+        }
+        command.env(CONTROL_ENV, control_port(settings).to_string());
+    }
     command.env("SWMM_LAUNCHED", "1");
     Ok(command)
 }
@@ -1398,12 +1458,31 @@ mod tests {
     #[test]
     fn launch_flags() {
         let line = "SAVAGEWIND_ROMFS_OVERLAY=/home/deck/.local/share/SWMM/overlay".to_string();
-        let new = launch_flags_text("", std::slice::from_ref(&line)).unwrap();
+        let both = [OVERLAY_ENV, CONTROL_ENV];
+        let new = launch_flags_text("", std::slice::from_ref(&line), &both).unwrap();
         assert!(new.starts_with('#') && new.ends_with(&format!("{line}\n")));
-        let kept = launch_flags_text("# mine\nSAVAGEWIND_SCALE=2\nsavagewind_romfs_overlay = /old\n", std::slice::from_ref(&line)).unwrap();
+        let kept = launch_flags_text(
+            "# mine\nSAVAGEWIND_SCALE=2\nsavagewind_romfs_overlay = /old\n",
+            std::slice::from_ref(&line),
+            &both,
+        )
+        .unwrap();
         assert_eq!(kept, format!("# mine\nSAVAGEWIND_SCALE=2\n{line}\n"));
-        assert_eq!(launch_flags_text(&new, &[]), None);
-        assert_eq!(launch_flags_text("SAVAGEWIND_SCALE=2\nSAVAGEWIND_ROMFS_OVERLAY=/x\n", &[]).unwrap(), "SAVAGEWIND_SCALE=2\n");
+        assert_eq!(launch_flags_text(&new, &[], &both), None);
+        assert_eq!(
+            launch_flags_text("SAVAGEWIND_SCALE=2\nSAVAGEWIND_ROMFS_OVERLAY=/x\n", &[], &both).unwrap(),
+            "SAVAGEWIND_SCALE=2\n"
+        );
+        assert_eq!(control_line("SAVAGEWIND_CONTROL=50000\n"), "SAVAGEWIND_CONTROL=50000");
+        assert_eq!(control_line("SAVAGEWIND_CONTROL=1\n"), format!("SAVAGEWIND_CONTROL={CONTROL_PORT}"));
+        let only_control = launch_flags_text(
+            "SAVAGEWIND_ROMFS_OVERLAY=/x\nSAVAGEWIND_CONTROL=50000\n",
+            &[control_line("")],
+            &[CONTROL_ENV],
+        )
+        .unwrap();
+        assert_eq!(only_control, format!("SAVAGEWIND_ROMFS_OVERLAY=/x\nSAVAGEWIND_CONTROL={CONTROL_PORT}\n"));
+        assert_eq!(flag_value("# SAVAGEWIND_CONTROL=9\nsavagewind_control = \"6000\"\n", CONTROL_ENV), Some("6000"));
     }
 
     #[test]

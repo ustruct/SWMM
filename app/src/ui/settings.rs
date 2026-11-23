@@ -14,10 +14,10 @@ use swmm_widgets::{
 
 use super::{chrome, App, Message};
 
-const MAX_WIDTH: f32 = 760.0;
+pub(super) const MAX_WIDTH: f32 = 760.0;
 const ROW_PADDING: f32 = 16.0;
 
-struct Group<'a> {
+pub(super) struct Group<'a> {
     ui: &'a mut Ui,
     rows: usize,
 }
@@ -36,7 +36,7 @@ impl Group<'_> {
         self.rows += 1;
     }
 
-    fn row(&mut self, label: &str, hint: &str, control_width: f32, add: impl FnOnce(&mut Ui)) {
+    pub(super) fn row(&mut self, label: &str, hint: &str, control_width: f32, add: impl FnOnce(&mut Ui)) {
         self.separator();
         let ui = &mut *self.ui;
         let palette = visuals::palette(ui);
@@ -73,12 +73,11 @@ impl Group<'_> {
             pos2(rect.right() - ROW_PADDING - control_width, rect.top()),
             pos2(rect.right() - ROW_PADDING, rect.bottom()),
         );
-        ui.allocate_ui_at_rect(control, |ui| {
-            ui.with_layout(Layout::right_to_left(Align::Center), add);
-        });
+        let mut child = ui.child_ui(control, Layout::right_to_left(Align::Center), None);
+        add(&mut child);
     }
 
-    fn block(&mut self, add: impl FnOnce(&mut Ui)) {
+    pub(super) fn block(&mut self, add: impl FnOnce(&mut Ui)) {
         self.separator();
         egui::Frame::none()
             .inner_margin(Margin::symmetric(ROW_PADDING, 12.0))
@@ -89,7 +88,7 @@ impl Group<'_> {
     }
 }
 
-fn group(ui: &mut Ui, title: &str, add: impl FnOnce(&mut Group)) {
+pub(super) fn group(ui: &mut Ui, title: &str, add: impl FnOnce(&mut Group)) {
     let palette = visuals::palette(ui);
     ui.add_space(2.0);
     ui.label(RichText::new(title).size(13.0).strong().color(palette.muted));
@@ -130,7 +129,7 @@ fn path_field(ui: &mut Ui, value: &mut Option<PathBuf>, folder: bool, hint: &str
     });
 }
 
-fn toggle(ui: &mut Ui, on: &mut bool) -> egui::Response {
+pub(super) fn toggle(ui: &mut Ui, on: &mut bool) -> egui::Response {
     let (rect, mut response) = ui.allocate_exact_size(Vec2::new(40.0, 20.0), Sense::click());
     if response.clicked() {
         *on = !*on;

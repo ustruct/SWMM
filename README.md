@@ -29,6 +29,9 @@
 - **Browse GameBanana** for Switch or Wii U mods and install them without leaving the app.
 - **Wii U mods work too.** They're converted for Switch when you add them. See [Wii U mods](#wii-u-mods) below.
 - **One click to play.** SWMM finds Savage Wind for you and never touches your game files.
+- **Cheats.** Infinite hearts, stamina, arrows and rupees, durability and weather, on
+  the Cheats page. They're Savage Wind's own cheats, so they work on game versions 1.8.2 and 1.9.0, and they change
+  while you play. With a save loaded you can also set the time, fly and teleport by clicking a map.
 
 ### Use many mods together
 
@@ -49,8 +52,6 @@
 
 ### Made for every screen
 
-- **Controller support** on gamepads and Steam Deck: D-pad to pick a mod, A to toggle it, X to play, Y to apply,
-  LB/RB to switch pages, LT/RT to move a mod, B to go back.
 - **Fits small screens** such as the Steam Deck in Game Mode.
 - **Dark and light themes** in 10 languages.
 
@@ -90,15 +91,12 @@ options on Linux and Steam Deck, so Steam shortcuts and Game Mode work too.
 ## Not supported
 
 SWMM only installs mods made of game files. Code patches (ExeFS, `.ips`, `.pchtxt`), code plugins (exlaunch, skyline)
-and cheats aren't installed. A mod that has both gets its game files installed.
+and cheat code files (Atmosphère `.txt`) aren't installed; use the Cheats page instead. A mod that has both gets its game files installed.
 
 ## Building
 
 Install [Rust](https://rustup.rs), then run `build-windows.bat` on Windows or `build.sh` on Linux. The finished app is
 placed in the `dist` folder.
-
-On Linux, controller support needs the udev development files (`libudev-dev` on Debian and Ubuntu, `systemd-devel` on
-Fedora).
 
 ## License and credits
 

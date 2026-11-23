@@ -379,6 +379,9 @@ pub fn after_deploy(core: &Manager) {
 }
 
 pub fn launch_savage_wind(core: &Manager, mods: Vec<Mod>, dirty: Manifest) -> Result<Message> {
+    if swmm_core::cheats::game_running() {
+        anyhow_ext::bail!("Savage Wind is already running. Close it before starting it again.");
+    }
     if !dirty.is_empty() {
         log::info!("Applying pending changes before starting Savage Wind");
         apply_changes(core, mods, Some(dirty))?;

@@ -114,14 +114,6 @@ impl App {
                     let id = Id::new(("modRow", mod_.hash()));
                     let place = rect.top() - origin;
                     let slid = ui.ctx().animate_value_with_time(id.with("slot"), place, 0.24);
-                    if self.selected.contains(&mod_)
-                        && ui
-                            .ctx()
-                            .data_mut(|d| d.remove_temp::<bool>(Id::new(super::gamepad::SCROLL_TO_SELECTED)))
-                            .unwrap_or(false)
-                    {
-                        ui.scroll_to_rect(rect, Some(egui::Align::Center));
-                    }
                     if !ui.is_rect_visible(rect) {
                         continue;
                     }

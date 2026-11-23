@@ -1,14 +1,15 @@
 mod actions;
+mod cheats;
 mod chrome;
 mod compat;
 mod conflicts;
 mod crash;
 mod dialogs;
 mod frame;
-mod gamepad;
 mod intro;
 mod browser;
 pub(crate) mod jobs;
+mod map_view;
 mod menus;
 mod mod_info;
 mod mod_list;
@@ -232,6 +233,7 @@ pub struct App {
     page: Page,
     browser: RefCell<browser::BrowserState>,
     compat: RefCell<compat::CompatState>,
+    cheats: RefCell<cheats::CheatsState>,
     game_status: frame::GameStatus,
     focused: FocusedPane,
     error: Option<anyhow_ext::Error>,
@@ -252,7 +254,6 @@ pub struct App {
     crash: Option<Box<swmm_core::crash::CrashReport>>,
     conflicts: RefCell<conflicts::ConflictCache>,
     saves: RefCell<Option<(f64, Vec<swmm_core::saves::Backup>)>>,
-    gamepad: gamepad::Gamepad,
     last_panic: Option<String>,
     pending_update: Option<Box<updater::Release>>,
     after_exit: Option<updater::Finish>,
@@ -342,6 +343,7 @@ impl App {
             page: Page::Home,
             browser: RefCell::new(browser::BrowserState::default()),
             compat: Default::default(),
+            cheats: Default::default(),
             game_status: frame::GameStatus::check(&core),
             focused: FocusedPane::None,
             error: None,
@@ -356,7 +358,6 @@ impl App {
             crash: None,
             conflicts: Default::default(),
             saves: Default::default(),
-            gamepad: gamepad::Gamepad::new(),
             toasts: egui_notify::Toasts::new().with_anchor(egui_notify::Anchor::BottomRight),
             theme: ui_state.theme,
             install_queue: Default::default(),
@@ -517,10 +518,6 @@ impl eframe::App for App {
         }
     }
 
-    fn raw_input_hook(&mut self, _ctx: &egui::Context, raw_input: &mut egui::RawInput) {
-        self.gamepad.inject(raw_input);
-    }
-
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         [0.0, 0.0, 0.0, 0.0]
     }
@@ -537,7 +534,6 @@ impl eframe::App for App {
 impl App {
     fn draw(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         self.handle_update(ctx, frame);
-        self.poll_gamepad(ctx);
         fit_small_screen(ctx);
         let minimized = ctx.input(|i| i.viewport().minimized.unwrap_or(false));
         let size = ctx.screen_rect().size();
@@ -553,18 +549,7 @@ impl App {
         self.render_status_bar(ctx);
         self.render_nav(ctx);
         self.render_page(ctx);
-        chrome::paint_modal_dim(ctx, self.modal_open());
-        self.render_error(ctx);
-        self.render_confirm(ctx);
-        self.render_new_profile(ctx);
-        self.render_about(ctx);
-        self.render_licenses(ctx);
-        self.render_option_picker(ctx);
-        self.render_changelog(ctx);
-        self.render_crash(ctx);
-        self.meta_input.ui(ctx);
-        self.render_busy(ctx, frame);
-        self.toasts.show(ctx);
+        self.render_dialogs(ctx, frame);
         let hovering_files = ctx.input(|i| !i.raw.hovered_files.is_empty());
         chrome::paint_drop_overlay(ctx, hovering_files && !self.modal_open());
         if self.theme_fade.as_ref().is_some_and(|fade| !fade.paint(ctx)) {
@@ -587,6 +572,21 @@ impl App {
             ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(false));
         }
         chrome::handle_resize(ctx);
+    }
+
+    fn render_dialogs(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
+        chrome::paint_modal_dim(ctx, self.modal_open());
+        self.render_error(ctx);
+        self.render_confirm(ctx);
+        self.render_new_profile(ctx);
+        self.render_about(ctx);
+        self.render_licenses(ctx);
+        self.render_option_picker(ctx);
+        self.render_changelog(ctx);
+        self.render_crash(ctx);
+        self.meta_input.ui(ctx);
+        self.render_busy(ctx, frame);
+        self.toasts.show(ctx);
     }
 }
 
@@ -651,7 +651,7 @@ pub fn main() -> Result<(), eframe::Error> {
                 title: Some("Savage Wind Mod Manager".into()),
                 app_id: Some("swmm".into()),
                 decorations: Some(false),
-                transparent: Some(!cfg!(windows)),
+                transparent: Some(true),
                 resizable: Some(true),
                 min_inner_size: Some(MIN_WINDOW),
                 inner_size: Some(egui::Vec2::new(1180.0, 740.0)),
