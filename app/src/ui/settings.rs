@@ -278,6 +278,11 @@ impl App {
                 ui.label(RichText::new("SW_Settings_Exe".localize()).color(palette.text));
                 ui.add_space(6.0);
                 path_field(ui, &mut config.executable, false, "savagewind.exe");
+                ui.add_space(12.0);
+                ui.label(RichText::new("SW_Settings_DataDir".localize()).color(palette.text));
+                ui.label(RichText::new("SW_Settings_DataDir_Desc".localize()).size(12.0).color(palette.muted));
+                ui.add_space(6.0);
+                path_field(ui, &mut config.data_dir, true, &"SW_Settings_DataDir_Hint".localize());
             });
         });
     }

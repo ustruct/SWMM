@@ -326,6 +326,9 @@ pub fn data_root(config: &SavageWindSettings) -> Option<PathBuf> {
     if let Some(root) = std::env::var_os(DATA_ROOT_ENV).filter(|v| !v.is_empty()) {
         return Some(PathBuf::from(root));
     }
+    if let Some(dir) = config.data_dir.as_ref().filter(|p| !p.as_os_str().is_empty()) {
+        return Some(dir.clone());
+    }
     let exe_dir = config
         .executable
         .as_ref()
@@ -347,12 +350,24 @@ pub fn data_root(config: &SavageWindSettings) -> Option<PathBuf> {
     #[cfg(all(unix, not(target_os = "macos")))]
     {
         let _ = exe_dir;
+        if let Some(home) = config.executable.as_deref().and_then(appimage_portable_home) {
+            return Some(home.join(".local/share/savagewind"));
+        }
         std::env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
             .filter(|p| p.is_absolute())
             .or_else(|| dirs2::home_dir().map(|h| h.join(".local/share")))
             .map(|d| d.join("savagewind"))
     }
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn appimage_portable_home(exe: &Path) -> Option<PathBuf> {
+    let name = exe.file_name()?.to_str()?;
+    if !name.to_ascii_lowercase().ends_with(".appimage") {
+        return None;
+    }
+    Some(exe.with_file_name(format!("{name}.home"))).filter(|home| home.is_dir())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -441,7 +456,7 @@ pub fn game_files(data_root: &Path) -> Result<GameFiles> {
 
 pub fn current_game_files(settings: &Settings) -> Result<GameFiles> {
     let root = data_root(&settings.savage_wind)
-        .context("Savage Wind's data folder is unknown. Choose savagewind.exe in Settings first.")?;
+        .context("Savage Wind's data folder is unknown. Choose savagewind.exe or the game data folder in Settings first.")?;
     game_files(&root)
 }
 
@@ -1526,5 +1541,33 @@ mod tests {
             assert!(check_program(&fake).is_ok());
             std::fs::remove_dir_all(&dir).unwrap();
         }
+    }
+
+    #[test]
+    fn data_dir_override() {
+        let config = SavageWindSettings {
+            data_dir: Some(PathBuf::from("/GAMES/savagewind")),
+            ..Default::default()
+        };
+        if std::env::var_os(DATA_ROOT_ENV).is_none() {
+            assert_eq!(data_root(&config), Some(PathBuf::from("/GAMES/savagewind")));
+        }
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    #[test]
+    fn appimage_home() {
+        let dir = std::env::temp_dir().join(format!("swmm-appimage-{}", std::process::id()));
+        let exe = dir.join("Savage_Wind-x86_64.AppImage");
+        assert_eq!(appimage_portable_home(&exe), None);
+        let home = dir.join("Savage_Wind-x86_64.AppImage.home");
+        std::fs::create_dir_all(&home).unwrap();
+        assert_eq!(appimage_portable_home(&exe), Some(home.clone()));
+        let config = SavageWindSettings { executable: Some(exe), ..Default::default() };
+        if std::env::var_os(DATA_ROOT_ENV).is_none() {
+            assert_eq!(data_root(&config), Some(home.join(".local/share/savagewind")));
+        }
+        assert_eq!(appimage_portable_home(&dir.join("savagewind")), None);
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

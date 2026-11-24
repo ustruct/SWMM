@@ -274,6 +274,7 @@ fn default_storage() -> PathBuf {
 #[serde(default)]
 pub struct SavageWindSettings {
     pub executable: Option<PathBuf>,
+    pub data_dir: Option<PathBuf>,
     pub browse_gamebanana: bool,
     pub backup_saves: bool,
 }
@@ -282,6 +283,7 @@ impl Default for SavageWindSettings {
     fn default() -> Self {
         Self {
             executable: None,
+            data_dir: None,
             browse_gamebanana: true,
             backup_saves: true,
         }

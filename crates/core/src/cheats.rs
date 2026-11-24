@@ -258,7 +258,7 @@ pub fn save_to(path: &Path, cheats: &Cheats) -> Result<()> {
 
 pub fn load(settings: &Settings) -> Result<(PathBuf, Cheats)> {
     let path = settings_file(settings)
-        .context("Savage Wind's data folder is unknown. Choose savagewind.exe in Settings first.")?;
+        .context("Savage Wind's data folder is unknown. Choose savagewind.exe or the game data folder in Settings first.")?;
     let cheats = load_from(&path)?;
     Ok((path, cheats))
 }
