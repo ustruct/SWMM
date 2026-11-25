@@ -229,6 +229,7 @@
   "SW_Config_Opened": "De Savage Wind-configuratie is geopend met je mods geplaatst",
   "SW_Notice_WiiU": "omgezet vanaf Wii U. Sommige delen werken misschien niet.",
   "SW_Notice_Version": "gemaakt voor een oudere spelversie. SWMM heeft hem aangepast aan de jouwe.",
+  "SW_Notice_CodePatches": "bevat codepatches die Savage Wind niet kan uitvoeren.",
   "Browse_Compat_Full": "Wordt volledig omgezet",
   "Browse_Compat_Partial": "Wordt deels omgezet",
   "Browse_Compat_Failed": "Wordt niet omgezet",

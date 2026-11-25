@@ -186,6 +186,14 @@ fn convert_inner(
         );
     }
     log::info!("Staged {placed} game files from {}", dir.display());
+    if has_code_patches(&dirs, &files) {
+        log::warn!(
+            "{} also has code patches (ExeFS, IPS or pchtxt). Savage Wind can't run code made for the Switch, so \
+             only its game files are installed. Anything that relies on those patches won't work.",
+            path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
+        );
+        crate::origin::note_code_patches();
+    }
     if crate::wiiu::has_wiiu_files(&staged) {
         log::info!("These game files are from the Wii U version, converting them for Switch");
         let (content, aoc) = platform_prefixes(core.settings().current_mode.into());
@@ -735,6 +743,11 @@ fn stage_loose_files(
     Ok(count)
 }
 
+fn has_code_patches(dirs: &[PathBuf], files: &[PathBuf]) -> bool {
+    dirs.iter().any(|d| name_of(d).eq_ignore_ascii_case("exefs"))
+        || files.iter().any(|f| matches!(extension(f).as_str(), "ips" | "pchtxt"))
+}
+
 fn unsupported_reason(dirs: &[PathBuf], files: &[PathBuf]) -> Option<&'static str> {
     let has_dir = |name: &str| dirs.iter().any(|d| name_of(d).eq_ignore_ascii_case(name));
     let has_ext = |exts: &[&str]| files.iter().any(|f| exts.contains(&extension(f).as_str()));
@@ -918,4 +931,27 @@ pub fn unpack(path: &Path) -> Result<PathBuf> {
         return extract_archive(path, &ext);
     }
     Ok(path.to_path_buf())
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn code_patches_are_noticed_next_to_game_files() {
+        let dirs = vec![
+            PathBuf::from("Arabic_Hesham"),
+            PathBuf::from("Arabic_Hesham/exefs"),
+            PathBuf::from("Arabic_Hesham/romfs"),
+        ];
+        let files = vec![PathBuf::from("Arabic_Hesham/romfs/Font/Font_US.sbfarc")];
+        assert!(has_code_patches(&dirs, &files));
+
+        let ips = vec![PathBuf::from("mod/CD57B23FA4BBAD65803D9788C01821EE.IPS")];
+        assert!(has_code_patches(&[], &ips));
+
+        let romfs_only = vec![PathBuf::from("mod/romfs"), PathBuf::from("mod/romfs/Pack")];
+        assert!(!has_code_patches(&romfs_only, &files));
+    }
 }

@@ -119,6 +119,7 @@ pub struct Notes {
     pub own_info: bool,
     pub kind: Option<Kind>,
     pub rebased: bool,
+    pub code_patches: bool,
 }
 
 impl Notes {
@@ -131,7 +132,7 @@ impl Notes {
 }
 
 thread_local! {
-    static NOTES: Cell<Notes> = const { Cell::new(Notes { wiiu: false, own_info: false, kind: None, rebased: false }) };
+    static NOTES: Cell<Notes> = const { Cell::new(Notes { wiiu: false, own_info: false, kind: None, rebased: false, code_patches: false }) };
 }
 
 pub fn reset() {
@@ -160,6 +161,10 @@ pub fn note_own_info() {
 
 pub fn note_rebased() {
     NOTES.with(|n| n.set(Notes { rebased: true, ..n.get() }));
+}
+
+pub fn note_code_patches() {
+    NOTES.with(|n| n.set(Notes { code_patches: true, ..n.get() }));
 }
 
 pub fn note_kind(kind: Kind) {

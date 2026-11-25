@@ -131,6 +131,12 @@ impl Runner {
         if converted.rebased {
             println!("{} was made for another version of the game. Its lists of actors, flags and texts were moved to this version.", mod_.meta.name);
         }
+        if converted.code_patches {
+            println!(
+                "{} also has code patches (ExeFS, IPS or pchtxt). Savage Wind can't run them, so only its game files are installed and anything that needs those patches won't work.",
+                mod_.meta.name
+            );
+        }
         println!("Installing {}...", mod_.meta.name);
         let _ = ModReader::open_peek(&mod_.path, vec![]).context("Failed to open the converted mod")?;
         Ok(Some(mod_.path))

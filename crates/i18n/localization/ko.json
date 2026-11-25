@@ -229,6 +229,7 @@
   "SW_Config_Opened": "모드를 적용한 상태로 Savage Wind 설정을 열었습니다",
   "SW_Notice_WiiU": "Wii U에서 변환했습니다. 일부가 작동하지 않을 수 있습니다.",
   "SW_Notice_Version": "이전 게임 버전용 모드입니다. SWMM이 현재 버전에 맞췄습니다.",
+  "SW_Notice_CodePatches": "Savage Wind에서 실행할 수 없는 코드 패치가 있습니다.",
   "Browse_Compat_Full": "완전히 변환됨",
   "Browse_Compat_Partial": "일부만 변환됨",
   "Browse_Compat_Failed": "변환되지 않음",

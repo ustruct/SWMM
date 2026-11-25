@@ -229,6 +229,7 @@
   "SW_Config_Opened": "已在应用你的模组后打开 Savage Wind 设置",
   "SW_Notice_WiiU": "已从 Wii U 转换。部分内容可能无法使用。",
   "SW_Notice_Version": "为旧版游戏制作。SWMM 已将其适配到你的版本。",
+  "SW_Notice_CodePatches": "包含 Savage Wind 无法运行的代码补丁。",
   "Browse_Compat_Full": "可完整转换",
   "Browse_Compat_Partial": "可部分转换",
   "Browse_Compat_Failed": "无法转换",

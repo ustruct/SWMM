@@ -191,11 +191,12 @@ pub fn open_downloaded_mod(
 pub struct Converted {
     pub wiiu: bool,
     pub rebased: bool,
+    pub code_patches: bool,
 }
 
 pub fn read_for_install(core: &Manager, path: &Path) -> Result<(Mod, Converted)> {
     let (mod_, notes) = read_mod(core, path, None)?;
-    Ok((mod_, Converted { wiiu: notes.wiiu, rebased: notes.rebased }))
+    Ok((mod_, Converted { wiiu: notes.wiiu, rebased: notes.rebased, code_patches: notes.code_patches }))
 }
 
 fn read_mod(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<(Mod, Notes)> {
@@ -215,6 +216,9 @@ fn read_mod(core: &Manager, path: &Path, meta: Option<Meta>) -> Result<(Mod, Not
         }
         if notes.rebased {
             send_message(Message::Toast(format!("{}: {}", mod_.meta.name, "SW_Notice_Version".localize())));
+        }
+        if notes.code_patches {
+            send_message(Message::Toast(format!("{}: {}", mod_.meta.name, "SW_Notice_CodePatches".localize())));
         }
     }
     swmm_core::util::end_temp_scope(result.as_ref().ok().map(|m| m.path.as_path()));

@@ -229,6 +229,7 @@
   "SW_Config_Opened": "Die Savage-Wind-Konfiguration wurde geöffnet, deine Mods sind bereitgestellt",
   "SW_Notice_WiiU": "von Wii U umgewandelt. Manche Teile funktionieren eventuell nicht.",
   "SW_Notice_Version": "für eine ältere Spielversion gemacht. SWMM hat sie an deine angepasst.",
+  "SW_Notice_CodePatches": "hat Code-Patches, die Savage Wind nicht ausführen kann.",
   "Browse_Compat_Full": "Wird vollständig konvertiert",
   "Browse_Compat_Partial": "Wird teilweise konvertiert",
   "Browse_Compat_Failed": "Lässt sich nicht konvertieren",
