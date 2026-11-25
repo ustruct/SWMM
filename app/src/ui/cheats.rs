@@ -22,6 +22,7 @@ use super::{
 const POLL: Duration = Duration::from_millis(1200);
 const PROCESS_CHECK: Duration = Duration::from_secs(5);
 const VISIBLE_FOR: Duration = Duration::from_secs(4);
+const TELEPORT_AIR_HEIGHT: f32 = 30.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum Link {
@@ -569,6 +570,7 @@ impl App {
                             state.target = Some(player);
                         }
                         if go && let Some([x, y, z]) = state.target {
+                            let y = y + TELEPORT_AIR_HEIGHT;
                             state.command(
                                 format!("teleport {x:.1} {y:.1} {z:.1}"),
                                 "Cheats_Teleport_Done"
