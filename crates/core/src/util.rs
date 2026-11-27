@@ -39,12 +39,53 @@ pub fn remove_dir_all(dir: impl AsRef<std::path::Path>) -> anyhow_ext::Result<()
             return Ok(());
         }
         #[cfg(windows)]
-        remove_dir_all::remove_dir_all(dir).with_context(|| dir.to_string_lossy().to_string())?;
+        {
+            let mut result = remove_dir_all::remove_dir_all(dir);
+            for attempt in 1..=6 {
+                if result.is_ok() || std::fs::symlink_metadata(dir).is_err() {
+                    return Ok(());
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100 * attempt));
+                result = remove_dir_all::remove_dir_all(dir);
+            }
+            if let Err(e) = result {
+                if std::fs::symlink_metadata(dir).is_err() {
+                    return Ok(());
+                }
+                if move_aside(dir) {
+                    log::warn!(
+                        "{} couldn't be deleted ({e}), moved it to the temporary folder instead",
+                        dir.display()
+                    );
+                    return Ok(());
+                }
+                return Err(e).with_context(|| dir.to_string_lossy().to_string());
+            }
+        }
         #[cfg(not(windows))]
         fs_err::remove_dir_all(dir)?;
         Ok(())
     }
     inner(dir.as_ref())
+}
+
+#[cfg(windows)]
+fn move_aside(dir: &Path) -> bool {
+    let root = temp_root();
+    if dir.starts_with(&root) {
+        return false;
+    }
+    let Ok(target) = tempfile::Builder::new().prefix(TEMP_PREFIX).tempdir_in(&root) else {
+        return false;
+    };
+    let target = target.keep();
+    let dest = target.join("removed");
+    if std::fs::rename(dir, &dest).is_err() {
+        std::fs::remove_dir(&target).unwrap_or(());
+        return false;
+    }
+    remove_dir_all::remove_dir_all(&target).unwrap_or(());
+    true
 }
 
 #[inline(always)]
