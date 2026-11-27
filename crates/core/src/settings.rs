@@ -262,7 +262,7 @@ fn migrate_legacy_folders() {
 }
 
 #[inline]
-fn default_storage() -> PathBuf {
+pub fn default_storage() -> PathBuf {
     if std::env::args().any(|a| a == "--portable") {
         std::env::current_exe().unwrap().with_file_name("data")
     } else {

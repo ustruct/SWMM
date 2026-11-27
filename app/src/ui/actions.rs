@@ -604,6 +604,10 @@ impl App {
                 }
                 Message::SaveSettings => {
                     let mut needs_reset = false;
+                    let old_storage = self.core.settings().storage_dir.clone();
+                    if old_storage != self.temp_settings.storage_dir {
+                        swmm_core::savage_wind::follow_storage(&mut self.temp_settings, &old_storage);
+                    }
                     let old_dep = self.core.settings().platform_config().and_then(|p| p.deploy_config.clone());
                     let new_dep = self.temp_settings.platform_config().and_then(|p| p.deploy_config.clone());
                     if let (Some(old_dep), Some(new_dep)) = (old_dep, new_dep) {

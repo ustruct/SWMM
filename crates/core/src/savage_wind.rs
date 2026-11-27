@@ -577,6 +577,26 @@ pub fn overlay_dir(settings: &Settings) -> Option<PathBuf> {
         .filter(|p| !p.as_os_str().is_empty())
 }
 
+pub fn follow_storage(settings: &mut Settings, old_storage: &Path) -> bool {
+    let target = default_overlay_dir(settings);
+    let Some(config) = settings.platform_config_mut().and_then(|c| c.deploy_config.as_mut()) else {
+        return false;
+    };
+    if same_file(&config.output, &target) {
+        return false;
+    }
+    let stale = [
+        old_storage.join("overlay"),
+        crate::settings::default_storage().join("overlay"),
+    ];
+    if !stale.iter().any(|p| same_file(&config.output, p)) {
+        return false;
+    }
+    log::info!("Moving the mod folder from {} to {}", config.output.display(), target.display());
+    config.output = target;
+    true
+}
+
 fn has_files(dir: &Path) -> bool {
     std::fs::read_dir(dir)
         .map(|mut entries| entries.next().is_some())

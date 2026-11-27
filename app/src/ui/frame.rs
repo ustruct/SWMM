@@ -106,17 +106,26 @@ impl GameStatus {
 
 pub fn auto_configure_on_start(core: &Manager) {
     savage_wind::clear_legacy_environment();
+    let mut moved_overlay = false;
     let result = {
         let mut settings = core.settings_mut();
+        let before = settings.clone();
+        if savage_wind::follow_storage(&mut settings, &before.storage_dir) {
+            if let Err(e) = before.wipe_output(before.current_mode.into()) {
+                log::warn!("Couldn't clear the old mod folder: {e:?}");
+            }
+            moved_overlay = true;
+        }
         match savage_wind::auto_configure(&mut settings) {
             Ok(done) if done.changed() => {
                 log::info!("Savage Wind set up automatically: {:?}", done);
                 settings.save().map(|_| true)
             }
+            Ok(_) if moved_overlay => settings.save().map(|_| true),
             Ok(_) => Ok(false),
             Err(e) => {
                 log::warn!("Savage Wind isn't fully set up yet: {e:?}");
-                Ok(false)
+                if moved_overlay { settings.save().map(|_| true) } else { Ok(false) }
             }
         }
     };
@@ -124,6 +133,11 @@ pub fn auto_configure_on_start(core: &Manager) {
         Ok(true) => {
             if let Err(e) = core.reload() {
                 log::error!("Failed to reload after setting up Savage Wind: {e:?}");
+            } else if moved_overlay {
+                let deploy = core.deploy_manager();
+                if let Err(e) = deploy.reset_pending().and_then(|_| deploy.save()) {
+                    log::warn!("Couldn't compare the profile with the new mod folder: {e:?}");
+                }
             }
         }
         Ok(false) => (),
