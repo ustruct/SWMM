@@ -218,7 +218,8 @@ impl App {
                     match self.core.change_profile(profile) {
                         Ok(()) => {
                             self.show_current_profile();
-                            self.do_task(jobs::refresh_pending);
+                            let unapplied = self.dirty().clone();
+                            self.do_task(move |core| jobs::refresh_pending(core, unapplied));
                         }
                         Err(e) => self.do_update(Message::Error(e)),
                     };
@@ -240,7 +241,8 @@ impl App {
                             match self.core.change_profile(&profile) {
                                 Ok(()) => {
                                     self.show_current_profile();
-                                    self.do_task(jobs::refresh_pending);
+                                    let unapplied = self.dirty().clone();
+                                    self.do_task(move |core| jobs::refresh_pending(core, unapplied));
                                 }
                                 Err(e) => self.do_update(Message::Error(e)),
                             };
@@ -550,6 +552,7 @@ impl App {
                     chrome::celebrate_next(ctx);
                     self.do_task(move |core| {
                         log::info!("Deploying current mod configuration");
+                        core.deploy_manager().ensure_merged()?;
                         core.deploy_manager().deploy()?;
                         jobs::after_deploy(&core);
                         Ok(Message::ResetMods(None))

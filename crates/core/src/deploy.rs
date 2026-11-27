@@ -32,6 +32,8 @@ use crate::{
 };
 use pending_log::PendingLog;
 
+const MERGE_STATE_NAME: &str = "swmm-merge-state";
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct OldPendingLog {
     files:  Manifest,
@@ -145,6 +147,58 @@ impl Manager {
         *self.pending_log.write() = log;
 
         Ok(())
+    }
+
+    fn merge_fingerprint(&self) -> Result<std::string::String> {
+        let mod_manager = self
+            .mod_manager
+            .upgrade()
+            .context("YIKES, the mod manager system is gone")?;
+        let mut text = std::string::String::new();
+        for m in mod_manager.read().mods() {
+            let options: Vec<std::string::String> = m
+                .enabled_options
+                .iter()
+                .map(|o| o.path.to_string_lossy().into_owned())
+                .collect();
+            text.push_str(&format!("{}	{}
+", m.hash(), options.join("|")));
+        }
+        Ok(text)
+    }
+
+    fn merge_state_path(settings: &Settings) -> PathBuf {
+        settings.merged_dir().join(MERGE_STATE_NAME)
+    }
+
+    fn write_merge_state(&self, settings: &Settings) -> Result<()> {
+        let merged = settings.merged_dir();
+        fs::create_dir_all(&merged)?;
+        fs::write(Self::merge_state_path(settings), self.merge_fingerprint()?)
+            .context("Failed to save which mods the merged folder holds")?;
+        Ok(())
+    }
+
+    pub fn merged_is_current(&self) -> bool {
+        let Some(settings) = self.settings.upgrade() else {
+            return false;
+        };
+        let path = Self::merge_state_path(&settings.read());
+        match (fs::read_to_string(path), self.merge_fingerprint()) {
+            (Ok(saved), Ok(wanted)) => saved == wanted,
+            _ => false,
+        }
+    }
+
+    pub fn ensure_merged(&self) -> Result<bool> {
+        if self.merged_is_current() {
+            return Ok(false);
+        }
+        log::info!("The merged mods don't match the profile's mods, remerging the profile");
+        self.apply(None)?;
+        self.reset_pending()?;
+        self.save()?;
+        Ok(true)
     }
 
     pub fn save(&self) -> Result<()> {
@@ -483,6 +537,17 @@ impl Manager {
             .context("No dump available for current platform")?;
         let endian = settings.current_mode.into();
         let out_dir = settings.merged_dir();
+        let had_state = Self::merge_state_path(&settings).is_file();
+        let full_remerge = manifest.is_none();
+        if full_remerge && mod_manager.read().mods().next().is_none() {
+            log::info!("No mods are enabled, clearing the merged folder");
+            util::remove_dir_all(&out_dir).context("Failed to clear merged folder")?;
+            self.pending_log.write().clear();
+            self.write_merge_state(&settings)?;
+            self.save_to(&Self::log_path(&settings))?;
+            log::info!("All changes applied successfully");
+            return Ok(());
+        }
         let unpacker = if let Some(mut manifest) = manifest {
             log::info!("Manifest provided, applying limited changes");
             let mut total_manifest = Manifest::default();
@@ -569,6 +634,9 @@ impl Manager {
             &dump,
             game_romfs.as_deref(),
         )?;
+        if full_remerge || had_state {
+            self.write_merge_state(&settings)?;
+        }
         self.save_to(&Self::log_path(&settings))?;
         log::info!("All changes applied successfully");
         Ok(())

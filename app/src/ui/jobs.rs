@@ -102,13 +102,20 @@ pub fn test_compat(core: &Manager, path: &Path, id: u64, name: &str, file: &str,
     Ok(Message::CompatTested(Box::new(entry)))
 }
 
-pub fn refresh_pending(core: Arc<Manager>) -> Result<Message> {
+pub fn refresh_pending(core: Arc<Manager>, unapplied: Manifest) -> Result<Message> {
     let deploy = core.deploy_manager();
+    if unapplied.is_empty() {
+        match deploy.ensure_merged() {
+            Ok(true) => log::info!("Remerged the profile's mods"),
+            Ok(false) => (),
+            Err(e) => log::warn!("Couldn't remerge the profile's mods: {e:?}"),
+        }
+    }
     match deploy.reset_pending().and_then(|_| deploy.save()) {
         Ok(()) => log::info!("{} files differ from the deployed profile", deploy.pending_len()),
         Err(e) => log::warn!("Couldn't compare the profile with the deployed files: {e:?}"),
     }
-    Ok(Message::ResetMods(None))
+    Ok(Message::ResetMods(Some(unapplied)))
 }
 
 pub fn import_modpack(core: &Manager, path: &Path) -> Result<Message> {
@@ -391,6 +398,9 @@ pub fn launch_savage_wind(core: &Manager, mods: Vec<Mod>, dirty: Manifest) -> Re
         apply_changes(core, mods, Some(dirty))?;
     }
     log::info!("Checking the overlay before starting Savage Wind");
+    core.deploy_manager()
+        .ensure_merged()
+        .context("Failed to remerge the profile's mods before starting Savage Wind")?;
     core.deploy_manager()
         .deploy()
         .context("Failed to deploy the mods before starting Savage Wind")?;
