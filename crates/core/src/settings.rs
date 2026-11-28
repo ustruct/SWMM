@@ -514,20 +514,8 @@ impl Settings {
     }
 
     #[inline]
-    pub fn deploy_dir(&self) -> Option<&Path> {
-        let config = self.platform_config();
-        config
-            .and_then(|c| c.deploy_config.as_ref())
-            .map(|c| c.output.as_ref())
-    }
-
-    #[inline]
     pub fn state_file(&self) -> PathBuf {
         Self::config_dir().join("ui.json")
     }
 
-    #[inline]
-    pub fn projects_dir(&self) -> PathBuf {
-        self.storage_dir.join("projects")
-    }
 }

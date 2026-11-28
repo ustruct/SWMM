@@ -244,6 +244,7 @@
   "Compat_Tested": "Getest op {date}",
   "Compat_ByYou": "Jouw test",
   "Compat_BySwmm": "Getest door SWMM",
+  "Compat_ByOwner": "Getest door de maker",
   "Compat_Converted": "{count} bestanden omgezet",
   "Compat_Remove": "Verwijderen",
   "Compat_Empty": "Geen geteste mods gevonden.",

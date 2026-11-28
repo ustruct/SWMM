@@ -1,6 +1,5 @@
 use std::{
     hash::{Hash, Hasher},
-    io::BufReader,
     ops::Deref,
     path::{Path, PathBuf},
     sync::{Arc, LazyLock, Weak},
@@ -15,12 +14,11 @@ use sanitise_file_name as sfn;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 use smartstring::alias::String;
-use uk_content::platform_prefixes;
-use uk_mod::{pack::ModPacker, unpack::ModReader, Manifest, Meta, ModOption};
+use uk_mod::{unpack::ModReader, Manifest, Meta, ModOption};
 
 use crate::{
     settings::Settings,
-    util::{self, extract_7z, HashMap},
+    util::{self, HashMap},
 };
 
 type ManifestCache = LazyLock<RwLock<HashMap<(usize, Vec<PathBuf>), Result<Arc<Manifest>>>>>;
@@ -383,10 +381,6 @@ impl Manager {
         if name != self.current_profile {
             self.profiles.remove(name);
         }
-    }
-
-    pub fn has_profile(&self, name: &str) -> bool {
-        self.profiles.contains_key(name)
     }
 
     pub fn ensure_profile(&self, name: &str) -> Result<()> {
@@ -846,198 +840,4 @@ impl Manager {
     pub fn get_mod(&self, hash: usize) -> Option<Mod> {
         self.profile().mods().get(&hash).cloned()
     }
-}
-
-pub fn convert_gfx(
-    core: &crate::core::Manager,
-    path: &Path,
-    meta: Option<Meta>,
-) -> Result<PathBuf> {
-    log::info!("Attempting to convert mod at {}", path.display());
-    let path = if path.is_file() {
-        let ext = path
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("")
-            .to_uppercase();
-
-        let find_rules = |path: &Path| -> Option<PathBuf> {
-            jwalk::WalkDir::new(path)
-                .into_iter()
-                .filter_map(Result::ok)
-                .find_map(|f| {
-                    [Some("rules.txt"), Some("info.json")].contains(&f.file_name().to_str())
-                        .then(|| f.parent_path().into())
-                })
-        };
-
-        let find_root = |path: &Path| -> Option<PathBuf> {
-            let (content, dlc) = platform_prefixes(core.settings().current_mode.into());
-            jwalk::WalkDir::new(path)
-                .into_iter()
-                .filter_map(Result::ok)
-                .find_map(|f| {
-                    (f.path().join(content).exists() || f.path().join(dlc).exists())
-                        .then(|| f.path())
-                        .or_else(|| {
-                            [Some(content), Some(dlc)].contains(&f.file_name().to_str())
-                                .then(|| f.parent_path().into())
-                        })
-                })
-        };
-
-        if ext == "ZIP" {
-            log::info!("Extracting ZIP file...");
-            let tmpdir = util::get_temp_folder();
-            zip::ZipArchive::new(BufReader::new(fs::File::open(path)?))
-                .context("Failed to open ZIP")?
-                .extract(&*tmpdir)
-                .context("Failed to extract ZIP")?;
-            if meta.is_none() {
-                find_rules(&tmpdir).context("Could not find rules.txt in extracted mod")?
-            } else {
-                find_root(&tmpdir)
-                    .context("Could not find base or DLC content folder in extracted mod")?
-            }
-        } else if ext == "7Z" {
-            log::info!("Extracting 7Z file...");
-            let tmpdir = util::get_temp_folder();
-            extract_7z(path, &tmpdir).context("Failed to extract 7Z file")?;
-            if meta.is_none() {
-                find_rules(&tmpdir).context("Could not find rules.txt in extracted mod")?
-            } else {
-                find_root(&tmpdir)
-                    .context("Could not find base or DLC content folder in extracted mod")?
-            }
-        } else if ext == "RAR" {
-            log::info!("Extracting RAR file...");
-            let tmpdir = util::get_temp_folder();
-            let mut archive = unrar::Archive::new(path)
-                .open_for_processing()
-                .context("Failed to open RAR for extraction")?;
-            while let Some(header) = archive.read_header()
-                .context("Failed to read header")? {
-                archive = if header.entry().is_file() {
-                    log::info!("Extracting {}...", header.entry().filename.to_string_lossy());
-                    header.extract_with_base::<&Path>(tmpdir.as_ref())
-                        .context("Failed to extract file")?
-                } else {
-                    header.skip().context("Failed to skip folder")?
-                };
-            }
-            if meta.is_none() {
-                find_rules(&tmpdir).context("Could not find rules.txt in extracted mod")?
-            } else {
-                find_root(&tmpdir)
-                    .context("Could not find base or DLC content folder in extracted mod")?
-            }
-        } else if path.file_name().context("No file name")?.to_str() == Some("rules.txt") {
-            path.parent()
-                .context("The mod has no folder")?
-                .to_owned()
-        } else {
-            log::error!("{} is not a supported mod archive", path.display());
-            anyhow_ext::bail!("{} files are not supported", ext)
-        }
-    } else {
-        log::info!("Unpacked mod, that's easy");
-        path.to_path_buf()
-    };
-    let temp = util::get_temp_folder();
-    log::debug!("Temp folder: {}", temp.display());
-    log::info!("Attempting to convert mod...");
-    let packer = ModPacker::new(path, &*temp, meta, vec![
-        core.settings()
-            .dump()
-            .context("No dump available for current platform")?,
-    ])?;
-    let result_path = packer.pack()?;
-    log::info!("Conversion complete");
-    Ok(result_path)
-}
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-#[test]
-fn san_test() {
-    let mut san_opts = sanitise_file_name::Options::DEFAULT;
-    san_opts.url_safe = true;
-    let sanitized = sanitise_file_name::sanitise_with_options(
-        Path::new("mod8378&$*#*FIDIFKHLGF*&#KFDJK2020..+=.zip")
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .trim_start_matches('.'),
-        &san_opts,
-    );
-    dbg!(sanitized);
-}
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-#[test]
-fn load_order_skips_missing_mods() {
-    let profiles: DashMap<String, Profile> = DashMap::new();
-    let profile = Profile::default();
-    profile.load_order_mut().push(42);
-    profiles.insert("test".into(), profile);
-    let found = Profile::iter(profiles.get("test").unwrap().map(|p| p)).count();
-    assert_eq!(found, 0);
-}
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-#[test]
-fn unapplied_changes_survive_a_restart() {
-    let dir = std::env::temp_dir().join(format!("swmm-unapplied-{}", std::process::id()));
-    fs::create_dir_all(dir.join("Pack")).unwrap();
-    let mut changes = Manifest::default();
-    changes.content_files.insert("Actor/Pack/Foo.sbactorpack".into());
-    save_unapplied(&dir, "Pack", &changes).unwrap();
-    assert_eq!(load_unapplied(&dir, "Pack"), changes);
-    save_unapplied(&dir, "Pack", &Manifest::default()).unwrap();
-    assert!(load_unapplied(&dir, "Pack").is_empty());
-    assert!(!dir.join("Pack").join(UNAPPLIED_FILE).exists());
-    save_unapplied(&dir, "Gone", &changes).unwrap();
-    assert!(!dir.join("Gone").exists());
-    fs::remove_dir_all(&dir).unwrap();
-}
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-#[test]
-fn custom_details_fall_back_to_the_mods_own() {
-    let mut mod_ = Mod {
-        meta: Meta {
-            api: "1.0.0".into(),
-            name: "Link Hair".into(),
-            version: "1.0.0".into(),
-            author: String::new(),
-            category: uk_mod::ModCategory::Other,
-            description: "Longer hair".into(),
-            platform: uk_mod::ModPlatform::Universal,
-            url: None,
-            options: Default::default(),
-            masters: Default::default(),
-        },
-        enabled_options: vec![],
-        enabled: true,
-        path: PathBuf::new(),
-        hash: 1,
-        custom_name: None,
-        custom_description: None,
-    };
-    assert_eq!(mod_.display_name(), "Link Hair");
-    mod_.set_custom_details("  Link Hair (conditional) ", "Only with the hood off");
-    assert_eq!(mod_.display_name(), "Link Hair (conditional)");
-    assert_eq!(mod_.display_description(), "Only with the hood off");
-    assert_eq!(mod_.meta.name.as_str(), "Link Hair");
-    let text = serde_yaml::to_string(&mod_).unwrap();
-    let back: Mod = serde_yaml::from_str(&text).unwrap();
-    assert_eq!(back.custom_name.as_deref(), Some("Link Hair (conditional)"));
-    mod_.set_custom_details("", "Longer hair");
-    assert!(mod_.custom_name.is_none() && mod_.custom_description.is_none());
-    let old: Mod = serde_yaml::from_str(&text.replace("custom_name", "unused_key")).unwrap();
-    assert!(old.custom_name.is_none());
 }

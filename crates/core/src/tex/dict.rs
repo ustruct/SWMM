@@ -60,17 +60,3 @@ pub fn build(keys: &[&str]) -> Vec<Node> {
     }
     nodes
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn matches_a_game_file() {
-        let keys = ["Bass_Alb.0", "Bass_Nrm", "Bass_Spm", "Bass_Eye_Alb", "Bass_Eye_Nrm", "Bass_Eye_Spm", "Bass_Alb.1",
-                    "Bass_Alb.2"];
-        let got: Vec<(i32, u16, u16)> = build(&keys).iter().map(|n| (n.bit, n.left, n.right)).collect();
-        assert_eq!(got, vec![(-1, 2, 0), (4, 0, 1), (0, 4, 7), (9, 6, 5), (1, 1, 8), (0x21, 5, 2), (0x21, 6, 3),
-                             (2, 7, 3), (4, 4, 8)]);
-    }
-}

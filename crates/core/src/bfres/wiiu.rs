@@ -5,6 +5,7 @@ use super::model::*;
 struct R<'a> {
     d: &'a [u8],
     version: u32,
+    notes: std::cell::RefCell<Vec<String>>,
 }
 
 impl<'a> R<'a> {
@@ -319,8 +320,9 @@ fn read_scene_anim(r: &R, a: usize, name: &str) -> Result<SceneAnim> {
     if r.bytes(a, 4)? != b"FSCN" {
         bail!("{name} isn't an FSCN section");
     }
-    if r.u16(a + 0x10)? > 0 || r.u16(a + 0x12)? > 0 {
-        bail!("light and fog animations aren't supported yet");
+    let (lights, fogs) = (r.u16(a + 0x10)?, r.u16(a + 0x12)?);
+    if lights > 0 || fogs > 0 {
+        r.notes.borrow_mut().push(format!("scene animation {name}: {lights} light and {fogs} fog animations left out"));
     }
     let mut cameras = Vec::new();
     for (cname, at) in r.group(a + 0x14)? {
@@ -443,7 +445,7 @@ fn read_tex_pattern(r: &R, a: usize, name: &str) -> Result<MaterialAnim> {
 }
 
 pub fn read_textures_container(d: &[u8]) -> Result<File> {
-    let mut r = R { d, version: 0 };
+    let mut r = R { d, version: 0, notes: Default::default() };
     r.version = r.u32(4)?;
     if d.get(..4) != Some(b"FRES") || r.u16(8)? != 0xfeff {
         bail!("Not a Wii U BFRES file");
@@ -456,6 +458,7 @@ pub fn read_textures_container(d: &[u8]) -> Result<File> {
         bone_vis_anims: vec![],
         scene_anims: vec![],
         external: vec![],
+        notes: vec![],
     };
     for (name, at) in r.group(0x20 + 4 * GROUP_EXTERNAL)? {
         let at = at.context("external file without data")?;
@@ -466,8 +469,8 @@ pub fn read_textures_container(d: &[u8]) -> Result<File> {
     Ok(file)
 }
 
-pub fn read(d: &[u8], allow_animations_dropped: bool) -> Result<File> {
-    let mut r = R { d, version: 0 };
+pub fn read(d: &[u8]) -> Result<File> {
+    let mut r = R { d, version: 0, notes: Default::default() };
     if d.get(..4) != Some(b"FRES") || r.u16(8)? != 0xfeff {
         bail!("Not a Wii U BFRES file");
     }
@@ -477,16 +480,10 @@ pub fn read(d: &[u8], allow_animations_dropped: bool) -> Result<File> {
         bail!("Wii U BFRES version {version:#x} isn't supported");
     }
     let counts: Vec<u16> = (0..12).map(|i| r.u16(0x50 + 2 * i)).collect::<Result<_>>()?;
-    if counts[GROUP_TEXTURES] != 0 {
-        bail!("it holds textures inside the model file, which SWMM doesn't convert yet");
-    }
-    let unsupported: Vec<String> = UNSUPPORTED_ANIMS
-        .iter()
-        .filter(|(g, _)| counts[*g] > 0)
-        .map(|(g, what)| format!("{} {what}", counts[*g]))
-        .collect();
-    if !unsupported.is_empty() && !allow_animations_dropped {
-        bail!("it holds {}, which SWMM can't convert from Wii U yet", unsupported.join(", "));
+    for (g, what) in UNSUPPORTED_ANIMS {
+        if counts[g] > 0 {
+            r.notes.borrow_mut().push(format!("{} {what} left out, as Switch models made by SWMM can't hold them yet", counts[g]));
+        }
     }
     let mut file =
         File {
@@ -497,6 +494,7 @@ pub fn read(d: &[u8], allow_animations_dropped: bool) -> Result<File> {
         bone_vis_anims: vec![],
         scene_anims: vec![],
         external: vec![],
+        notes: vec![],
     };
     for (name, at) in r.group(0x20 + 4 * GROUP_MODELS)? {
         let at = at.context("model without data")?;
@@ -544,6 +542,12 @@ pub fn read(d: &[u8], allow_animations_dropped: bool) -> Result<File> {
         let size = r.u32(at + 4)? as usize;
         file.external.push((name, r.bytes(data_at, size)?.to_vec()));
     }
+    if counts[GROUP_TEXTURES] != 0 && !file.external.iter().any(|(n, _)| n == "textures.bntx") {
+        let bntx = crate::tex::embedded_bntx(d).context("the textures inside the model file")?;
+        file.external.insert(0, ("textures.bntx".into(), bntx));
+        r.notes.borrow_mut().push(format!("{} textures inside the model file converted with it", counts[GROUP_TEXTURES]));
+    }
+    file.notes = r.notes.take();
     Ok(file)
 }
 
@@ -750,7 +754,7 @@ fn read_shape(r: &R, s: usize, name: String) -> Result<Shape> {
     let n_mesh = r.u8(s + 0x17)? as usize;
     let n_key = r.u8(s + 0x18)?;
     if n_key != 0 {
-        bail!("shape {name} has key shapes (morphs), which SWMM can't convert yet");
+        r.notes.borrow_mut().push(format!("shape {name}: {n_key} morph targets (key shapes) left out, so it keeps its base shape"));
     }
     let meshes_at = r.must(s + 0x24, "meshes")?;
     let mut meshes = Vec::with_capacity(n_mesh);
@@ -1009,12 +1013,10 @@ fn read_material(r: &R, m: usize, name: String) -> Result<Material> {
             slot.copy_from_slice(&alpha_ref.to_le_bytes());
         }
     }
-    if let Some(v) = r.rel(m + 0x44)? {
-        let flags = r.bytes(v, n_par.div_ceil(8))?;
-        if flags.iter().any(|b| *b != 0) {
-            bail!("material {name} has volatile shader parameters, which SWMM can't convert yet");
-        }
-    }
+    let volatile_flags = match r.rel(m + 0x44)? {
+        Some(v) => r.bytes(v, n_par.div_ceil(8))?.to_vec(),
+        None => vec![],
+    };
     Ok(Material {
         name,
         flags: r.u32(m + 8)?,
@@ -1025,6 +1027,7 @@ fn read_material(r: &R, m: usize, name: String) -> Result<Material> {
         params,
         param_data,
         volatile_count: n_volatile,
+        volatile_flags,
         raw_param_size: raw_size,
         user_data: read_user_data(r, m + 0x40)?,
     })

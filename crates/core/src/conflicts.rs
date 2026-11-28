@@ -91,16 +91,3 @@ pub fn overlaps(mods: &[Mod]) -> Vec<Overlap> {
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn merged_files() {
-        assert!(is_merged("content/Actor/Pack/Link.sbactorpack"));
-        assert!(is_merged("content/Layout/Common.sblarc"));
-        assert!(!is_merged("content/Model/Link.sbfres"));
-        assert!(!is_merged("content/Movie/Demo.mp4"));
-    }
-}

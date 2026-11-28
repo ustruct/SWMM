@@ -95,8 +95,8 @@ and cheat code files (Atmosphère `.txt`) aren't installed; use the Cheats page 
 
 ## Building
 
-Install [Rust](https://rustup.rs), then run `build-windows.bat` on Windows or `build.sh` on Linux. The finished app is
-placed in the `dist` folder.
+Install [Rust](https://rustup.rs), then run `cargo build --release --workspace`. The app is placed in `target/release`
+as `swmm` (`swmm.exe` on Windows). On Windows, keep `swmm_loader.dll` next to it, renamed to `swmm.dll`.
 
 ## License and credits
 

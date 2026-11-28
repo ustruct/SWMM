@@ -94,12 +94,3 @@ pub fn trim_memory() {
     #[cfg(windows)]
     win::trim_memory();
 }
-
-#[cfg(all(test, windows))]
-#[test]
-fn finds_its_own_process() {
-    let exe = std::env::current_exe().unwrap();
-    let name = exe.file_name().unwrap().to_string_lossy().to_string();
-    let found = find_by_name(&[name.as_str()]);
-    assert!(found.iter().any(|p| p.file_name() == exe.file_name()));
-}

@@ -51,12 +51,20 @@ fn status_name(status: Option<Status>) -> String {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum By {
+    You,
+    Owner,
+    Swmm,
+}
+
 enum RowAction {
     Open(String),
     Forget(Entry),
 }
 
-fn render_row(ui: &mut Ui, entry: &Entry, yours: bool) -> Option<RowAction> {
+fn render_row(ui: &mut Ui, entry: &Entry, by: By) -> Option<RowAction> {
+    let yours = by == By::You;
     let palette = visuals::palette(ui);
     let mut action = None;
     super::frame::card(ui, |ui| {
@@ -86,7 +94,11 @@ fn render_row(ui: &mut Ui, entry: &Entry, yours: bool) -> Option<RowAction> {
         ui.horizontal(|ui| {
             let mut facts = vec![
                 "Compat_Tested".localize().replace("{date}", entry.date()),
-                if yours { "Compat_ByYou".localize().to_string() } else { "Compat_BySwmm".localize().to_string() },
+                match by {
+                    By::You => "Compat_ByYou".localize().to_string(),
+                    By::Owner => "Compat_ByOwner".localize().to_string(),
+                    By::Swmm => "Compat_BySwmm".localize().to_string(),
+                },
             ];
             if entry.converted > 0 {
                 facts.push("Compat_Converted".localize().replace("{count}", &entry.converted.to_string()));
@@ -147,9 +159,10 @@ impl App {
         ui.add_space(8.0);
         let bundled: Vec<&Entry> = compat::bundled().iter().filter(|e| state.shows(e)).collect();
         let mine: Vec<Entry> = state.mine.iter().filter(|e| state.shows(e)).cloned().collect();
+        let owner: Vec<&Entry> = compat::owner().iter().filter(|e| state.shows(e)).collect();
         let mut action = None;
         egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-            if bundled.is_empty() && mine.is_empty() {
+            if bundled.is_empty() && mine.is_empty() && owner.is_empty() {
                 ui.add_space(20.0);
                 ui.vertical_centered(|ui| {
                     ui.label(RichText::new("Compat_Empty".localize()).color(palette.muted));
@@ -159,7 +172,13 @@ impl App {
             if !mine.is_empty() {
                 section(ui, &"Compat_Yours".localize());
                 for entry in &mine {
-                    action = render_row(ui, entry, true).or(action.take());
+                    action = render_row(ui, entry, By::You).or(action.take());
+                }
+            }
+            if !owner.is_empty() {
+                section(ui, &"Compat_ByOwner".localize());
+                for entry in owner {
+                    action = render_row(ui, entry, By::Owner).or(action.take());
                 }
             }
             if !bundled.is_empty() {
@@ -173,7 +192,7 @@ impl App {
                     .replace("{failed}", &count(Status::Failed));
                 section(ui, &title);
                 for entry in bundled {
-                    action = render_row(ui, entry, false).or(action.take());
+                    action = render_row(ui, entry, By::Swmm).or(action.take());
                 }
             }
         });

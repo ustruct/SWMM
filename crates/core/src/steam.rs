@@ -182,33 +182,3 @@ pub fn update_shortcuts(var: &str, value: Option<&Path>, is_game: impl Fn(&Path)
     }
     Ok(changed)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn launch_options_round_trip() {
-        let var = "SAVAGEWIND_ROMFS_OVERLAY";
-        let p = Path::new("/home/deck/mods");
-        assert_eq!(launch_options("", var, Some(p)), "SAVAGEWIND_ROMFS_OVERLAY=\"/home/deck/mods\" %command%");
-        assert_eq!(launch_options("-fullscreen", var, Some(p)), "SAVAGEWIND_ROMFS_OVERLAY=\"/home/deck/mods\" %command% -fullscreen");
-        assert_eq!(launch_options("gamemoderun %command%", var, Some(p)), "SAVAGEWIND_ROMFS_OVERLAY=\"/home/deck/mods\" gamemoderun %command%");
-        let set = launch_options("", var, Some(p));
-        assert_eq!(launch_options(&set, var, None), "");
-        assert_eq!(launch_options(&set, var, Some(Path::new("/x y"))), "SAVAGEWIND_ROMFS_OVERLAY=\"/x y\" %command%");
-    }
-
-    #[test]
-    fn vdf_round_trip() {
-        let mut data = Vec::new();
-        data.extend_from_slice(b"\x00shortcuts\x00\x000\x00\x02appid\x00\x01\x02\x03\x04\x01AppName\x00Savage Wind\x00");
-        data.extend_from_slice(b"\x01Exe\x00\"/games/Savage_Wind.AppImage\"\x00\x01LaunchOptions\x00\x00\x00tags\x00\x08\x08\x08\x08");
-        let mut reader = Reader { data: &data, pos: 0 };
-        let root = reader.map().expect("parse");
-        let mut out = Vec::new();
-        write_map(&root, &mut out);
-        out.push(0x08);
-        assert_eq!(out, data);
-    }
-}

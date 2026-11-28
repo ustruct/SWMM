@@ -244,6 +244,7 @@
   "Compat_Tested": "测试于 {date}",
   "Compat_ByYou": "你的测试",
   "Compat_BySwmm": "由 SWMM 测试",
+  "Compat_ByOwner": "作者已测试",
   "Compat_Converted": "已转换 {count} 个文件",
   "Compat_Remove": "移除",
   "Compat_Empty": "没有匹配的已测试模组。",

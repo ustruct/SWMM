@@ -244,6 +244,7 @@
   "Compat_Tested": "Testata il {date}",
   "Compat_ByYou": "Il tuo test",
   "Compat_BySwmm": "Testata da SWMM",
+  "Compat_ByOwner": "Testato dal creatore",
   "Compat_Converted": "{count} file convertiti",
   "Compat_Remove": "Rimuovi",
   "Compat_Empty": "Nessuna mod testata corrisponde.",

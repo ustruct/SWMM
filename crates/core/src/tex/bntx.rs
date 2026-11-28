@@ -402,32 +402,3 @@ pub fn write(name: &str, textures: &[Texture]) -> Result<Vec<u8>> {
     o.u32(0x1c, file_size as u32);
     Ok(o.b)
 }
-
-pub fn relocations(b: &[u8]) -> Result<Vec<(usize, usize)>> {
-    let rlt = u32_at(b, 0x18)? as usize;
-    if b.get(rlt..rlt + 4) != Some(b"_RLT") {
-        bail!("No relocation table");
-    }
-    let sections = u32_at(b, rlt + 8)? as usize;
-    let entries = rlt + 0x10 + 0x18 * sections;
-    let mut out = Vec::new();
-    for s in 0..sections {
-        let sec = rlt + 0x10 + 0x18 * s;
-        let first = u32_at(b, sec + 0x10)? as usize;
-        let count = u32_at(b, sec + 0x14)? as usize;
-        for e in first..first + count {
-            let at = entries + 8 * e;
-            let pos = u32_at(b, at)? as usize;
-            let structs = u16_at(b, at + 4)? as usize;
-            let offsets = b[at + 6] as usize;
-            let padding = b[at + 7] as usize;
-            for st in 0..structs {
-                for k in 0..offsets {
-                    out.push((s, pos + st * 8 * (offsets + padding) + 8 * k));
-                }
-            }
-        }
-    }
-    out.sort_unstable();
-    Ok(out)
-}

@@ -244,6 +244,7 @@
   "Compat_Tested": "Проверено {date}",
   "Compat_ByYou": "Ваша проверка",
   "Compat_BySwmm": "Проверено SWMM",
+  "Compat_ByOwner": "Проверено автором",
   "Compat_Converted": "Сконвертировано файлов: {count}",
   "Compat_Remove": "Удалить",
   "Compat_Empty": "Подходящих проверенных модов нет.",
