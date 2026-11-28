@@ -95,6 +95,11 @@ impl App {
         if menu_item(ui, Icon::FileUpload, &"SW_Menu_UpdateMod".localize(), self.selected.len() == 1) {
             self.do_update(Message::ModUpdate);
         }
+        if menu_item(ui, Icon::Pen, &"SW_EditDetails".localize(), self.selected.len() == 1) {
+            if let Some(mod_) = self.selected.first() {
+                self.do_update(Message::EditMod(mod_.clone()));
+            }
+        }
         ui.separator();
         if menu_item(ui, Icon::ListCheck, &format!("{}  (Ctrl+A)", "Mod_Select_All".localize()), !self.mods.is_empty()) {
             self.do_update(Message::SelectAll);
@@ -110,7 +115,7 @@ impl App {
         }
         ui.separator();
         if menu_item(ui, Icon::Delete, &"SW_Menu_Uninstall".localize(), has_selection) {
-            let name = self.selected.first().map(|m| m.meta.name.to_string()).unwrap_or_default();
+            let name = self.selected.first().map(|m| m.display_name().to_string()).unwrap_or_default();
             self.do_update(Message::Confirm(
                 Message::UninstallMods(None).into(),
                 super::mod_list::uninstall_prompt(&name, self.selected.len()),

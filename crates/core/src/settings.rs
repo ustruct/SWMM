@@ -208,10 +208,10 @@ fn move_into(src: &Path, dst: &Path) {
     }
 }
 
-fn flatten_switch_folder(storage: &Path) {
+fn flatten_switch_folder(storage: &Path) -> bool {
     let nx = storage.join("nx");
     if !nx.is_dir() {
-        return;
+        return false;
     }
     log::info!("Moving files from {} to {}", nx.display(), storage.display());
     if let Ok(entries) = std::fs::read_dir(&nx) {
@@ -232,6 +232,7 @@ fn flatten_switch_folder(storage: &Path) {
             replace_in_file(&entry.path().join("profile.yml"), &from, &to);
         }
     }
+    true
 }
 
 fn migrate_legacy_folders() {
@@ -355,11 +356,15 @@ impl Settings {
     }
 
     pub fn load() -> Arc<RwLock<Settings>> {
-        let storage = Settings::read(Self::path())
-            .map(|s| s.storage_dir)
+        let mut read = Settings::read(Self::path());
+        let storage = read
+            .as_ref()
+            .map(|s| s.storage_dir.clone())
             .unwrap_or_else(|_| default_storage());
-        flatten_switch_folder(&storage);
-        Arc::new(RwLock::new(match Settings::read(Self::path()) {
+        if flatten_switch_folder(&storage) {
+            read = Settings::read(Self::path());
+        }
+        Arc::new(RwLock::new(match read {
             Ok(settings) => {
                 log::debug!("{:#?}", settings);
                 crate::util::USE_SZ.store(settings.system_7z, std::sync::atomic::Ordering::Release);

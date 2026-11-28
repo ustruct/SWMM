@@ -11,6 +11,14 @@ use mimalloc::MiMalloc;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
+
+unsafe extern "C" {
+    fn mi_collect(force: bool);
+}
+
+pub fn release_allocator_memory() {
+    unsafe { mi_collect(true) };
+}
 include!(concat!(env!("OUT_DIR"), "/build_info.rs"));
 mod cli;
 mod ui;

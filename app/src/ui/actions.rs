@@ -225,6 +225,24 @@ impl App {
                     };
                 }
                 Message::NewProfile => self.new_profile = Some("".into()),
+                Message::EditMod(mod_) => {
+                    self.edit_mod = Some(dialogs::ModDetailsEdit::new(&mod_));
+                }
+                Message::SaveModDetails(hash, name, description) => {
+                    match self.core.mod_manager().set_custom_details(hash, &name, &description) {
+                        Ok(updated) => {
+                            for list in [&mut self.mods, &mut self.selected] {
+                                for m in list.iter_mut().filter(|m| m.hash() == hash) {
+                                    m.custom_name = updated.custom_name.clone();
+                                    m.custom_description = updated.custom_description.clone();
+                                }
+                            }
+                            self.edit_mod = None;
+                            self.do_update(Message::RefreshModsDisplay);
+                        }
+                        Err(e) => self.do_update(Message::Error(e)),
+                    }
+                }
                 Message::AddProfile => {
                     if let Some(profile) = self.new_profile.take() {
                         let profile = profile.trim().to_string();
@@ -572,6 +590,7 @@ impl App {
                         toast
                     });
                     self.do_update(Message::ResetMods(None));
+                    self.release_memory(ctx);
                 }
                 Message::SwAutoDetect => {
                     self.do_task(jobs::sw_auto_detect);

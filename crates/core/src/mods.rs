@@ -34,6 +34,10 @@ pub struct Mod {
     pub path: PathBuf,
     #[serde_as(as = "DisplayFromStr")]
     pub(crate) hash: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_description: Option<String>,
 }
 
 impl std::fmt::Debug for Mod {
@@ -44,6 +48,8 @@ impl std::fmt::Debug for Mod {
             .field("enabled", &self.enabled)
             .field("path", &self.path)
             .field("hash", &self.hash)
+            .field("custom_name", &self.custom_name)
+            .field("custom_description", &self.custom_description)
             .finish()
     }
 }
@@ -70,7 +76,32 @@ impl Mod {
             enabled_options: vec![],
             path: reader.path,
             enabled: false,
+            custom_name: None,
+            custom_description: None,
         }
+    }
+
+    pub fn display_name(&self) -> &str {
+        self.custom_name.as_deref().unwrap_or(self.meta.name.as_str())
+    }
+
+    pub fn display_description(&self) -> &str {
+        self.custom_description
+            .as_deref()
+            .unwrap_or(self.meta.description.as_str())
+    }
+
+    pub fn set_custom_details(&mut self, name: &str, description: &str) {
+        let name = name.trim();
+        self.custom_name =
+            (!name.is_empty() && name != self.meta.name.as_str()).then(|| name.into());
+        self.custom_description =
+            (description.trim() != self.meta.description.trim()).then(|| description.into());
+    }
+
+    fn keep_custom_details(&mut self, old: &Mod) {
+        self.custom_name = old.custom_name.clone();
+        self.custom_description = old.custom_description.clone();
     }
 
     pub fn manifest(&self) -> Result<Arc<Manifest>> {
@@ -506,6 +537,34 @@ impl Manager {
         Ok(())
     }
 
+    pub fn set_custom_details(&self, hash: usize, name: &str, description: &str) -> Result<Mod> {
+        let mut updated = None;
+        let mut changed_profiles = vec![];
+        for profile in self.profiles.iter() {
+            if let Some(mod_) = profile.value().mods_mut().get_mut(&hash) {
+                mod_.set_custom_details(name, description);
+                updated.get_or_insert_with(|| mod_.clone());
+                changed_profiles.push(profile.key().clone());
+            }
+        }
+        let updated = updated.context("The mod isn't installed")?;
+        for name in changed_profiles {
+            let dir = self.dir.join(name.as_str());
+            if !dir.is_dir() {
+                continue;
+            }
+            let text = serde_yaml::to_string(self.profile_named(name.as_str()).deref())?;
+            fs::write(dir.join("profile.yml"), text)
+                .with_context(|| format!("Couldn't save the profile {name}"))?;
+        }
+        log::info!(
+            "Set the details of {} (shown as {})",
+            updated.meta.name,
+            updated.display_name()
+        );
+        Ok(updated)
+    }
+
     pub fn current_profile(&self) -> &str {
         self.current_profile.as_str()
     }
@@ -643,8 +702,10 @@ impl Manager {
             }
             let profile_data = self.get_profile(profile);
             mod_.enabled = old_mod.enabled;
+            mod_.keep_custom_details(&old_mod);
             if let Some(m) = profile_data.mods_mut().get_mut(&mod_.hash) {
                 m.enabled = old_mod.enabled;
+                m.keep_custom_details(&old_mod);
             }
             log::info!(
                 "Updated mod {} in profile {} to version {}",
@@ -723,6 +784,7 @@ impl Manager {
             .remove(&old_hash)
             .context("The mod being updated isn't in this profile")?;
         mod_.enabled = old_mod.enabled;
+        mod_.keep_custom_details(&old_mod);
         mod_.path = stored_path;
         profile_data.mods_mut().insert(mod_.hash, mod_.clone());
         let mut load_order = profile_data.load_order_mut();
@@ -940,4 +1002,42 @@ fn unapplied_changes_survive_a_restart() {
     save_unapplied(&dir, "Gone", &changes).unwrap();
     assert!(!dir.join("Gone").exists());
     fs::remove_dir_all(&dir).unwrap();
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+#[test]
+fn custom_details_fall_back_to_the_mods_own() {
+    let mut mod_ = Mod {
+        meta: Meta {
+            api: "1.0.0".into(),
+            name: "Link Hair".into(),
+            version: "1.0.0".into(),
+            author: String::new(),
+            category: uk_mod::ModCategory::Other,
+            description: "Longer hair".into(),
+            platform: uk_mod::ModPlatform::Universal,
+            url: None,
+            options: Default::default(),
+            masters: Default::default(),
+        },
+        enabled_options: vec![],
+        enabled: true,
+        path: PathBuf::new(),
+        hash: 1,
+        custom_name: None,
+        custom_description: None,
+    };
+    assert_eq!(mod_.display_name(), "Link Hair");
+    mod_.set_custom_details("  Link Hair (conditional) ", "Only with the hood off");
+    assert_eq!(mod_.display_name(), "Link Hair (conditional)");
+    assert_eq!(mod_.display_description(), "Only with the hood off");
+    assert_eq!(mod_.meta.name.as_str(), "Link Hair");
+    let text = serde_yaml::to_string(&mod_).unwrap();
+    let back: Mod = serde_yaml::from_str(&text).unwrap();
+    assert_eq!(back.custom_name.as_deref(), Some("Link Hair (conditional)"));
+    mod_.set_custom_details("", "Longer hair");
+    assert!(mod_.custom_name.is_none() && mod_.custom_description.is_none());
+    let old: Mod = serde_yaml::from_str(&text.replace("custom_name", "unused_key")).unwrap();
+    assert!(old.custom_name.is_none());
 }

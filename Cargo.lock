@@ -4182,8 +4182,6 @@ dependencies = [
 [[package]]
 name = "piz"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "898b071c1938a2c92b95c18708cbf38f2566a01f0ab9dd7bdf4329987e5c2e17"
 dependencies = [
  "camino",
  "chrono",
@@ -5515,7 +5513,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-app"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "anyhow_ext",
@@ -5558,7 +5556,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-core"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "anyhow_ext",
@@ -5600,7 +5598,7 @@ dependencies = [
 
 [[package]]
 name = "swmm-i18n"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "parking_lot",
  "serde",
@@ -5609,11 +5607,11 @@ dependencies = [
 
 [[package]]
 name = "swmm-loader"
-version = "0.2.3"
+version = "0.2.4"
 
 [[package]]
 name = "swmm-widgets"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "ab_glyph",
  "eframe",
@@ -5621,6 +5619,7 @@ dependencies = [
  "egui_extras",
  "font-loader",
  "include-flate",
+ "memmap2",
  "rfd",
  "serde",
 ]

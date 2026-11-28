@@ -46,6 +46,14 @@ impl Default for MapState {
 }
 
 impl MapState {
+    pub fn release(&mut self) {
+        if self.pending.is_none() {
+            self.texture = None;
+            self.terrain = None;
+            self.romfs = None;
+        }
+    }
+
     fn start(&mut self, romfs: Option<PathBuf>, ctx: &egui::Context) {
         *self = Self { romfs: romfs.clone(), ..Self::default() };
         let Some(romfs) = romfs else {

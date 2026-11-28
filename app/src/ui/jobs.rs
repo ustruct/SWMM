@@ -163,8 +163,16 @@ fn wait_until_log_is_quiet(settings: &swmm_core::settings::Settings) {
     }
 }
 
+pub static GAME_RUNNING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn game_running() -> bool {
+    GAME_RUNNING.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 fn watch_game(mut child: std::process::Child, settings: swmm_core::settings::Settings, mods: Vec<Mod>) {
-    let Ok(status) = child.wait() else {
+    let waited = child.wait();
+    GAME_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
+    let Ok(status) = waited else {
         return;
     };
     let exit_ok = status.success();
@@ -409,6 +417,7 @@ pub fn launch_savage_wind(core: &Manager, mods: Vec<Mod>, dirty: Manifest) -> Re
     backup_saves_before_launch(&settings);
     let child = swmm_core::savage_wind::launch(&settings)?;
     log::info!("Savage Wind started (process {})", child.id());
+    GAME_RUNNING.store(true, std::sync::atomic::Ordering::Relaxed);
     let mods: Vec<Mod> = core.mod_manager().all_mods().collect();
     std::thread::spawn(move || watch_game(child, settings, mods));
     Ok(Message::Launched)

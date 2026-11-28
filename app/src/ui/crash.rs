@@ -39,7 +39,7 @@ impl App {
                 for (mod_, files) in &suspects {
                     ui.horizontal(|ui| {
                         ui.label(Icon::Puzzle.rich(11.0).color(warn));
-                        ui.label(mod_.meta.name.as_str());
+                        ui.label(mod_.display_name());
                         ui.label(RichText::new(format!("({files})")).size(11.0).color(palette.muted));
                     });
                 }

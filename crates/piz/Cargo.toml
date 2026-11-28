@@ -1,0 +1,29 @@
+[package]
+name = "piz"
+version = "0.5.1"
+edition = "2021"
+authors = ["Matt Kline <matt@bitbashing.io>"]
+license = "Zlib"
+repository = "https://github.com/mrkline/piz-rs"
+description = "piz 0.5.1 with a fix for Zip64 fields in local headers"
+publish = false
+
+[lib]
+doctest = false
+
+[dependencies]
+camino = "1.0"
+codepage-437 = "0.1"
+crc32fast = "1.0"
+flate2 = "1.0"
+log = "0.4"
+thiserror = "1.0"
+memchr = "2.0"
+chrono = "0.4"
+
+[features]
+default = ["check-local-metadata"]
+check-local-metadata = []
+
+[lints.rust]
+warnings = "allow"

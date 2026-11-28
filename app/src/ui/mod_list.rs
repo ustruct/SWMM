@@ -32,6 +32,7 @@ impl Default for ModListState {
 
 enum RowAction {
     CopyToProfile(smartstring::alias::String),
+    Edit,
     Update,
     Uninstall,
     Reinstall,
@@ -74,7 +75,11 @@ impl App {
             .mods
             .iter()
             .enumerate()
-            .filter(|(_, m)| filter.is_empty() || m.meta.name.to_lowercase().contains(&filter))
+            .filter(|(_, m)| {
+                filter.is_empty()
+                    || m.display_name().to_lowercase().contains(&filter)
+                    || m.meta.name.to_lowercase().contains(&filter)
+            })
             .map(|(i, _)| i)
             .collect();
         if rows.is_empty() {
@@ -203,7 +208,7 @@ impl App {
                     text_painter.text(
                         pos2(text_rect.left(), rect.center().y - 9.0),
                         Align2::LEFT_CENTER,
-                        mod_.meta.name.as_str(),
+                        mod_.display_name(),
                         FontId::proportional(14.0),
                         if mod_.enabled { palette.text } else { palette.muted },
                     );
@@ -332,11 +337,12 @@ impl App {
         match action {
             RowAction::CopyToProfile(profile) => self.do_update(Message::AddToProfile(profile)),
             RowAction::Update => self.do_update(Message::ModUpdate),
+            RowAction::Edit => self.do_update(Message::EditMod(mod_.clone())),
             RowAction::Uninstall => {
                 let count = if self.selected.contains(mod_) { self.selected.len() } else { 1 };
                 self.do_update(Message::Confirm(
                     Message::UninstallMods(None).into(),
-                    uninstall_prompt(&mod_.meta.name, count),
+                    uninstall_prompt(mod_.display_name(), count),
                 ));
             }
             RowAction::Reinstall => self.do_update(Message::ReinstallMods(None)),
@@ -384,6 +390,9 @@ impl App {
             }
             if item(ui, Icon::FileUpload, "Generic_Update".localize()) {
                 result = Some(RowAction::Update);
+            }
+            if item(ui, Icon::Pen, "SW_EditDetails".localize()) {
+                result = Some(RowAction::Edit);
             }
         }
         if item(ui, Icon::FolderOpen, "Mod_View".localize()) {

@@ -174,17 +174,8 @@ impl Search {
 pub fn running_executable() -> Option<PathBuf> {
     #[cfg(windows)]
     {
-        use std::os::windows::process::CommandExt;
-        let names = EXE_NAMES.iter().map(|n| n.trim_end_matches(".exe")).collect::<Vec<_>>().join(",");
-        let output = Command::new("powershell.exe")
-            .args(["-NoProfile", "-NonInteractive", "-Command"])
-            .arg(format!("Get-Process -Name {names} -ErrorAction SilentlyContinue | ForEach-Object {{ $_.Path }}"))
-            .creation_flags(0x0800_0000)
-            .output()
-            .ok()?;
-        std::string::String::from_utf8_lossy(&output.stdout)
-            .lines()
-            .map(|l| PathBuf::from(l.trim()))
+        crate::process::find_by_name(EXE_NAMES)
+            .into_iter()
             .find(|p| p.is_file() && is_savage_wind_exe(p))
     }
     #[cfg(all(unix, not(target_os = "macos")))]

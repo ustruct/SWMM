@@ -122,7 +122,7 @@ impl App {
             let Some((mod_, _)) = self.options_mod.as_mut() else {
                 return;
             };
-            ui.label(RichText::new(mod_.meta.name.as_str()).size(13.0).color(palette.muted));
+            ui.label(RichText::new(mod_.display_name()).size(13.0).color(palette.muted));
             ui.add_space(10.0);
             let mut done = true;
             egui::ScrollArea::vertical().drag_to_scroll(false)

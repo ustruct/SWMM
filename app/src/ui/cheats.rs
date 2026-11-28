@@ -221,6 +221,12 @@ fn worker(port: u16, shared: Arc<Mutex<Shared>>, inbox: Receiver<Job>, ctx: egui
     }
 }
 
+impl CheatsState {
+    pub fn release_map(&mut self) {
+        self.map.release();
+    }
+}
+
 #[derive(Default)]
 pub struct CheatsState {
     loaded: bool,

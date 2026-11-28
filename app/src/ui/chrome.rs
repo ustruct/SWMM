@@ -30,6 +30,16 @@ pub fn now(ctx: &egui::Context) -> f64 {
     ctx.input(|i| i.time)
 }
 
+static CALM: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn set_calm(calm: bool) {
+    CALM.store(calm, std::sync::atomic::Ordering::Relaxed);
+}
+
+pub fn calm() -> bool {
+    CALM.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 pub fn appear(ctx: &egui::Context, id: Id, visible: bool, duration: f32) -> f32 {
     let key = id.with("appearSince");
     if !visible {
@@ -332,7 +342,7 @@ fn styled_button(ui: &mut Ui, icon: Icon, text: &str, min_width: f32, height: f3
         palette.hover
     };
     painter.rect_filled(shape_rect, rounding, fill);
-    if enabled && shine {
+    if enabled && shine && !calm() {
         const PERIOD: f64 = 5.0;
         const SWEEP: f64 = 1.1;
         let phase = now(ui.ctx()) % PERIOD;

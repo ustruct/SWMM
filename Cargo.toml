@@ -5,11 +5,12 @@ members = [
     "crates/core",
     "crates/i18n",
     "crates/loader",
+    "crates/piz",
     "crates/widgets",
 ]
 
 [workspace.package]
-version = "0.2.3"
+version = "0.2.4"
 license = "GPL-3.0-or-later"
 authors = ["SWMM contributors"]
 
@@ -49,6 +50,9 @@ uk-util = { git = "https://github.com/ustruct/ukmm", branch = "swmm" }
 unrar = "0.5.8"
 zip = { version = "2.1", default-features = false }
 zstd = { version = "0.13.1", features = ["experimental"] }
+
+[patch.crates-io]
+piz = { path = "crates/piz" }
 
 [profile.release]
 lto = "thin"

@@ -17,11 +17,27 @@ fn font_is_valid(data: &[u8], index: u32) -> bool {
     ab_glyph::FontRef::try_from_slice_and_index(data, index).is_ok()
 }
 
-fn font_data(data: Vec<u8>, index: u32) -> Option<egui::FontData> {
-    font_is_valid(&data, index).then(|| egui::FontData {
+fn static_font_data(data: &'static [u8], index: u32) -> egui::FontData {
+    egui::FontData {
         index,
-        ..egui::FontData::from_owned(data)
-    })
+        ..egui::FontData::from_static(data)
+    }
+}
+
+fn font_data(data: Vec<u8>, index: u32) -> Option<egui::FontData> {
+    font_is_valid(&data, index)
+        .then(|| static_font_data(Box::leak(data.into_boxed_slice()), index))
+}
+
+#[cfg(windows)]
+fn mapped_font_data(path: &std::path::Path) -> Option<egui::FontData> {
+    let file = std::fs::File::open(path).ok()?;
+    let map = unsafe { memmap2::Mmap::map(&file) }.ok()?;
+    if !font_is_valid(&map, 0) {
+        return None;
+    }
+    let data: &'static [u8] = Box::leak(Box::new(map));
+    Some(static_font_data(data, 0))
 }
 
 fn load_system_font(name: &str, bold: bool) -> Option<egui::FontData> {
@@ -40,10 +56,7 @@ fn load_system_font(name: &str, bold: bool) -> Option<egui::FontData> {
             ("NotoSC", true) => &["msyhbd.ttc"],
             _ => &[],
         };
-        files.iter().find_map(|file| {
-            let data = std::fs::read(fonts_dir.join(file)).ok()?;
-            font_data(data, 0)
-        })
+        files.iter().find_map(|file| mapped_font_data(&fonts_dir.join(file)))
     }
     #[cfg(not(windows))]
     {

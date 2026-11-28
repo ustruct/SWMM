@@ -56,7 +56,7 @@ impl App {
         self.mods
             .iter()
             .find(|m| (*m).hash() == hash)
-            .map(|m| m.meta.name.to_string())
+            .map(|m| m.display_name().to_string())
             .unwrap_or_else(|| "?".into())
     }
 

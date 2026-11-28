@@ -34,7 +34,7 @@ impl ModInfo<'_> {
                     let mut vec = vec![0; file.size() as usize];
                     file.read_exact(&mut vec)?;
                     return Ok(Some(Arc::new(
-                        RetainedImage::from_image_bytes(mod_.meta.name.as_str(), &vec)
+                        super::frame::fitted_image(mod_.meta.name.as_str(), &vec, 960, 540)
                             .map_err(|e| anyhow::anyhow!("{}", e))?,
                     )));
                 }
@@ -57,6 +57,15 @@ impl ModInfo<'_> {
             .or_insert(loaded)
             .clone()
     }
+}
+
+pub fn release_previews() {
+    let mut previews = PREVIEW.write();
+    previews.clear();
+    previews.shrink_to_fit();
+    let mut roots = ROOTS.write();
+    roots.clear();
+    roots.shrink_to_fit();
 }
 
 pub static ROOTS: LazyLock<RwLock<FxHashMap<u64, PathNode>>> =

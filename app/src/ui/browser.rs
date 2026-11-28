@@ -638,6 +638,13 @@ fn format_count(count: u64) -> String {
 }
 
 impl BrowserState {
+    pub fn release_images(&mut self) {
+        self.thumbnails.clear();
+        self.blurred.clear();
+        self.thumbnails.shrink_to_fit();
+        self.blurred.shrink_to_fit();
+    }
+
     fn reload(&mut self) {
         self.request += 1;
         let request = self.request;

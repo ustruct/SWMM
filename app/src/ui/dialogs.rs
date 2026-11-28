@@ -5,6 +5,29 @@ use net::SmartStringWrapper;
 use super::*;
 
 #[derive(Debug)]
+pub struct ModDetailsEdit {
+    hash: usize,
+    original_name: String,
+    original_description: String,
+    name: String,
+    description: String,
+    focused: bool,
+}
+
+impl ModDetailsEdit {
+    pub fn new(mod_: &swmm_core::mods::Mod) -> Self {
+        Self {
+            hash: mod_.hash(),
+            original_name: mod_.meta.name.to_string(),
+            original_description: mod_.meta.description.to_string(),
+            name: mod_.display_name().to_string(),
+            description: mod_.display_description().to_string(),
+            focused: false,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct MetaInputModal {
     meta:   Option<Meta>,
     path:   Option<PathBuf>,
@@ -198,6 +221,73 @@ impl App {
         });
         if close {
             self.new_profile = None;
+        }
+    }
+
+    pub fn render_edit_mod(&mut self, ctx: &egui::Context) {
+        let Some(edit) = self.edit_mod.as_mut() else {
+            return;
+        };
+        let palette = visuals::ctx_palette(ctx);
+        let mut close = false;
+        let mut save = false;
+        chrome::dialog(ctx, "editModDialog", Icon::Pen, None, &"SW_EditDetails_Title".localize(), 460.0, |ui| {
+            ui.add(
+                Label::new(RichText::new("SW_EditDetails_Hint".localize()).size(12.5).color(palette.muted)).wrap(),
+            );
+            ui.add_space(8.0);
+            ui.label("Info_Name".localize());
+            let name = ui.add(
+                egui::TextEdit::singleline(&mut edit.name)
+                    .hint_text(edit.original_name.as_str())
+                    .desired_width(f32::INFINITY)
+                    .margin(Vec2::new(8.0, 5.0)),
+            );
+            if !edit.focused {
+                name.request_focus();
+                edit.focused = true;
+            }
+            let submit = name.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+            ui.label(
+                RichText::new(format!("{} {}", "SW_EditDetails_Originally".localize(), edit.original_name))
+                    .size(12.0)
+                    .color(palette.muted),
+            );
+            ui.add_space(8.0);
+            ui.label("Info_Description".localize());
+            ui.small("Generic_MarkdownSupported".localize());
+            egui::ScrollArea::vertical().drag_to_scroll(false).max_height(220.0).show(ui, |ui| {
+                ui.add(
+                    egui::TextEdit::multiline(&mut edit.description)
+                        .desired_rows(6)
+                        .desired_width(f32::INFINITY),
+                );
+            });
+            chrome::dialog_buttons(ui, |ui| {
+                if chrome::fancy_button(ui, Icon::Check, &"Generic_Save".localize(), 86.0, 30.0).clicked() || submit {
+                    save = true;
+                }
+                if ui.add(egui::Button::new("Generic_Cancel".localize()).min_size(Vec2::new(80.0, 30.0))).clicked()
+                    || ui.input(|i| i.key_pressed(egui::Key::Escape))
+                {
+                    close = true;
+                }
+                if ui
+                    .add(egui::Button::new("Generic_Reset".localize()).min_size(Vec2::new(80.0, 30.0)))
+                    .on_hover_text("SW_EditDetails_Reset".localize())
+                    .clicked()
+                {
+                    edit.name = edit.original_name.clone();
+                    edit.description = edit.original_description.clone();
+                }
+            });
+        });
+        if save {
+            if let Some(edit) = self.edit_mod.as_ref() {
+                self.do_update(Message::SaveModDetails(edit.hash, edit.name.clone(), edit.description.clone()));
+            }
+        } else if close {
+            self.edit_mod = None;
         }
     }
 

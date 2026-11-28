@@ -89,7 +89,9 @@ impl Sort {
                 Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| a.enabled.cmp(&b.enabled))
             }
             Sort::Name => {
-                Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| a.meta.name.cmp(&b.meta.name))
+                Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| {
+                    a.display_name().to_lowercase().cmp(&b.display_name().to_lowercase())
+                })
             }
             Sort::Category => {
                 Box::new(|(_, a): &(_, Mod), (_, b): &(_, Mod)| {
@@ -130,6 +132,7 @@ pub enum Message {
     Deploy,
     Deselect(usize),
     DuplicateProfile(String),
+    EditMod(Mod),
     Error(anyhow_ext::Error),
     HandleMod(Mod),
     HandleSettings,
@@ -150,6 +153,7 @@ pub enum Message {
     ResetMods(Option<Manifest>),
     ResetPending,
     ResetSettings,
+    SaveModDetails(usize, String, String),
     SaveSettings,
     SelectAll,
     SelectAlso(usize),
@@ -238,6 +242,7 @@ pub struct App {
     focused: FocusedPane,
     error: Option<anyhow_ext::Error>,
     new_profile: Option<String>,
+    edit_mod: Option<dialogs::ModDetailsEdit>,
     confirm: Option<(Message, String)>,
     busy: Cell<bool>,
     show_about: bool,
@@ -348,6 +353,7 @@ impl App {
             focused: FocusedPane::None,
             error: None,
             new_profile: None,
+            edit_mod: None,
             confirm: None,
             show_about: false,
             show_licenses: false,
@@ -400,6 +406,7 @@ impl App {
             || self.show_about
             || self.show_licenses
             || self.new_profile.is_some()
+            || self.edit_mod.is_some()
             || self.meta_input.is_open()
             || self.changelog.is_some()
             || self.crash.is_some()
@@ -532,8 +539,20 @@ impl eframe::App for App {
 }
 
 impl App {
+    fn release_memory(&self, ctx: &egui::Context) {
+        mod_info::release_previews();
+        self.browser.borrow_mut().release_images();
+        self.cheats.borrow_mut().release_map();
+        *self.conflicts.borrow_mut() = Default::default();
+        ctx.forget_all_images();
+        crate::release_allocator_memory();
+        swmm_core::process::trim_memory();
+        log::info!("Freed cached images and memory while Savage Wind runs");
+    }
+
     fn draw(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         self.handle_update(ctx, frame);
+        chrome::set_calm(jobs::game_running() || !ctx.input(|i| i.focused));
         fit_small_screen(ctx);
         let minimized = ctx.input(|i| i.viewport().minimized.unwrap_or(false));
         let size = ctx.screen_rect().size();
@@ -579,6 +598,7 @@ impl App {
         self.render_error(ctx);
         self.render_confirm(ctx);
         self.render_new_profile(ctx);
+        self.render_edit_mod(ctx);
         self.render_about(ctx);
         self.render_licenses(ctx);
         self.render_option_picker(ctx);

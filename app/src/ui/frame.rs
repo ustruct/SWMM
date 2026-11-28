@@ -146,8 +146,27 @@ pub fn auto_configure_on_start(core: &Manager) {
     super::jobs::sync_loader(&core.settings());
 }
 
+pub fn fitted_image(name: &str, bytes: &[u8], max_width: u32, max_height: u32) -> Result<RetainedImage, String> {
+    match image::load_from_memory(bytes) {
+        Ok(decoded) => {
+            let decoded = if decoded.width() > max_width || decoded.height() > max_height {
+                decoded.resize(max_width, max_height, image::imageops::FilterType::Triangle)
+            } else {
+                decoded
+            };
+            let rgba = decoded.to_rgba8();
+            let size = [rgba.width() as usize, rgba.height() as usize];
+            Ok(RetainedImage::from_color_image(
+                name,
+                egui::ColorImage::from_rgba_unmultiplied(size, rgba.as_raw()),
+            ))
+        }
+        Err(_) => RetainedImage::from_image_bytes(name, bytes),
+    }
+}
+
 fn bundled_image(name: &str, bytes: &[u8]) -> RetainedImage {
-    RetainedImage::from_image_bytes(name, bytes).unwrap_or_else(|e| {
+    fitted_image(name, bytes, 960, 540).unwrap_or_else(|e| {
         log::error!("Couldn't load the bundled {name} image: {e}");
         RetainedImage::from_color_image(name, egui::ColorImage::new([1, 1], Color32::TRANSPARENT))
     })
@@ -478,7 +497,9 @@ impl App {
         let configured = self.game_status.ok;
         let palette = visuals::palette(ui);
         let time = ui.input(|i| i.time);
-        ui.ctx().request_repaint_after(std::time::Duration::from_millis(33));
+        if !chrome::calm() {
+            ui.ctx().request_repaint_after(std::time::Duration::from_millis(33));
+        }
         let avail = ui.available_rect_before_wrap();
         let width = avail.width().clamp(240.0, 720.0);
         let area = Rect::from_center_size(avail.center(), Vec2::new(width, avail.height().min(660.0)));
@@ -634,7 +655,7 @@ impl App {
                 let names = self
                     .selected
                     .iter()
-                    .map(|m| m.meta.name.as_str())
+                    .map(|m| m.display_name())
                     .collect::<Vec<_>>()
                     .join(", ");
                 self.do_update(Message::Confirm(
@@ -728,7 +749,7 @@ impl App {
         ui.add_space(14.0);
         ui.add(
             egui::Label::new(
-                RichText::new(mod_.meta.name.as_str())
+                RichText::new(mod_.display_name())
                     .size(18.0)
                     .family(egui::FontFamily::Name("Bold".into()))
                     .color(palette.text),
@@ -741,6 +762,16 @@ impl App {
             meta.push_str(&format!("  ·  {} {}", "SW_By".localize(), mod_.meta.author));
         }
         ui.add(egui::Label::new(RichText::new(meta).size(13.0).color(palette.muted)).truncate());
+        if mod_.custom_name.is_some() {
+            ui.add(
+                egui::Label::new(
+                    RichText::new(format!("{} {}", "SW_EditDetails_Originally".localize(), mod_.meta.name))
+                        .size(12.0)
+                        .color(palette.muted),
+                )
+                .truncate(),
+            );
+        }
         ui.add_space(8.0);
         ui.horizontal_wrapped(|ui| {
             ui.spacing_mut().item_spacing.x = 6.0;
@@ -768,13 +799,23 @@ impl App {
             {
                 self.do_update(Message::RequestOptions(mod_.clone(), true));
             }
+            if ui
+                .add(
+                    egui::Button::new(icon_text_job_owned(ui, Icon::Pen, &"SW_EditDetails_Short".localize()))
+                        .min_size(Vec2::new(0.0, 24.0)),
+                )
+                .on_hover_text("SW_EditDetails".localize())
+                .clicked()
+            {
+                self.do_update(Message::EditMod(mod_.clone()));
+            }
         });
         ui.add_space(12.0);
         egui::ScrollArea::vertical().drag_to_scroll(false)
             .id_source("homeInfoScroll")
             .auto_shrink([false, false])
             .show(ui, |ui| {
-                if mod_.meta.description.trim().is_empty() {
+                if mod_.display_description().trim().is_empty() {
                     ui.label(RichText::new("SW_NoDescription".localize()).color(palette.muted));
                 } else {
                     let md_cache = ui.data_mut(|d| {
@@ -786,7 +827,7 @@ impl App {
                     egui_commonmark::CommonMarkViewer::new("homeModDescription").show(
                         ui,
                         &mut md_cache.lock(),
-                        &mod_.meta.description,
+                        mod_.display_description(),
                     );
                 }
                 if !mod_.enabled_options.is_empty() {
@@ -1033,7 +1074,7 @@ impl App {
                                     painter.text(
                                         pos2(rect.left() + 64.0, rect.center().y),
                                         Align2::LEFT_CENTER,
-                                        m.meta.name.as_str(),
+                                        m.display_name(),
                                         egui::FontId::proportional(14.0),
                                         if m.enabled { palette.text } else { palette.muted },
                                     );

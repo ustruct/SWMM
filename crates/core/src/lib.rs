@@ -19,6 +19,7 @@ pub mod map;
 pub mod modpack;
 pub mod mods;
 pub mod origin;
+pub mod process;
 pub mod rebase;
 pub mod texts;
 pub mod saves;
