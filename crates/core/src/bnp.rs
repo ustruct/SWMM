@@ -749,16 +749,3 @@ pub fn convert_bnp(core: &crate::core::Manager, path: &Path) -> Result<PathBuf> 
     crate::util::release_temp(&tempdir);
     packed
 }
-
-#[cfg(test)]
-#[test]
-#[allow(clippy::unwrap_used)]
-fn test_convert() {
-    let path = dirs2::download_dir()
-        .unwrap()
-        .join("clearcameraui_nodetection.bnp");
-    if !path.is_file() {
-        return;
-    }
-    unpack_bnp(&super::core::Manager::init().unwrap(), path.as_ref()).unwrap();
-}

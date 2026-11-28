@@ -15,5 +15,3 @@ egui_extras = { version = "0.28", features = ["image", "svg"] }
 font-loader = "0.11.0"
 memmap2 = "0.9"
 
-[dev-dependencies]
-eframe = { workspace = true }

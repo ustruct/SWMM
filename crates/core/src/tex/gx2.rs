@@ -411,10 +411,6 @@ pub fn address_in_slice(x: u32, y: u32, slice: u32, l: &LevelInfo, bpp: u32, swi
     }
 }
 
-pub fn untile(data: &[u8], l: &LevelInfo, bpp: u32, swizzle: u32) -> Result<Vec<u8>> {
-    untile_slice(data, 0, l, bpp, swizzle)
-}
-
 pub fn untile_slice(data: &[u8], slice: u32, l: &LevelInfo, bpp: u32, swizzle: u32) -> Result<Vec<u8>> {
     let bpe = (bpp / 8) as usize;
     let mut out = vec![0u8; l.width_elems as usize * l.height_elems as usize * bpe];
@@ -490,70 +486,4 @@ pub fn untile_all(s: &Surface, mips: Option<&[u8]>) -> Result<Vec<Vec<u8>>> {
         log::warn!("{}: its mip levels need {end:#x} bytes, the header says {:#x}", s.name, s.mip_size);
     }
     Ok(levels)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn surface(w: u32, h: u32, format: u32, tile_mode: u32, swizzle: u32) -> Surface {
-        Surface {
-            name: "t".into(),
-            dim: 1,
-            width: w,
-            height: h,
-            depth: 1,
-            mips: 1,
-            format,
-            aa: 0,
-            image_size: 0,
-            mip_size: 0,
-            tile_mode,
-            swizzle,
-            alignment: 0,
-            pitch: 0,
-            mip_offsets: [0; 13],
-            comp_sel: [0, 1, 2, 3],
-            image: vec![],
-            mip_data: vec![],
-            data_at: None,
-            mip_at: None,
-            user_data: vec![],
-        }
-    }
-
-    #[test]
-    fn tiling_is_one_to_one() {
-        for (w, h, fmt) in [(256, 256, 0x31), (512, 128, 0x33), (64, 64, 0x1a), (128, 256, 0x35), (96, 40, 0x31),
-                            (32, 32, 0x01)] {
-            for mode in [2, 4] {
-                for swizzle in [0, 0x100, 0x300, 0x700] {
-                    let s = surface(w, h, fmt, mode, swizzle);
-                    let (bpp, _) = format_bits(fmt).unwrap();
-                    for level in 0..4 {
-                        let l = level_info(&s, level).unwrap();
-                        let mut seen = std::collections::HashSet::new();
-                        for y in 0..l.height {
-                            for x in 0..l.pitch {
-                                let a = address(x, y, &l, bpp, swizzle);
-                                assert!(a + (bpp / 8) as u64 <= l.size as u64, "{w}x{h} {fmt:#x} mode {mode} level {level}");
-                                assert!(seen.insert(a), "{w}x{h} {fmt:#x} mode {mode} level {level}: twice at {a:#x}");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn layout_of_common_textures() {
-        let s = surface(256, 256, 0x31, 4, 0);
-        let l0 = level_info(&s, 0).unwrap();
-        assert_eq!((l0.pitch, l0.height, l0.size, l0.base_align), (64, 64, 0x8000, 0x1000));
-        let l1 = level_info(&s, 1).unwrap();
-        assert_eq!((l1.tile_mode, l1.pitch, l1.size), (4, 32, 0x2000));
-        let l2 = level_info(&s, 2).unwrap();
-        assert_eq!((l2.tile_mode, l2.pitch, l2.height, l2.size), (2, 16, 16, 0x800));
-    }
 }

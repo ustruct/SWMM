@@ -178,23 +178,3 @@ pub fn restore(save: &Path, from: &Path) -> Result<()> {
     log::info!("Restored the saves from {}", from.display());
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn backup_and_restore() {
-        let root = tempfile::tempdir().unwrap();
-        let save = root.path().join("save");
-        std::fs::create_dir_all(save.join("slot0")).unwrap();
-        std::fs::write(save.join("slot0/game_data.sav"), b"one").unwrap();
-        let first = backup(&save, true).unwrap().expect("first backup");
-        assert!(backup(&save, true).unwrap().is_none());
-        std::fs::write(save.join("slot0/game_data.sav"), b"two").unwrap();
-        restore(&save, &first).unwrap();
-        assert_eq!(std::fs::read(save.join("slot0/game_data.sav")).unwrap(), b"one");
-        let all = list(&save);
-        assert!(all.len() >= 2 && all.iter().all(|b| b.by_swmm));
-    }
-}

@@ -91,11 +91,6 @@ impl Manager {
     }
 
     #[inline(always)]
-    pub fn mod_manager_mut(&self) -> RwLockWriteGuard<'_, mods::Manager> {
-        self.mod_manager.write()
-    }
-
-    #[inline(always)]
     pub fn deploy_manager(&self) -> RwLockReadGuard<'_, deploy::Manager> {
         self.deploy_manager.read()
     }

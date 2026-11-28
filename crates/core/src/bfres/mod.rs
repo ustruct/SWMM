@@ -2,20 +2,6 @@ pub mod model;
 pub mod switch;
 pub mod wiiu;
 
-use anyhow_ext::Result;
-
-pub fn convert_wiiu(data: &[u8]) -> Result<Vec<u8>> {
-    let raw = if data.starts_with(b"Yaz0") { roead::yaz0::decompress(data)? } else { data.to_vec() };
-    let file = wiiu::read(&raw, false)?;
-    Ok(roead::yaz0::compress(switch::write(&file)?))
-}
-
-pub fn convert_wiiu_dropping_unsupported(data: &[u8]) -> Result<Vec<u8>> {
-    let raw = if data.starts_with(b"Yaz0") { roead::yaz0::decompress(data)? } else { data.to_vec() };
-    let file = wiiu::read(&raw, true)?;
-    switch::write(&file)
-}
-
 pub const NEUTRAL_BLACK: &str = "SwmmNeutral_Black";
 pub const NEUTRAL_WHITE: &str = "SwmmNeutral_White";
 pub const NEUTRAL_NORMAL: &str = "SwmmNeutral_Normal";

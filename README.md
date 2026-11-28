@@ -65,7 +65,7 @@ SWMM converts Wii U mods for Switch as you install them, so mods that were never
 | Menus and fonts | UI layouts, their animations and textures, and fonts |
 | Sound and music | Music streams and sound archives |
 | Game data | Actors, maps, events, texts, terrain and collision |
-| Effects | A mod's effect edits are carried onto the Switch game's effects |
+| Effects | Effect edits, including new and changed effect textures and particle shapes |
 | Packages | UKMM packages and BNPs made for Wii U |
 
 **Not converted:** shaders and edits inside compiled effect shaders, because they're GPU programs built for the Wii U.
@@ -74,8 +74,9 @@ version's own.
 
 **How well it works:** the converter was checked against the whole Wii U game. More than 150,000 files come out byte for
 byte the same as the Switch version, and the rest differ only where Nintendo changed the game for Switch. Of the 45 most
-downloaded Wii U mods on GameBanana, 39 convert fully and 6 partly. The **Compatibility** page in the app lists them,
-and you can test any mod file there without installing it.
+downloaded Wii U mods on GameBanana, all 45 convert fully. The **Compatibility** page in the app lists them, along with
+mods tested by SWMM's owner, such as Second Wind, and you can test any mod file there without installing it. These
+results come from converting the mods; they weren't checked in game.
 
 ## Getting started
 
@@ -95,8 +96,8 @@ and cheat code files (Atmosphère `.txt`) aren't installed; use the Cheats page 
 
 ## Building
 
-Install [Rust](https://rustup.rs), then run `build-windows.bat` on Windows or `build.sh` on Linux. The finished app is
-placed in the `dist` folder.
+Install [Rust](https://rustup.rs), then run `cargo build --release --workspace`. The app is placed in `target/release`
+as `swmm` (`swmm.exe` on Windows). On Windows, keep `swmm_loader.dll` next to it, renamed to `swmm.dll`.
 
 ## License and credits
 

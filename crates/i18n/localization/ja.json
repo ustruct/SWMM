@@ -244,6 +244,7 @@
   "Compat_Tested": "{date}にテスト",
   "Compat_ByYou": "あなたのテスト",
   "Compat_BySwmm": "SWMMがテスト",
+  "Compat_ByOwner": "作者がテスト済み",
   "Compat_Converted": "{count}個のファイルを変換",
   "Compat_Remove": "削除",
   "Compat_Empty": "一致するテスト済みMODはありません。",

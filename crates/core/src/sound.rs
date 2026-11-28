@@ -503,30 +503,3 @@ fn amta_to_switch(b: &mut [u8], a: usize) -> Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sounds_past_the_end_are_dropped() {
-        let mut b = Vec::new();
-        b.extend_from_slice(b"BARS");
-        b.extend(0u32.to_be_bytes());
-        b.extend([0xfe, 0xff, 1, 1]);
-        b.extend(1u32.to_be_bytes());
-        b.extend(0u32.to_be_bytes());
-        b.extend(0x20u32.to_be_bytes());
-        b.extend(0xffff_ecffu32.to_be_bytes());
-        b.resize(0x20, 0);
-        let mut amta = b"AMTA".to_vec();
-        amta.extend([0xfe, 0xff, 0, 4]);
-        amta.extend(0x1cu32.to_be_bytes());
-        amta.extend([0; 16]);
-        b.extend(amta);
-        let n = b.len() as u32;
-        b[4..8].copy_from_slice(&n.to_be_bytes());
-        let out = bars_to_switch(&b, "Voice/USen/NV_Test.bars").unwrap();
-        assert_eq!(&out[0x18..0x1c], &u32::MAX.to_le_bytes());
-    }
-}

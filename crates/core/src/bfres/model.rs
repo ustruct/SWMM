@@ -7,6 +7,7 @@ pub struct File {
     pub bone_vis_anims: Vec<BoneVisAnim>,
     pub scene_anims: Vec<SceneAnim>,
     pub external: Vec<(String, Vec<u8>)>,
+    pub notes: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -138,6 +139,7 @@ pub struct Material {
     pub params: Vec<ShaderParam>,
     pub param_data: Vec<u8>,
     pub volatile_count: u16,
+    pub volatile_flags: Vec<u8>,
     pub raw_param_size: u16,
     pub user_data: Vec<UserData>,
 }

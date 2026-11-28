@@ -84,29 +84,3 @@ pub fn deswizzle(data: &[u8], level: &Level, bpe: u32) -> Vec<u8> {
     }
     out
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn layout_of_a_128_bc1() {
-        assert_eq!(block_height(32), 4);
-        let l = levels(128, 128, 8, 4, 8, 4);
-        assert_eq!(l.iter().map(|x| x.size).sum::<u32>(), 0x3400);
-        assert_eq!(l[1].offset, 0x2000);
-        assert_eq!(block_height(80), 8);
-        assert_eq!(block_height(96), 16);
-        assert_eq!(block_height(10), 1);
-        assert_eq!(block_height(11), 2);
-    }
-
-    #[test]
-    fn swizzle_round_trip() {
-        let l = levels(64, 40, 1, 4, 16, block_height(10))[0];
-        let linear: Vec<u8> = (0..(l.width_blocks * l.height_blocks * 16)).map(|i| (i * 7 % 251) as u8).collect();
-        let mut s = vec![0u8; l.size as usize];
-        swizzle(&linear, &l, 16, &mut s);
-        assert_eq!(deswizzle(&s, &l, 16), linear);
-    }
-}

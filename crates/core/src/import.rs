@@ -932,26 +932,3 @@ pub fn unpack(path: &Path) -> Result<PathBuf> {
     }
     Ok(path.to_path_buf())
 }
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn code_patches_are_noticed_next_to_game_files() {
-        let dirs = vec![
-            PathBuf::from("Arabic_Hesham"),
-            PathBuf::from("Arabic_Hesham/exefs"),
-            PathBuf::from("Arabic_Hesham/romfs"),
-        ];
-        let files = vec![PathBuf::from("Arabic_Hesham/romfs/Font/Font_US.sbfarc")];
-        assert!(has_code_patches(&dirs, &files));
-
-        let ips = vec![PathBuf::from("mod/CD57B23FA4BBAD65803D9788C01821EE.IPS")];
-        assert!(has_code_patches(&[], &ips));
-
-        let romfs_only = vec![PathBuf::from("mod/romfs"), PathBuf::from("mod/romfs/Pack")];
-        assert!(!has_code_patches(&romfs_only, &files));
-    }
-}

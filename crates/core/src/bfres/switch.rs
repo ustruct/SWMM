@@ -734,6 +734,10 @@ fn write_material(w: &mut W, o: usize, m: &Material, index: u16) -> Result<()> {
         w.at(o + 0x68, data);
     }
     let vol = w.alloc(np.div_ceil(64).max(1) * 8, 8);
+    if !m.volatile_flags.is_empty() {
+        let n = m.volatile_flags.len().min(np.div_ceil(64).max(1) * 8);
+        w.put(vol, &m.volatile_flags[..n]);
+    }
     w.at(o + 0x80, vol);
     if m.user_data.is_empty() {
         let here = align(w.b.len(), 8);

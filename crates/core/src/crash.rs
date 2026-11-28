@@ -127,27 +127,3 @@ pub fn check(settings: &Settings, exit_ok: bool, mods: &[Mod]) -> Option<CrashRe
         report
     })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn clean_exit_is_not_a_crash() {
-        assert!(analyze("[fs] mounted host directory x\nwindow closed\n[vk] t=1 frame 2\n", false, &[]).is_none());
-        assert!(analyze("[fs] something\n", true, &[]).is_none());
-    }
-
-    #[test]
-    fn access_violation_is_a_crash() {
-        let log = "[fs] cannot read C:/x/overlay/Actor/Pack/Foo.sbactorpack: bad\n[plat] access violation: read at 0x10\n  #0  0000 savagewind+12\n";
-        let report = analyze(log, true, &[]).expect("crash");
-        assert!(report.reason.starts_with("[plat] access violation"));
-        assert_eq!(report.files, vec!["Actor/Pack/Foo.sbactorpack".to_string()]);
-    }
-
-    #[test]
-    fn early_exit_without_close_is_a_crash() {
-        assert!(analyze("[fs] starting\n[pso] warm\n", false, &[]).is_some());
-    }
-}

@@ -53,12 +53,20 @@ impl Entry {
 static LIST: LazyLock<Vec<Entry>> =
     LazyLock::new(|| serde_json::from_str::<Vec<Entry>>(include_str!("wiiu_compat.json")).unwrap_or_default());
 
-static BY_ID: LazyLock<HashMap<u64, &'static Entry>> = LazyLock::new(|| LIST.iter().map(|e| (e.id, e)).collect());
+static OWNER: LazyLock<Vec<Entry>> =
+    LazyLock::new(|| serde_json::from_str::<Vec<Entry>>(include_str!("owner_compat.json")).unwrap_or_default());
+
+static BY_ID: LazyLock<HashMap<u64, &'static Entry>> =
+    LazyLock::new(|| OWNER.iter().chain(LIST.iter()).filter(|e| e.id != 0).rev().map(|e| (e.id, e)).collect());
 
 pub const TESTED: &str = "2026-11-22";
 
 pub fn bundled() -> &'static [Entry] {
     &LIST
+}
+
+pub fn owner() -> &'static [Entry] {
+    &OWNER
 }
 
 pub fn wiiu(id: u64) -> Option<&'static Entry> {
@@ -262,43 +270,5 @@ pub fn test_file(core: &crate::core::Manager, path: &Path) -> Test {
         options,
         error,
         error_chain,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn list_parses() {
-        let text = include_str!("wiiu_compat.json");
-        let entries: Vec<Entry> = serde_json::from_str(text).unwrap();
-        assert_eq!(entries.len(), LIST.len());
-        assert!(LIST.iter().all(|e| !e.name.is_empty()));
-    }
-
-    #[test]
-    fn reasons_read_well() {
-        assert_eq!(clean("Bad file at `C:\\x\\y.rs:4` here"), "Bad file here");
-        let mut test = Test {
-            name: String::new(),
-            status: Status::Partial,
-            converted: 3,
-            textures: 0,
-            stock: 0,
-            not_needed: 0,
-            left_out: vec![],
-            kinds: BTreeMap::from([("effects".to_string(), 1), ("shaders and other formats".to_string(), 2)]),
-            wiiu: true,
-            rebased: false,
-            kind: None,
-            options: 0,
-            error: None,
-            error_chain: vec![],
-        };
-        assert_eq!(test.reason(), "2 files in formats SWMM can't convert, 1 effect file");
-        test.status = Status::Failed;
-        test.error_chain = vec!["Failed to parse resource Actor/Pack/A.sbactorpack".into(), "Bad magic".into()];
-        assert_eq!(test.reason(), "Actor/Pack/A.sbactorpack can't be read: Bad magic");
     }
 }

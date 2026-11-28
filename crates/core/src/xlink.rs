@@ -868,18 +868,6 @@ fn wiiu_users(sound: bool) -> &'static std::collections::HashSet<(u32, u32, u32)
     &t[sound as usize]
 }
 
-pub fn wiiu_users_table(effects: &[u8], sounds: &[u8]) -> Result<Vec<u8>> {
-    let mut o = vec![];
-    for t in [effects, sounds] {
-        let f = fingerprints(t)?;
-        o.extend((f.len() as u32).to_le_bytes());
-        for (h, c, n) in f {
-            o.extend(h.to_le_bytes().into_iter().chain(c.to_le_bytes()).chain(n.to_le_bytes()));
-        }
-    }
-    Ok(o)
-}
-
 pub fn merge(switch: &[u8], modded: &[u8], sound: bool) -> Result<(Vec<u8>, usize)> {
     let (s, m) = (Sw::new(switch)?, Sw::new(modded)?);
     let props = |t: &Sw| -> Result<Vec<Vec<u8>>> {

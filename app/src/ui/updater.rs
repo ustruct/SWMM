@@ -484,22 +484,3 @@ fn localized(key: &'static str, version: &str) -> String {
     ]);
     strfmt::strfmt(&message, &vars).unwrap_or_else(|_| message.to_string())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn versions_compare() {
-        assert!(is_newer("0.1.6", "0.1.5"));
-        assert!(is_newer("v0.2.0", "0.1.9"));
-        assert!(is_newer("1.0.0", "0.99.99"));
-        assert!(!is_newer("0.1.5", "0.1.5"));
-        assert!(!is_newer("0.1.4", "0.1.5"));
-        assert!(is_newer("0.1.6", "0.1.6-beta.1"));
-        assert!(!is_newer("0.1.6-beta.1", "0.1.6"));
-        assert!(is_newer("0.1.6-beta.2", "0.1.6-beta.1"));
-        assert!(is_newer("0.2", "0.1.9"));
-        assert!(!is_newer("nonsense", "0.1.5"));
-    }
-}

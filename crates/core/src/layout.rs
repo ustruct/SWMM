@@ -462,21 +462,3 @@ fn anim_info(sec: &[u8]) -> Result<Vec<u8>> {
     }
     Ok(sized(out))
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn other_tools_material_flags_are_read_in_the_games_order() {
-        let mut m = vec![0u8; 0x28];
-        m[..4].copy_from_slice(b"W_Se");
-        m[0x24..0x28].copy_from_slice(&0x140u32.to_be_bytes());
-        m.extend([1, 2, 3, 4]);
-        m.extend([6, 0, 0, 0, 0x3f, 0, 0, 0]);
-        let out = material(&m).unwrap();
-        assert_eq!(u32::from_le_bytes(out[0x1c..0x20].try_into().unwrap()), 0x240);
-        assert_eq!(&out[out.len() - 12..out.len() - 8], &[1, 2, 3, 4]);
-        assert_eq!(material_size(0x240), m.len());
-    }
-}

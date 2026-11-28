@@ -244,6 +244,7 @@
   "Compat_Tested": "{date} 테스트",
   "Compat_ByYou": "내 테스트",
   "Compat_BySwmm": "SWMM 테스트",
+  "Compat_ByOwner": "제작자가 테스트함",
   "Compat_Converted": "파일 {count}개 변환됨",
   "Compat_Remove": "제거",
   "Compat_Empty": "일치하는 테스트 모드가 없습니다.",

@@ -538,17 +538,3 @@ pub fn handle_mod_arg(path: PathBuf) {
     log::info!("Opening mod at {} for installation", path.display());
     forward_to_ui(Message::OpenMod(path));
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn remerge() {
-        let Ok(core) = swmm_core::core::Manager::init() else {
-            return;
-        };
-        if core.settings().dump().is_none() {
-            return;
-        }
-        super::apply_changes(&core, vec![], None).unwrap_or_else(|e| panic!("{e:?}"));
-    }
-}

@@ -9,6 +9,7 @@ pub mod conflicts;
 pub mod control;
 pub mod crash;
 pub mod effect;
+pub mod effect_shape;
 pub mod core;
 pub mod deploy;
 pub mod font;

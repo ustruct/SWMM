@@ -32,12 +32,13 @@
  {
   "id": 33531,
   "name": "PS4 UI Complete 1.4.1",
-  "status": "partial",
-  "left_out": 1,
-  "converted": 2082,
+  "status": "full",
+  "left_out": 0,
+  "converted": 2083,
   "file": "botw_ps4_ui_standard_layout.zip",
-  "reason": "1 effect file",
-  "wiiu": true
+  "reason": "",
+  "wiiu": true,
+  "date": "2026-11-28"
  },
  {
   "id": 49532,
@@ -72,12 +73,13 @@
  {
   "id": 33533,
   "name": "Xbox One UI Complete 1.4.1",
-  "status": "partial",
-  "left_out": 1,
-  "converted": 2081,
+  "status": "full",
+  "left_out": 0,
+  "converted": 2082,
   "file": "botw_xbox_ui_standard_layout.zip",
-  "reason": "1 effect file",
-  "wiiu": true
+  "reason": "",
+  "wiiu": true,
+  "date": "2026-11-28"
  },
  {
   "id": 167741,
@@ -162,12 +164,13 @@
  {
   "id": 33527,
   "name": "Xbox UI Fixed (Complete)",
-  "status": "partial",
-  "left_out": 1,
-  "converted": 2079,
+  "status": "full",
+  "left_out": 0,
+  "converted": 2080,
   "file": "xbox_ui_standard_layout.rar",
-  "reason": "1 effect file",
-  "wiiu": true
+  "reason": "",
+  "wiiu": true,
+  "date": "2026-11-28"
  },
  {
   "id": 414110,
@@ -192,12 +195,13 @@
  {
   "id": 33532,
   "name": "Xbox One UI Complete - BNP Version",
-  "status": "partial",
-  "left_out": 1,
-  "converted": 2075,
+  "status": "full",
+  "left_out": 0,
+  "converted": 2076,
   "file": "xboneui_us.7z",
-  "reason": "1 effect file",
-  "wiiu": true
+  "reason": "",
+  "wiiu": true,
+  "date": "2026-11-28"
  },
  {
   "id": 439900,
@@ -212,12 +216,13 @@
  {
   "id": 168042,
   "name": "Alternative Hair and Eye Color for Linkle(V2 only)",
-  "status": "partial",
-  "left_out": 4,
-  "converted": 26,
-  "file": "linkle_bonus_green_hair_colour_mod_3addb.bnp",
-  "reason": "2 models SWMM can't convert yet, 2 files in formats SWMM can't convert",
-  "wiiu": true
+  "status": "full",
+  "left_out": 0,
+  "converted": 29,
+  "file": "linkle_green_hair_colour_mod_d57b3.bnp",
+  "reason": "",
+  "wiiu": true,
+  "date": "2026-11-28"
  },
  {
   "id": 49627,
@@ -282,12 +287,13 @@
  {
   "id": 33530,
   "name": "PS4 UI Complete - BNP Version",
-  "status": "partial",
-  "left_out": 1,
-  "converted": 1570,
+  "status": "full",
+  "left_out": 0,
+  "converted": 1571,
   "file": "ds4_ui_complete_pe.bnp",
-  "reason": "1 effect file",
-  "wiiu": true
+  "reason": "",
+  "wiiu": true,
+  "date": "2026-11-28"
  },
  {
   "id": 49749,

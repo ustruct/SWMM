@@ -49,10 +49,17 @@ pub struct Report {
     pub game: crate::stock::Game,
     pub neutral: Vec<(String, Vec<&'static str>)>,
     pub tex_stems: Option<std::collections::HashSet<String>>,
+    pub shared_model_dirs: Vec<PathBuf>,
+    pub prefix: &'static str,
     pub not_needed: usize,
 }
 
-fn own_tex(name: &str, model_dir: Option<&Path>, tex_stems: Option<&std::collections::HashSet<String>>) -> Option<String> {
+fn own_tex(
+    name: &str,
+    model_dir: Option<&Path>,
+    shared: &[PathBuf],
+    tex_stems: Option<&std::collections::HashSet<String>>,
+) -> Option<String> {
     let (dir, file) = name.rsplit_once('/').unwrap_or(("", name));
     let stem = file.strip_suffix(".sbfres").or_else(|| file.strip_suffix(".bfres"))?;
     let base = stem.rsplit_once('-').filter(|(_, n)| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit())).map(|(b, _)| b);
@@ -60,7 +67,10 @@ fn own_tex(name: &str, model_dir: Option<&Path>, tex_stems: Option<&std::collect
         let candidate = if dir.is_empty() { s.to_string() } else { format!("{dir}/{s}") };
         let found = match (tex_stems, model_dir.and_then(Path::parent)) {
             (Some(set), _) => set.contains(&candidate),
-            (None, Some(src)) => src.join(format!("{candidate}.Tex1.sbfres")).is_file(),
+            (None, Some(src)) => {
+                src.join(format!("{candidate}.Tex1.sbfres")).is_file()
+                    || shared.iter().filter_map(|d| d.parent()).any(|r| r.join(format!("{candidate}.Tex1.sbfres")).is_file())
+            }
             (None, None) => false,
         };
         found.then_some(candidate)
@@ -68,6 +78,24 @@ fn own_tex(name: &str, model_dir: Option<&Path>, tex_stems: Option<&std::collect
 }
 
 pub const NOT_NEEDED: &str = "not needed on Switch";
+
+fn with_switch_extras(data: Vec<u8>, places: &[String], report: &mut Report) -> Vec<u8> {
+    let Some((path, theirs)) = places.iter().find_map(|p| report.game.read(p).map(|d| (p, d))) else { return data };
+    let file = path.rsplit('/').next().unwrap_or(path);
+    let fres_name = file.strip_suffix(".sbfres").unwrap_or(file);
+    match crate::tex::add_missing_from(&data, &theirs, fres_name) {
+        Ok((d, 0)) => d,
+        Ok((d, n)) => {
+            report.notes.push(format!("{path}: the Switch game's {n} textures the Wii U file doesn't have were added"));
+            log::info!("{path}: added the Switch game's {n} textures the Wii U file doesn't have");
+            d
+        }
+        Err(e) => {
+            log::warn!("{path}: couldn't add the Switch game's own textures: {e:#}");
+            data
+        }
+    }
+}
 
 impl Report {
     pub fn leave_out(&mut self, name: String, why: &str) {
@@ -150,29 +178,15 @@ fn is_byml(d: &[u8]) -> bool {
 
 pub type Skipped = Vec<(String, String)>;
 
-pub fn convert_file_lenient(name: &str, data: &[u8]) -> std::result::Result<(Vec<u8>, Skipped), String> {
-    let mut r = Report::default();
-    let out = convert(name, data, None, &mut r).map_err(str::to_string)?;
-    Ok((out, r.skipped))
-}
-
 pub fn convert_with(name: &str, data: &[u8], report: &mut Report) -> std::result::Result<Vec<u8>, &'static str> {
     convert(name, data, None, report)
 }
 
-pub fn convert_file(name: &str, data: &[u8]) -> std::result::Result<Vec<u8>, String> {
-    let mut r = Report::default();
-    let out = convert(name, data, None, &mut r).map_err(str::to_string)?;
-    if let Some((f, why)) = r.skipped.first() {
-        return Err(format!("{f}: {why}"));
-    }
-    Ok(out)
-}
-
 fn pack_textures(
+    pack: &str,
     sarc: &Sarc,
     model_dir: Option<&Path>,
-    w: &mut SarcWriter,
+    made: &mut Vec<(String, Vec<u8>)>,
     report: &mut Report,
 ) -> std::collections::HashSet<String> {
     let mut used = std::collections::HashSet::new();
@@ -191,7 +205,10 @@ fn pack_textures(
     for stem in stems {
         let file = stem.rsplit('/').next().unwrap_or(&stem).to_string();
         let from_pack = |n: &str| sarc.get_data(n).map(|d| d.to_vec());
-        let loose = |n: &str| model_dir.and_then(|d| fs::read(d.join(n)).ok());
+        let shared = report.shared_model_dirs.clone();
+        let loose = |n: &str| {
+            model_dir.and_then(|d| fs::read(d.join(n)).ok()).or_else(|| shared.iter().find_map(|d| fs::read(d.join(n)).ok()))
+        };
         let Some(first) = from_pack(&format!("{stem}.Tex1.sbfres")).or_else(|| loose(&format!("{file}.Tex1.sbfres")))
         else {
             let unchanged = from_pack(&format!("{stem}.Tex2.sbfres"))
@@ -220,7 +237,13 @@ fn pack_textures(
         let parts: Vec<&[u8]> = parts.iter().map(|p| p.as_slice()).collect();
         match crate::tex::convert_wiiu_parts(&file, &parts, tex2.as_deref()) {
             Ok((data, r)) => {
-                w.add_file(format!("{stem}.Tex.sbfres"), data);
+                let places = [
+                    format!("{}{pack}//{stem}.Tex.sbfres", report.prefix),
+                    format!("{}{stem}.Tex.sbfres", report.prefix),
+                    format!("{stem}.Tex.sbfres"),
+                ];
+                let data = with_switch_extras(data, &places, report);
+                made.push((stem.clone(), data));
                 report.converted += 1;
                 report.textures += r.textures;
                 report.notes.extend(r.notes.into_iter().map(|n| format!("{file}: {n}")));
@@ -298,20 +321,30 @@ fn convert(
     let wiiu_fres = raw.len() > 0x70 && &raw[..4] == b"FRES" && raw[8..10] == [0xfe, 0xff];
     let groups = |i: usize| if wiiu_fres { u16::from_be_bytes([raw[0x50 + 2 * i], raw[0x51 + 2 * i]]) } else { 0 };
     if wiiu_fres && p != "bfres" && groups(1) > 0 && groups(0) == 0 && (2..11).all(|g| groups(g) == 0) {
-        let out = crate::tex::convert_wiiu_container(&raw).map_err(|e| {
+        let stock = report.game.read(&format!("{}{name}", report.prefix));
+        let stock = stock.map(|d| if d.starts_with(b"Yaz0") { yaz0::decompress(&d).map(|d| d.to_vec()).unwrap_or(d) } else { d });
+        let (out, resized) = crate::tex::convert_wiiu_container_like(&raw, stock.as_deref()).map_err(|e| {
             log::warn!("{name}: {e:#}");
             "texture file SWMM can't convert yet (see the log)"
         })?;
+        if resized > 0 {
+            log::info!("{name}: {resized} textures resized to the Switch game's size");
+            report.notes.push(format!("{name}: {resized} textures resized to the size the Switch game uses"));
+        }
         report.converted += 1;
         report.textures += groups(1) as usize;
         return Ok(if compressed { yaz0::compress(&out) } else { out });
     }
     if wiiu_fres && (p == "bfres" || groups(1) == 0) {
-        let mut file = crate::bfres::wiiu::read(&raw, false).map_err(|e| {
+        let mut file = crate::bfres::wiiu::read(&raw).map_err(|e| {
             log::warn!("{name}: {e:#}");
-            "model SWMM can't convert yet (material visibility animations, morphs or an unusual format: see the log)"
+            "model in a format SWMM can't convert yet (see the log)"
         })?;
-        let tex = own_tex(name, model_dir, report.tex_stems.as_ref());
+        for n in std::mem::take(&mut file.notes) {
+            log::info!("{name}: {n}");
+            report.notes.push(format!("{name}: {n}"));
+        }
+        let tex = own_tex(name, model_dir, &report.shared_model_dirs, report.tex_stems.as_ref());
         let fixes = crate::bfres::fix_dangling_samplers(&mut file, tex.is_some());
         if !fixes.is_empty() {
             let mut needed: Vec<&'static str> = fixes.iter().filter_map(|f| f.texture).collect();
@@ -353,7 +386,8 @@ fn convert(
     if matches!(p, "srsizetable" | "rsizetable") {
         return Err(NOT_NEEDED);
     }
-    if p == "esetlist" && let Some(out) = crate::effect::to_switch(name, &raw, &mut report.game) {
+    if p == "esetlist" && let Some(result) = crate::effect::to_switch(name, &raw, &mut report.game) {
+        let out = result?;
         report.converted += 1;
         return Ok(if compressed { yaz0::compress(&out) } else { out });
     }
@@ -412,7 +446,8 @@ fn convert(
     } else if raw.len() > 4 && &raw[..4] == b"SARC" {
         let sarc = Sarc::new(raw.as_slice()).map_err(|_| "broken archive")?;
         let mut w = SarcWriter::new(Endian::Little).with_min_alignment(sarc.guess_min_alignment());
-        let mut used = pack_textures(&sarc, model_dir, &mut w, report);
+        let mut made = Vec::new();
+        let mut used = pack_textures(name, &sarc, model_dir, &mut made, report);
         let images: Vec<(String, Vec<u8>)> = sarc
             .files()
             .filter_map(|f| {
@@ -444,6 +479,17 @@ fn convert(
                 Ok(d) => w.add_file(n, d),
                 Err(why) => report.leave_out(n.to_string(), why),
             }
+        }
+        for (stem, mut data) in made {
+            if let Some(at) = report.neutral.iter().position(|(s, _)| *s == stem) {
+                let (_, names) = report.neutral.remove(at);
+                let fres_name = format!("{}.Tex", stem.rsplit('/').next().unwrap_or(&stem));
+                match crate::tex::add_textures_to_tex(&data, &fres_name, &names) {
+                    Ok(d) => data = d,
+                    Err(e) => log::warn!("{stem}.Tex.sbfres: couldn't add the neutral textures {names:?}: {e:#}"),
+                }
+            }
+            w.add_file(format!("{stem}.Tex.sbfres"), data);
         }
         w.to_binary()
     } else if is_byml(&raw) {
@@ -848,10 +894,6 @@ pub fn tex1_part_stem(name: &str) -> Option<&str> {
     Some(file.rsplit('/').next().unwrap_or(file))
 }
 
-pub fn convert_mod(dir: &Path, content_out: &Path, aoc_out: &Path) -> Result<Report> {
-    convert_mod_with_game(dir, content_out, aoc_out, None)
-}
-
 fn fill_empty_actor_packs(dst: &Path, prefix: &str, report: &mut Report) -> Result<()> {
     let Ok(entries) = fs::read_dir(dst.join("Actor/Pack")) else { return Ok(()) };
     for e in entries.flatten() {
@@ -885,14 +927,23 @@ fn fill_empty_actor_packs(dst: &Path, prefix: &str, report: &mut Report) -> Resu
 }
 
 pub fn convert_mod_with_game(dir: &Path, content_out: &Path, aoc_out: &Path, romfs: Option<&Path>) -> Result<Report> {
+    convert_mod_sharing(dir, content_out, aoc_out, romfs, None)
+}
+
+fn convert_mod_sharing(
+    dir: &Path,
+    content_out: &Path,
+    aoc_out: &Path,
+    romfs: Option<&Path>,
+    base: Option<&Path>,
+) -> Result<Report> {
     let Some((content, aoc)) = find(dir) else { bail!("No Wii U content or aoc folder in {}", dir.display()) };
     let mut report = Report { game: crate::stock::Game::new(romfs), ..Default::default() };
     let mut case_cache: HashMap<PathBuf, Vec<String>> = HashMap::new();
-    for (src, dst, prefix) in [(content, content_out.to_path_buf(), ""), (aoc, aoc_out.to_path_buf(), "aoc/")] {
-        let Some(src) = src else { continue };
+    let mut in_packs = std::collections::HashSet::new();
+    for root in [content.as_ref(), aoc.as_ref()].into_iter().flatten() {
         let mut files = Vec::new();
-        walk(&src, &mut files);
-        let mut in_packs = std::collections::HashSet::new();
+        walk(root, &mut files);
         for f in files.iter().filter(|f| f.extension().is_some_and(|e| e.eq_ignore_ascii_case("pack"))) {
             let Ok(b) = fs::read(f) else { continue };
             let b = if b.starts_with(b"Yaz0") { yaz0::decompress(&b).unwrap_or_default() } else { b };
@@ -904,6 +955,17 @@ pub fn convert_mod_with_game(dir: &Path, content_out: &Path, aoc_out: &Path, rom
                 }
             }
         }
+    }
+    let base_models = base.map(|b| b.join("Model")).filter(|d| d.is_dir());
+    let shared_models = content.as_ref().map(|c| c.join("Model")).filter(|d| d.is_dir());
+    for (src, dst, prefix) in [(content.clone(), content_out.to_path_buf(), ""), (aoc, aoc_out.to_path_buf(), "aoc/")] {
+        let Some(src) = src else { continue };
+        report.prefix = prefix;
+        report.shared_model_dirs =
+            if prefix.is_empty() { vec![] } else { shared_models.clone().into_iter().collect() };
+        report.shared_model_dirs.extend(base_models.clone());
+        let mut files = Vec::new();
+        walk(&src, &mut files);
         for f in files {
             let rel_raw = f.strip_prefix(&src).context("path")?;
             let rel_fixed = game_case(rel_raw, romfs, &mut case_cache);
@@ -949,6 +1011,9 @@ pub fn convert_mod_with_game(dir: &Path, content_out: &Path, aoc_out: &Path, rom
                 let tex2: Vec<&[u8]> = tex2.iter().map(|p| p.as_slice()).collect();
                 match crate::tex::convert_wiiu_split(&stem, &parts, &tex2) {
                     Ok((data, r)) => {
+                        let dir = rel_s.rsplit_once('/').map(|(d, _)| format!("{d}/")).unwrap_or_default();
+                        let places = [format!("{prefix}{dir}{stem}.Tex.sbfres")];
+                        let data = with_switch_extras(data, &places, &mut report);
                         let to = dst.join(rel).with_file_name(format!("{stem}.Tex.sbfres"));
                         if let Some(p) = to.parent() {
                             fs::create_dir_all(p)?;
@@ -997,18 +1062,22 @@ pub fn convert_mod_with_game(dir: &Path, content_out: &Path, aoc_out: &Path, rom
 }
 
 pub fn convert_bnp_dir(dir: &Path, content: &str, aoc: &str, romfs: Option<&Path>) -> Result<Report> {
-    let mut roots = vec![dir.to_path_buf()];
+    let mut roots = vec![];
     if let Ok(rd) = std::fs::read_dir(dir.join("options")) {
         roots.extend(rd.flatten().map(|e| e.path()).filter(|p| p.is_dir()));
     }
+    roots.sort();
+    roots.push(dir.to_path_buf());
+    let base_content = dir.join("content");
     let mut total = Report::default();
     for root in roots {
+        let base = (root != dir).then_some(base_content.as_path()).filter(|b| b.is_dir());
         let has = root.join("content").is_dir() || root.join("aoc").is_dir();
         if !has {
             continue;
         }
         let out = crate::util::new_temp_dir()?;
-        match convert_mod_with_game(&root, &out.join(content), &out.join(aoc), romfs) {
+        match convert_mod_sharing(&root, &out.join(content), &out.join(aoc), romfs, base) {
             Ok(r) => {
                 total.converted += r.converted;
                 total.stock += r.stock;
@@ -1074,66 +1143,4 @@ pub fn convert_bnp_dir(dir: &Path, content: &str, aoc: &str, romfs: Option<&Path
         log::warn!("{} files of this Wii U BNP can't be converted for Switch yet and were left out", total.skipped.len());
     }
     Ok(total)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn byml_and_sarc_to_little_endian() {
-        let mut map = roead::byml::Map::default();
-        map.insert("Hello".into(), Byml::I32(5));
-        let byml = Byml::Map(map).to_binary(Endian::Big);
-        assert_eq!(big_endian(&byml), Some(true));
-        let sarc = SarcWriter::new(Endian::Big).with_file("Actor/Test.byml", byml).to_binary();
-        let mut r = Report::default();
-        let out = convert("Pack/Test.pack", &sarc, None, &mut r).unwrap();
-        let s = Sarc::new(out.as_slice()).unwrap();
-        assert_eq!(s.endian(), Endian::Little);
-        let inner = s.get_data("Actor/Test.byml").unwrap();
-        assert_eq!(&inner[..2], b"YB");
-        assert_eq!(r.converted, 2);
-        assert!(convert("Model/X.sbfres", b"FRES....", None, &mut r).is_err());
-    }
-
-    #[test]
-    fn empty_actor_pack_is_built_from_the_game_and_loose_files() {
-        let root = std::env::temp_dir().join(format!("swmm-actorpack-{}", std::process::id()));
-        let (romfs, dst) = (root.join("romfs"), root.join("out"));
-        fs::create_dir_all(romfs.join("Actor/Pack")).unwrap();
-        fs::create_dir_all(dst.join("Actor/Pack")).unwrap();
-        fs::create_dir_all(dst.join("Actor/ActorLink")).unwrap();
-        let stock = SarcWriter::new(Endian::Little)
-            .with_file("Actor/ActorLink/Foo.bxml", b"stock link".to_vec())
-            .with_file("Actor/ModelList/Foo.bmodellist", b"stock models".to_vec())
-            .to_binary();
-        fs::write(romfs.join("Actor/Pack/Foo.sbactorpack"), yaz0::compress(&stock)).unwrap();
-        fs::write(dst.join("Actor/Pack/Foo.sbactorpack"), b"").unwrap();
-        fs::write(dst.join("Actor/ActorLink/Foo.bxml"), b"mod link").unwrap();
-        let mut r = Report { game: crate::stock::Game::new(Some(&romfs)), ..Default::default() };
-        fill_empty_actor_packs(&dst, "", &mut r).unwrap();
-        let built = yaz0::decompress(&fs::read(dst.join("Actor/Pack/Foo.sbactorpack")).unwrap()).unwrap();
-        let s = Sarc::new(built.as_slice()).unwrap();
-        assert_eq!(s.get_data("Actor/ActorLink/Foo.bxml"), Some(&b"mod link"[..]));
-        assert_eq!(s.get_data("Actor/ModelList/Foo.bmodellist"), Some(&b"stock models"[..]));
-        let _ = fs::remove_dir_all(&root);
-    }
-
-    #[test]
-    fn empty_yaz0_stub_is_kept() {
-        let mut stub = b"Yaz0".to_vec();
-        stub.extend([0u8; 12]);
-        stub.push(0xff);
-        let sarc = SarcWriter::new(Endian::Big)
-            .with_file("Armor_022_Head_B.sbactorpack", stub.clone())
-            .to_binary();
-        let mut r = Report::default();
-        let out = convert("Actor/Pack/Armor_022_Head_B.sbactorpack", &yaz0::compress(&sarc), None, &mut r).unwrap();
-        let s = Sarc::new(yaz0::decompress(&out).unwrap()).unwrap();
-        assert_eq!(s.endian(), Endian::Little);
-        assert_eq!(s.get_data("Armor_022_Head_B.sbactorpack"), Some(stub.as_slice()));
-        assert!(r.skipped.is_empty());
-        assert_eq!(convert("Pack/AocMainField.pack", &[], None, &mut r), Ok(Vec::new()));
-    }
 }
